@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Textiles Madruga | Catálogo de Confecciones</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <!-- Estilos -->
+    <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+    
+    <!-- ============================================ -->
+    <!-- HEADER                                      -->
+    <!-- ============================================ -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <img src="assets/img/header/logo-up.PNG" alt="Textiles Madruga" class="logo-header">
+                <div>
+                    <span class="logo-textiles">TEXTILES</span>
+                    <span class="logo-madruga">Madruga</span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="btn-acceder" id="btn-acceder">Acceder a la cuenta</button>
+                <button class="btn-cerrar-sesion" id="btn-cerrar-sesion">Cerrar sesión</button>
+                <nav class="nav">
+                    <a href="#inicio">Inicio</a>
+                    <a href="#ofertas-ropa">Ofertas</a>
+                    <a href="#ropa">Ropa</a>
+                    <a href="#telas">Telas</a>
+                    <a href="#otros">Otros</a>
+                    <a href="#personalizados">Personalizados</a>
+                    <a href="#contacto">Contacto</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- ============================================ -->
+    <!-- HERO                                        -->
+    <!-- ============================================ -->
+    <section id="inicio" class="hero">
+        <div class="container hero-content">
+            <div class="hero-text">
+                <div class="logo-wrapper">
+                    <span class="letra-textiles">TEXTILES</span>
+                    <h1 class="letra-madruga">Madruga</h1>
+                    <img src="assets/img/header/logo.png" alt="Textiles Madruga" class="logo-hero">
+                    <p class="hero-slogan">Catálogo de Confecciones</p>
+                </div>
+                <a href="#ofertas-ropa" class="btn-primary">Explorar colección</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- CATEGORÍAS DESTACADAS                        -->
+    <!-- ============================================ -->
+    <section class="categorias-destacadas">
+        <div class="container">
+            <h2 class="section-title">Nuestras ofertas</h2>
+            <div class="grid-categorias">
+                <a href="#ofertas-ropa" class="categoria-card" style="--cat-color: #E87A20;">
+                    <span><img src="assets/img/categorías/categoria-ropa.jpg" alt="Textiles Madruga" class="logo-hero"></span>
+                    <h3>Ropas</h3>
+                </a>
+                <a href="#telas" class="categoria-card" style="--cat-color: #F5E6D3;">
+                    <span><img src="assets/img/categorías/categoria-telas.jpg" alt="Textiles Madruga" class="logo-hero"></span>
+                    <h3>Telas</h3>
+                </a>
+                <a href="#otros" class="categoria-card" style="--cat-color: #D4A574;">
+                    <span><img src="assets/img/categorías/categoria-otros.jpg" alt="Textiles Madruga" class="logo-hero"></span>
+                    <h3>Otros</h3>
+                </a>
+                <a href="#personalizados" class="categoria-card" style="--cat-color: #B0B0B0;">
+                    <span><img src="assets/img/categorías/categoria-personalizados.jpg" alt="Textiles Madruga" class="logo-hero"></span>
+                    <h3>Personalizados</h3>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- OFERTAS Y POPULARES (Ropa)                   -->
+    <!-- ============================================ -->
+    <section id="ofertas-ropa" class="categoria seccion-ofertas">
+        <div class="container">
+            <div class="ofertas-header">
+                <span class="etiqueta-oferta">En Oferta Especial</span>
+                <h2 class="section-title">Prendas populares</h2>
+                <p class="section-subtitle">Lo más vendido y las mejores rebajas</p>
+            </div>
+            <div class="grid-productos"></div>
+            <div class="cta-ofertas">
+                <a href="#ropa" class="btn-primary">Ver todo el catálogo</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- SUB-CATEGORÍAS: ROPA (Hombre / Mujer)       -->
+    <!-- ============================================ -->
+    <section id="ropa" class="categoria seccion-ropa-sub">
+        <div class="container">
+            <h2 class="section-title">Tiene buen gusto</h2>
+            <p class="section-subtitle">Elija su estilo</p>
+            
+            <div class="grid-subcategorias">
+                <!-- Subcategoría: Hombre -->
+                <a href="#ropa-hombre" class="subcategoria-card subcategoria-card-imagen" 
+                style="background-image: url('assets/img/ropa/hombre/ropa-hombre-portada.jpg');">
+                    <span><img src="assets/img/categorías/collage-hombre.jpg" alt="Textiles Madruga" class="logo-hero"></span>
+                    <h3>Hombre</h3>
+                    <p>Camisas, pantalones, chaquetas</p>
+                </a>
+            
+                <!-- Subcategoría: Mujer -->
+                <a href="#ropa-mujer" class="subcategoria-card subcategoria-card-imagen" 
+                style="background-image: url('assets/img/ropa/mujer/ropa-mujer-portada.jpg');">
+                    <span><img src="assets/img/categorías/vestidos.jpg" alt="Textiles Madruga" class="logo-hero"></span>
+                    <h3>Mujer</h3>
+                    <p>Vestidos, blusas, faldas</p>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- PRODUCTOS: HOMBRE                            -->
+    <!-- ============================================ -->
+    <section id="ropa-hombre" class="categoria seccion-productos">
+        <div class="container">
+            <div class="volver">
+                <a href="#ropa" class="btn-volver">← Volver a categorías</a>
+            </div>
+            <h2 class="section-title">Ropa para Hombre</h2>
+            <p class="section-subtitle">Estilo y confort para el día a día</p>
+            <div class="grid-productos"></div>
+        </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- PRODUCTOS: MUJER                            -->
+    <!-- ============================================ -->
+    <section id="ropa-mujer" class="categoria seccion-productos">
+        <div class="container">
+            <div class="volver">
+                <a href="#ropa" class="btn-volver">← Volver a categorías</a>
+            </div>
+            <h2 class="section-title">Ropa para Mujer</h2>
+            <p class="section-subtitle">Elegancia y frescura en cada prenda</p>
+            <div class="grid-productos"></div>
+        </div>
+    </section>
+    
+    <!-- ============================================ -->
+    <!-- CATÁLOGO: TELAS                              -->
+    <!-- ============================================ -->
+    <section id="telas" class="categoria seccion-telas">
+        <div class="container">
+            <h2 class="section-title">Telas</h2>
+            <p class="section-subtitle">Texturas y colores para tus creaciones</p>
+            <div class="grid-productos"></div>
+        </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- CATÁLOGO: Otros                              -->
+    <!-- ============================================ -->
+    <section id="otros" class="categoria seccion-otros">
+        <div class="container">
+            <h2 class="section-title">Otros</h2>
+            <p class="section-subtitle">Complementos con estilo</p>
+            <div class="grid-productos"></div>
+        </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- PERSONALIZADOS Y PEDIDOS POR ENCARGO         -->
+    <!-- ============================================ -->
+    <section id="personalizados" class="personalizados">
+        <div class="container">
+            <h2 class="section-title">Personalizados y pedidos por encargo</h2>
+            <p class="section-subtitle">¿Necesitas algo especial? Te lo hacemos realidad.</p>
+            
+            <div class="grid-personalizados">
+                <div class="personalizado-card">
+                    <h3>🎨 Diseño personalizado</h3>
+                    <p>Prendas, objetos o telas con tu diseño, logo o estilo único.</p>
+                </div>
+                <div class="personalizado-card">
+                    <h3>🏭 Pedidos al por mayor</h3>
+                    <p>Para empresas, eventos o promociones. Cantidades grandes con precios especiales.</p>
+                </div>
+                <div class="personalizado-card">
+                    <h3>📦 Pedidos por encargo</h3>
+                    <p>¿No encuentras lo que buscas? Háblanos y lo creamos para ti.</p>
+                </div>
+            </div>
+            
+            <div class="cta-personalizados">
+                <a href="#contacto" class="btn-primary">Solicitar presupuesto</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- CONTACTO                                     -->
+    <!-- ============================================ -->
+    <section id="contacto" class="contacto">
+        <div class="container">
+            <h2 class="section-title">Contacto</h2>
+            <p class="section-subtitle">¿Tienes alguna pregunta? Escríbenos</p>
+            
+            <div class="contacto-info">
+                <p>📞 <strong>Teléfono:</strong> +53 5XXX-XXXX</p>
+                <p>📧 <strong>Email:</strong> textilesmadruga@email.com</p>
+                <p>📱 <strong>WhatsApp:</strong> +53 5XXX-XXXX</p>
+                <p>📍 <strong>Ubicación:</strong> Madruga, Cuba</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- FOOTER                                      -->
+    <!-- ============================================ -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 Textiles Madruga. Todos los derechos reservados.</p>
+            <p>Con esa bella esencia de Cuba.</p>
+        </div>
+    </footer>
+
+    <!-- ============================================ -->
+    <!-- MODAL DETALLE DE PRODUCTO                    -->
+    <!-- ============================================ -->
+    <div id="modal-detalle" class="modal-oculto">
+        <div class="modal-overlay" id="modal-overlay"></div>
+        <div class="modal-contenido">
+            <button class="modal-cerrar" id="modal-cerrar">✕</button>
+            <div id="modal-body">
+                <div class="modal-loading">Cargando...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- PANEL DE ADMINISTRACIÓN (ACTUALIZADO)        -->
+    <!-- ============================================ -->
+    <div id="admin-panel" class="admin-oculto">
+        <div class="admin-overlay" id="admin-overlay"></div>
+        <div class="admin-contenido">
+            <div class="admin-header">
+                <div class="admin-header-left">
+                    <span class="admin-icono">◈</span>
+                    <h2>Gestión <span class="admin-highlight">Textiles Madruga</span></h2>
+                    <span class="admin-badge">ADMIN</span>
+                </div>
+                <button class="admin-cerrar" id="admin-cerrar">✕</button>
+            </div>
+            
+            <!-- TABS -->
+            <div class="admin-tabs">
+                <button class="admin-tab active" data-tab="productos">Productos</button>
+                <button class="admin-tab" data-tab="ofertas">Ofertas</button>
+                <button class="admin-tab" data-tab="seguridad">Seguridad</button>
+            </div>
+
+            <!-- TAB: PRODUCTOS -->
+            <div id="tab-productos" class="admin-tab-content active">
+                <div class="admin-acciones">
+                    <button class="btn-admin btn-nuevo" id="btn-nuevo-producto">+ Nuevo Producto</button>
+                    <button class="btn-admin btn-guardar" id="btn-guardar-cambios">💾 Guardar</button>
+                    <button class="btn-admin btn-peligro" id="btn-restaurar">↺ Restaurar</button>
+                </div>
+                
+                <div id="form-producto" class="form-oculto">
+                    <div class="form-card">
+                        <h3 class="form-title" id="form-title">✦ Nuevo Producto</h3>
+                        <form id="producto-form" class="form-elegante">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Nombre</label>
+                                    <input type="text" id="prod-nombre" placeholder="Ej: Camisa Lino" maxlength="40" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Precio (USD)</label>
+                                    <input type="number" id="prod-precio" placeholder="0.00" step="0.01" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>URL Imagen</label>
+                                    <input type="text" id="prod-imagen" placeholder="assets/img/... (opcional)">
+                                    <span style="font-size:0.65rem;color:var(--color-gris);">Deja vacío para usar imagen por defecto</span>
+                                </div>
+                                <div class="form-group">
+                                    <label>Categoría</label>
+                                    <select id="prod-categoria" required>
+                                        <option value="hombre">Hombre</option>
+                                        <option value="mujer">Mujer</option>
+                                        <option value="telas">Telas</option>
+                                        <option value="objetos">Otros</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn-admin btn-primario" id="btn-submit-producto">✦ Crear</button>
+                                <button type="button" class="btn-admin btn-secundario" id="btn-cancelar-form">Cancelar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div id="admin-productos-lista" class="admin-lista-elegante"></div>
+            </div>
+
+            <!-- TAB: OFERTAS -->
+            <div id="tab-ofertas" class="admin-tab-content">
+                <h3 class="tab-title">Gestionar Ofertas</h3>
+                <p class="tab-subtitle">Configura descuentos, promociones y detalles personalizables</p>
+                
+                <div class="admin-acciones">
+                    <button class="btn-admin btn-primario" id="btn-guardar-ofertas">💾 Guardar Ofertas</button>
+                </div>
+                
+                <div id="lista-ofertas-admin" class="admin-lista-elegante"></div>
+            </div>
+
+            <!-- TAB: SEGURIDAD (SOLO SUPERADMIN) -->
+            <div id="tab-seguridad" class="admin-tab-content">
+                <h3 class="tab-title">Seguridad y Gestión de Usuarios</h3>
+                <p class="tab-subtitle">Administra las cuentas de usuario y sus permisos</p>
+                
+                <div class="admin-acciones">
+                    <button class="btn-admin btn-nuevo" id="btn-nuevo-usuario">+ Nuevo Usuario</button>
+                </div>
+                
+                <div id="admin-usuarios-lista" class="admin-lista-elegante"></div>
+                
+                <div class="security-card" style="margin-top:20px;">
+                    <div class="security-item">
+                        <span class="security-label">Estado de sesión</span>
+                        <span class="security-value" id="sesion-estado">Activa</span>
+                    </div>
+                    <div class="security-item">
+                        <span class="security-label">Rol actual</span>
+                        <span class="security-value" id="sesion-rol">Administrador</span>
+                    </div>
+                    <div class="security-actions">
+                        <button class="btn-admin btn-secundario" onclick="descargarBackup()">📥 Descargar Backup</button>
+                        <button class="btn-admin btn-secundario" onclick="subirBackup()">📤 Restaurar Backup</button>
+                        <button class="btn-admin btn-peligro" id="btn-cerrar-sesion-admin">🚪 Cerrar Sesión</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- LOGIN MODAL                                 -->
+    <!-- ============================================ -->
+    <div id="login-modal" class="login-oculto">
+        <div class="login-overlay" id="login-overlay"></div>
+        <div class="login-contenido">
+            <button class="login-cerrar" id="login-cerrar">✕</button>
+            <div class="login-header">
+                <span class="login-icon">◈</span>
+                <h2>Textiles <span class="login-highlight">Madruga</span></h2>
+                <p class="login-subtitle">Acceso al panel de gestión</p>
+            </div>
+            <form id="login-form" class="login-form" autocomplete="off" novalidate>
+                <div class="login-group">
+                    <label>Usuario</label>
+                    <input type="text" id="login-user" placeholder="Usuario" autocomplete="off" required>
+                </div>
+                <div class="login-group">
+                    <label>Contraseña</label>
+                    <input type="password" id="login-pass" placeholder="••••••••" autocomplete="new-password" required>
+                    <button type="button" class="toggle-password" id="toggle-pass" aria-label="Mostrar contraseña">
+                        <svg class="icono-ojo" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </button>
+                </div>
+                <button type="submit" class="btn-admin btn-primario btn-login">Acceder</button>
+            </form>
+            <div class="login-footer">
+                <span>¿No tienes cuenta? </span>
+                <a href="#" id="login-registro-link">Regístrate aquí</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js" defer></script>
+</body>
+</html>
