@@ -13,7 +13,12 @@ const PORT = process.env.PORT || 5000;
 // ============================================
 app.use(helmet());
 app.use(cors({
-    origin: ['http://localhost:3000', 'http://localhost:5173', 'http://127.0.0.1:5500'],
+    origin: [
+        'http://localhost:3000',
+        'http://localhost:5173',
+        'http://127.0.0.1:5500',
+        'https://textiles-madruga.netlify.app'
+    ],
     credentials: true
 }));
 
@@ -113,7 +118,6 @@ mongoose.connect(process.env.MONGODB_URI)
 // ============================================
 async function inicializarSuperAdmin() {
     try {
-        // Importar el modelo de usuario dentro de la función
         const User = require('./models/User');
         const superAdminExists = await User.findOne({ username: 'Texmadmin' });
 
@@ -135,6 +139,23 @@ async function inicializarSuperAdmin() {
         console.error('❌ Error al crear SuperAdmin:', error);
     }
 }
+
+// ============================================
+// MANEJO DE ERRORES GLOBAL
+// ============================================
+app.use((err, req, res, next) => {
+    console.error('❌ Error:', err);
+    res.status(err.status || 500).json({ 
+        error: err.message || 'Error interno del servidor' 
+    });
+});
+
+// ============================================
+// MANEJO DE RUTAS NO ENCONTRADAS (404)
+// ============================================
+app.use((req, res) => {
+    res.status(404).json({ error: 'Ruta no encontrada' });
+});
 
 // ============================================
 // INICIAR SERVIDOR
