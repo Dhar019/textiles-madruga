@@ -1,0 +1,23 @@
+🖥️ ARQUITECTURA DE TERMINALES (3 Terminales Necesarias)
+Terminal	/ Ubicación						/	Comando	Función
+Terminal 1	/ C:\Program Files\MongoDB\Server\8.0\bin		/	mongod.exe --dbpath "C:\01 Dani\Bases de Datos\data\db"	Base de datos (MongoDB)
+Terminal 2	/ C:\01 Dani\Proyectos Dev\Textiles Madruga\backend	/	npm start	Backend (API)
+Terminal 3	/ VS Code (Live Server)					/	index.html → "Open with Live Server"	Frontend (Web)
+
+
+🛑 CÓMO APAGAR LA APP (Para apagar el PC)
+
+    Terminal 2 (Backend): Presiona Ctrl + C.
+
+    Terminal 1 (MongoDB): Presiona Ctrl + C.
+
+    Cierra las terminales y apaga el PC.
+
+
+📊 DIAGRAMA DE FLUJO DE EJECUCIÓN
+
+[Terminal 1] MongoDB (puerto 27017)
+      ↓
+[Terminal 2] Backend (puerto 5000) → API
+      ↓
+[Terminal 3] Frontend (puerto 5500) → Navegador
