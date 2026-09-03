@@ -4,13 +4,10 @@
 
 const express = require('express');
 const cors = require('cors');
-//const helmet = require('helmet');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
 
 // Middleware
-//app.use(helmet());
 app.use(cors());
 app.use(express.json());
 
@@ -21,7 +18,7 @@ app.use(express.json());
 app.get('/api/health', (req, res) => {
     res.json({ 
         status: 'ok', 
-        message: 'API de Textiles Madruga (sin base de datos)',
+        message: 'API de Textiles Madruga funcionando',
         timestamp: new Date().toISOString()
     });
 });
@@ -37,13 +34,5 @@ app.get('/api/products', (req, res) => {
 // EXPORTAR PARA CLOUDFLARE PAGES
 // ============================================
 
-// Esto es lo que Cloudflare Pages necesita
+// ✅ Esto es lo que Cloudflare Pages necesita
 module.exports = app;
-
-// Iniciar localmente (solo para pruebas con node server.js)
-if (require.main === module) {
-    app.listen(process.env.PORT || 5000, () => {
-        console.log(`✅ Servidor corriendo en http://localhost:${process.env.PORT || 5000}`);
-        console.log(`📁 API disponible en http://localhost:${process.env.PORT || 5000}/api/health`);
-    });
-}
