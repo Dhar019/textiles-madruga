@@ -6,7 +6,7 @@
 // ============================================
 // 1. CONFIGURACIÓN Y CONSTANTES
 // ============================================
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'https://textiles-madruga-api.eldani000219.workers.dev/api';
 const USERS_KEY = 'tm_users';
 const SESSION_KEY = 'tm_session';
 
