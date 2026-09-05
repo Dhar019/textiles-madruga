@@ -36,3 +36,15 @@ app.get('/api/products', (req, res) => {
 
 // ✅ Esto es lo que Cloudflare Pages necesita
 module.exports = app;
+
+// ============================================
+// INICIAR LOCALMENTE (SOLO PARA PRUEBAS)
+// ============================================
+
+// ⚠️ ESTA PARTE SOLO SE EJECUTA EN LOCAL
+if (require.main === module) {
+    app.listen(process.env.PORT || 5000, () => {
+        console.log(`✅ Servidor corriendo en http://localhost:${process.env.PORT || 5000}`);
+        console.log(`📁 API disponible en http://localhost:${process.env.PORT || 5000}/api/health`);
+    });
+}
