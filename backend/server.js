@@ -1,20 +1,77 @@
 // ============================================
-// SERVER.JS - VERSIÓN DE PRUEBA (SIN MONGODB)
+// SERVER.JS - VERSIÓN HÍBRIDA PARA CLOUDFLARE
 // ============================================
 
+require('dotenv').config();
 const express = require('express');
+const mongoose = require('mongoose');
 const cors = require('cors');
 
 const app = express();
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+// ============================================
+// MIDDLEWARE
+// ============================================
+app.use(cors({
+    origin: [
+        'http://localhost:3000',
+        'http://localhost:5173',
+        'http://127.0.0.1:5500',
+        'https://textiles-madruga.netlify.app'
+    ],
+    credentials: true
+}));
+
+app.use(express.json({ limit: '10mb' }));
 
 // ============================================
-// RUTAS DE PRUEBA
+// RUTAS
 // ============================================
 
+// IMPORTAR RUTAS (con verificación)
+let authRoutes, productRoutes, offerRoutes, userRoutes;
+
+try {
+    authRoutes = require('./routes/auth');
+    console.log('✅ authRoutes cargado');
+} catch (e) {
+    console.warn('⚠️ authRoutes no encontrado, creando router vacío');
+    authRoutes = express.Router();
+}
+
+try {
+    productRoutes = require('./routes/products');
+    console.log('✅ productRoutes cargado');
+} catch (e) {
+    console.warn('⚠️ productRoutes no encontrado, creando router vacío');
+    productRoutes = express.Router();
+}
+
+try {
+    offerRoutes = require('./routes/offers');
+    console.log('✅ offerRoutes cargado');
+} catch (e) {
+    console.warn('⚠️ offerRoutes no encontrado, creando router vacío');
+    offerRoutes = express.Router();
+}
+
+try {
+    userRoutes = require('./routes/users');
+    console.log('✅ userRoutes cargado');
+} catch (e) {
+    console.warn('⚠️ userRoutes no encontrado, creando router vacío');
+    userRoutes = express.Router();
+}
+
+// REGISTRAR RUTAS
+app.use('/api/auth', authRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/offers', offerRoutes);
+app.use('/api/users', userRoutes);
+
+// ============================================
+// RUTA DE SALUD
+// ============================================
 app.get('/api/health', (req, res) => {
     res.json({ 
         status: 'ok', 
@@ -23,25 +80,74 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-app.get('/api/products', (req, res) => {
-    res.json([
-        { id: 1, nombre: 'Camisa Azul', precio: 25 },
-        { id: 2, nombre: 'Vestido Verano', precio: 45 }
-    ]);
+// ============================================
+// CONEXIÓN A MONGODB (SOLO SI HAY URI)
+// ============================================
+if (process.env.MONGODB_URI) {
+    mongoose.connect(process.env.MONGODB_URI)
+        .then(() => {
+            console.log('✅ Conectado a MongoDB');
+            inicializarSuperAdmin();
+        })
+        .catch(err => {
+            console.error('❌ Error al conectar a MongoDB:', err);
+        });
+} else {
+    console.log('⚠️ MONGODB_URI no configurada, modo sin base de datos');
+}
+
+// ============================================
+// INICIALIZAR SUPERADMIN
+// ============================================
+async function inicializarSuperAdmin() {
+    try {
+        const User = require('./models/User');
+        const superAdminExists = await User.findOne({ username: 'Texmadmin' });
+
+        if (!superAdminExists) {
+            const superAdmin = new User({
+                username: 'Texmadmin',
+                password: 'TexMadmin2026*/',
+                role: 'superadmin',
+                name: 'Texmadmin'
+            });
+            await superAdmin.save();
+            console.log('👑 SuperAdmin creado automáticamente');
+            console.log('📋 Usuario: Texmadmin');
+            console.log('🔑 Contraseña: TexMadmin2026*/');
+        } else {
+            console.log('👑 SuperAdmin ya existe');
+        }
+    } catch (error) {
+        console.error('❌ Error al crear SuperAdmin:', error);
+    }
+}
+
+// ============================================
+// MANEJO DE RUTAS NO ENCONTRADAS (404)
+// ============================================
+app.use((req, res) => {
+    res.status(404).json({ error: 'Ruta no encontrada' });
+});
+
+// ============================================
+// MANEJO DE ERRORES GLOBAL
+// ============================================
+app.use((err, req, res, next) => {
+    console.error('❌ Error:', err);
+    res.status(err.status || 500).json({ 
+        error: err.message || 'Error interno del servidor' 
+    });
 });
 
 // ============================================
 // EXPORTAR PARA CLOUDFLARE PAGES
 // ============================================
-
-// ✅ Esto es lo que Cloudflare Pages necesita
 module.exports = app;
 
 // ============================================
 // INICIAR LOCALMENTE (SOLO PARA PRUEBAS)
 // ============================================
-
-// ⚠️ ESTA PARTE SOLO SE EJECUTA EN LOCAL
 if (require.main === module) {
     app.listen(process.env.PORT || 5000, () => {
         console.log(`✅ Servidor corriendo en http://localhost:${process.env.PORT || 5000}`);
