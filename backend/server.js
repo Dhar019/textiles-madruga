@@ -28,46 +28,56 @@ app.use(express.json({ limit: '10mb' }));
 // RUTAS
 // ============================================
 
-// IMPORTAR RUTAS (con verificación)
+// ============================================
+// IMPORTAR RUTAS CON VERIFICACIÓN MEJORADA
+// ============================================
+
 let authRoutes, productRoutes, offerRoutes, userRoutes;
 
-try {
-    authRoutes = require('./routes/auth');
-    console.log('✅ authRoutes cargado');
-} catch (e) {
-    console.warn('⚠️ authRoutes no encontrado, creando router vacío');
-    authRoutes = express.Router();
+// Función auxiliar para cargar rutas de forma segura
+function cargarRuta(ruta) {
+    try {
+        const modulo = require(ruta);
+        // Si es una función, devolverla
+        if (typeof modulo === 'function') {
+            return modulo;
+        }
+        // Si tiene un router exportado como .router o .default
+        if (modulo && typeof modulo === 'object') {
+            if (typeof modulo.router === 'function') return modulo.router;
+            if (typeof modulo.default === 'function') return modulo.default;
+        }
+        console.warn(`⚠️ ${ruta} no exporta una función, creando router vacío`);
+        return express.Router();
+    } catch (e) {
+        console.error(`❌ Error cargando ${ruta}:`, e.message);
+        return express.Router();
+    }
 }
 
-try {
-    productRoutes = require('./routes/products');
-    console.log('✅ productRoutes cargado');
-} catch (e) {
-    console.warn('⚠️ productRoutes no encontrado, creando router vacío');
-    productRoutes = express.Router();
-}
+authRoutes = cargarRuta('./routes/auth');
+productRoutes = cargarRuta('./routes/products');
+offerRoutes = cargarRuta('./routes/offers');
+userRoutes = cargarRuta('./routes/users');
 
-try {
-    offerRoutes = require('./routes/offers');
-    console.log('✅ offerRoutes cargado');
-} catch (e) {
-    console.warn('⚠️ offerRoutes no encontrado, creando router vacío');
-    offerRoutes = express.Router();
-}
+// Verificar que son funciones válidas
+console.log('✅ authRoutes:', typeof authRoutes === 'function' ? 'función OK' : 'ERROR');
+console.log('✅ productRoutes:', typeof productRoutes === 'function' ? 'función OK' : 'ERROR');
+console.log('✅ offerRoutes:', typeof offerRoutes === 'function' ? 'función OK' : 'ERROR');
+console.log('✅ userRoutes:', typeof userRoutes === 'function' ? 'función OK' : 'ERROR');
 
-try {
-    userRoutes = require('./routes/users');
-    console.log('✅ userRoutes cargado');
-} catch (e) {
-    console.warn('⚠️ userRoutes no encontrado, creando router vacío');
-    userRoutes = express.Router();
-}
+// REGISTRAR RUTAS (solo si son funciones)
+if (typeof authRoutes === 'function') app.use('/api/auth', authRoutes);
+else console.warn('⚠️ authRoutes no es función, omitiendo ruta');
 
-// REGISTRAR RUTAS
-app.use('/api/auth', authRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/offers', offerRoutes);
-app.use('/api/users', userRoutes);
+if (typeof productRoutes === 'function') app.use('/api/products', productRoutes);
+else console.warn('⚠️ productRoutes no es función, omitiendo ruta');
+
+if (typeof offerRoutes === 'function') app.use('/api/offers', offerRoutes);
+else console.warn('⚠️ offerRoutes no es función, omitiendo ruta');
+
+if (typeof userRoutes === 'function') app.use('/api/users', userRoutes);
+else console.warn('⚠️ userRoutes no es función, omitiendo ruta');
 
 // ============================================
 // RUTA DE SALUD
