@@ -1,5 +1,5 @@
 // ============================================
-// SERVER.JS - VERSIÓN DEFINITIVA
+// SERVER.JS - VERSIÓN DEFINITIVA CON MANEJO DE RUTAS
 // ============================================
 
 require('dotenv').config();
@@ -25,79 +25,106 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 
 // ============================================
-// IMPORTAR Y REGISTRAR RUTAS
+// FUNCIÓN PARA CREAR UN ROUTER VACÍO VÁLIDO
+// ============================================
+function crearRouterVacio(nombre) {
+    const router = express.Router();
+    router.get('/', (req, res) => {
+        res.json({ 
+            message: `Ruta ${nombre} en construcción`,
+            status: 'pending'
+        });
+    });
+    console.log(`🔄 Router vacío creado para: ${nombre}`);
+    return router;
+}
+
+// ============================================
+// IMPORTAR RUTAS (CON MANEJO DE ERRORES MEJORADO)
 // ============================================
 
-let authRoutes, productRoutes, offerRoutes, userRoutes;
-
-// Función auxiliar para cargar rutas de forma segura
-function cargarRuta(ruta) {
+function cargarRutaSegura(rutaPath, nombre) {
     try {
-        const modulo = require(ruta);
-        console.log(`📂 Cargando módulo: ${ruta}`);
+        const modulo = require(rutaPath);
+        console.log(`📂 Cargando módulo: ${rutaPath}`);
         
+        // Caso 1: Es una función (router)
         if (typeof modulo === 'function') {
-            console.log(`✅ ${ruta} es una función`);
+            console.log(`✅ ${nombre} es una función`);
             return modulo;
         }
         
+        // Caso 2: Es un objeto con .router
         if (modulo && typeof modulo === 'object') {
             if (typeof modulo.router === 'function') {
-                console.log(`✅ ${ruta} tiene .router`);
+                console.log(`✅ ${nombre} tiene .router`);
                 return modulo.router;
             }
             if (typeof modulo.default === 'function') {
-                console.log(`✅ ${ruta} tiene .default`);
+                console.log(`✅ ${nombre} tiene .default`);
                 return modulo.default;
             }
         }
         
-        console.warn(`⚠️ ${ruta} no exporta una función, creando router vacío`);
-        return express.Router();
-    } catch (e) {
-        console.error(`❌ Error cargando ${ruta}:`, e.message);
-        return express.Router();
+        // Caso 3: No es válido
+        console.warn(`⚠️ ${nombre} no exporta una función válida`);
+        return null;
+        
+    } catch (error) {
+        console.error(`❌ Error cargando ${nombre}:`, error.message);
+        return null;
     }
 }
 
-// Cargar rutas
-authRoutes = cargarRuta('./routes/auth');
-productRoutes = cargarRuta('./routes/products');
-offerRoutes = cargarRuta('./routes/offers');
-userRoutes = cargarRuta('./routes/users');
+// Cargar rutas (si no se cargan, se crean routers vacíos)
+let authRoutes = cargarRutaSegura('./routes/auth', 'auth');
+let productRoutes = cargarRutaSegura('./routes/products', 'product');
+let offerRoutes = cargarRutaSegura('./routes/offers', 'offer');
+let userRoutes = cargarRutaSegura('./routes/users', 'user');
 
-// Registrar rutas con verificación robusta
+// Si alguna ruta es null, crear un router vacío
+if (!authRoutes) authRoutes = crearRouterVacio('auth');
+if (!productRoutes) productRoutes = crearRouterVacio('product');
+if (!offerRoutes) offerRoutes = crearRouterVacio('offer');
+if (!userRoutes) userRoutes = crearRouterVacio('user');
+
+// ============================================
+// REGISTRAR RUTAS (FORMA SEGURA)
+// ============================================
+
 console.log('📋 Registrando rutas...');
 
-const rutasConfig = [
-    { nombre: 'auth', ruta: authRoutes, path: '/api/auth' },
-    { nombre: 'product', ruta: productRoutes, path: '/api/products' },
-    { nombre: 'offer', ruta: offerRoutes, path: '/api/offers' },
-    { nombre: 'user', ruta: userRoutes, path: '/api/users' }
+// Lista de rutas a registrar
+const rutasParaRegistrar = [
+    { nombre: 'auth', router: authRoutes, path: '/api/auth' },
+    { nombre: 'product', router: productRoutes, path: '/api/products' },
+    { nombre: 'offer', router: offerRoutes, path: '/api/offers' },
+    { nombre: 'user', router: userRoutes, path: '/api/users' }
 ];
 
-rutasConfig.forEach(({ nombre, ruta, path }) => {
+// Registrar cada ruta con verificación
+rutasParaRegistrar.forEach(({ nombre, router, path }) => {
     try {
-        if (typeof ruta === 'function') {
-            app.use(path, ruta);
+        // Verificar que el router es una función ANTES de usar app.use()
+        if (typeof router === 'function') {
+            app.use(path, router);
             console.log(`✅ Ruta ${nombre} registrada en ${path}`);
-        } else if (ruta && typeof ruta === 'object' && ruta.router) {
-            app.use(path, ruta.router);
-            console.log(`✅ Ruta ${nombre} registrada desde objeto.router en ${path}`);
         } else {
-            console.warn(`⚠️ Ruta ${nombre} no es válida, creando router vacío para ${path}`);
-            const emptyRouter = express.Router();
-            emptyRouter.get('/', (req, res) => {
-                res.json({ 
-                    message: `Ruta ${nombre} en construcción`,
-                    status: 'pending'
-                });
-            });
-            app.use(path, emptyRouter);
-            console.log(`🔄 Ruta ${nombre} reemplazada por router vacío`);
+            console.error(`❌ ERROR: router ${nombre} NO es una función, creando uno vacío`);
+            const routerVacio = crearRouterVacio(nombre);
+            app.use(path, routerVacio);
+            console.log(`🔄 Ruta ${nombre} reemplazada por router vacío en ${path}`);
         }
     } catch (error) {
         console.error(`❌ Error registrando ruta ${nombre}:`, error.message);
+        // En caso de error extremo, crear un router vacío y registrarlo
+        try {
+            const routerEmergencia = crearRouterVacio(nombre);
+            app.use(path, routerEmergencia);
+            console.log(`🚨 Ruta ${nombre} registrada con router de emergencia`);
+        } catch (e) {
+            console.error(`💀 No se pudo recuperar la ruta ${nombre}:`, e.message);
+        }
     }
 });
 
@@ -113,23 +140,20 @@ app.get('/api/health', (req, res) => {
 });
 
 // ============================================
-// CONEXIÓN A MONGODB (CORREGIDA PARA CLOUDFLARE)
+// CONEXIÓN A MONGODB
 // ============================================
 if (process.env.MONGODB_URI) {
     const mongoURI = process.env.MONGODB_URI;
     console.log('📡 Intentando conectar a MongoDB...');
     
-    // Opciones de conexión robustas
     const mongooseOptions = {
-        serverSelectionTimeoutMS: 10000,  // 10 segundos
+        serverSelectionTimeoutMS: 10000,
         socketTimeoutMS: 45000,
         retryWrites: true,
         retryReads: true,
     };
     
-    // Solo añadir opciones SSL en desarrollo local
     if (process.env.NODE_ENV !== 'production') {
-        console.log('🔧 Modo desarrollo: permitiendo certificados no válidos');
         mongooseOptions.tlsAllowInvalidCertificates = true;
     }
     
@@ -151,12 +175,11 @@ if (process.env.MONGODB_URI) {
 // ============================================
 async function inicializarSuperAdmin() {
     try {
-        // Verificar que el modelo existe
         let User;
         try {
             User = require('./models/User');
         } catch (e) {
-            console.warn('⚠️ Modelo User no encontrado, omitiendo creación de SuperAdmin');
+            console.warn('⚠️ Modelo User no encontrado, omitiendo SuperAdmin');
             return;
         }
         

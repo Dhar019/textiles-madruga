@@ -1,0 +1,98 @@
+{
+  "ofertas": [
+    4,
+    9,
+    12
+  ],
+  "productos": {
+    "hombre": [
+      {
+        "id": 4,
+        "nombre": "Camisa Azul",
+        "precio": 25,
+        "imagen": "assets/img/ropa/hombre/camisas/camisa-azul.jpg"
+      },
+      {
+        "id": 5,
+        "nombre": "Camisa Blanca",
+        "precio": 35,
+        "imagen": "assets/img/ropa/hombre/camisas/camisa-blanca.jpg"
+      },
+      {
+        "id": 6,
+        "nombre": "Camisa Mamey",
+        "precio": 60,
+        "imagen": "assets/img/ropa/hombre/camisas/camisa-mamey.jpg"
+      },
+      {
+        "id": 7,
+        "nombre": "Camisa Blanca Manga Corta",
+        "precio": 60,
+        "imagen": "assets/img/ropa/hombre/camisas/camisa-mangas-cortas-blanca.jpg"
+      },
+      {
+        "id": 8,
+        "nombre": "Camisa Verde Manga Corta",
+        "precio": 60,
+        "imagen": "assets/img/ropa/hombre/camisas/camisa-mangas-cortas-verde.jpg"
+      }
+    ],
+    "mujer": [
+      {
+        "id": 9,
+        "nombre": "Vestido Negro con Flores Blancas",
+        "precio": 45,
+        "imagen": "assets/img/ropa/mujer/vestidos/vestido-negro-flores-blancas.jpg"
+      },
+      {
+        "id": 10,
+        "nombre": "Vestido Verano Floreado",
+        "precio": 38,
+        "imagen": "assets/img/ropa/mujer/ropa-mujer-vestido-verano-floreado.jpg"
+      },
+      {
+        "id": 11,
+        "nombre": "Blusa Lino",
+        "precio": 28,
+        "imagen": "assets/img/ropa/mujer/ropa-mujer-blusa-lino.jpg"
+      }
+    ],
+    "telas": [
+      {
+        "id": 12,
+        "nombre": "Lino Natural",
+        "precio": 12,
+        "unidad": "/m",
+        "imagen": "https://placehold.co/280x250/F5E6D3/1A1A1A?text=Lino"
+      },
+      {
+        "id": 13,
+        "nombre": "Algodón Premium",
+        "precio": 8,
+        "unidad": "/m",
+        "imagen": "https://placehold.co/280x250/F5E6D3/1A1A1A?text=Algod%C3%B3n"
+      },
+      {
+        "id": 14,
+        "nombre": "Seda Natural",
+        "precio": 25,
+        "unidad": "/m",
+        "imagen": "https://placehold.co/280x250/F5E6D3/1A1A1A?text=Seda"
+      }
+    ],
+    "objetos": [
+      {
+        "id": 15,
+        "nombre": "Pozuelo Cerámica",
+        "precio": 15,
+        "imagen": "https://placehold.co/280x250/D4A574/1A1A1A?text=Pozuelo"
+      },
+      {
+        "id": 16,
+        "nombre": "Mochila Artesanal",
+        "precio": 40,
+        "imagen": "https://placehold.co/280x250/D4A574/1A1A1A?text=Mochila"
+      }
+    ]
+  }
+}
