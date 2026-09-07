@@ -40,21 +40,38 @@ function crearRouterVacio(nombre) {
 }
 
 // ============================================
-// IMPORTAR RUTAS (CON MANEJO DE ERRORES MEJORADO)
+// IMPORTAR Y REGISTRAR RUTAS (VERSIÓN ROBUSTA)
 // ============================================
 
+// Función para crear un router vacío válido
+function crearRouterVacio(nombre) {
+    const router = express.Router();
+    router.get('/', (req, res) => {
+        res.json({ 
+            message: `Ruta ${nombre} en construcción`,
+            status: 'pending'
+        });
+    });
+    router.get('/health', (req, res) => {
+        res.json({ status: 'ok', module: nombre });
+    });
+    console.log(`🔄 Router vacío creado para: ${nombre}`);
+    return router;
+}
+
+// Función para cargar una ruta de forma segura
 function cargarRutaSegura(rutaPath, nombre) {
     try {
         const modulo = require(rutaPath);
         console.log(`📂 Cargando módulo: ${rutaPath}`);
         
-        // Caso 1: Es una función (router)
+        // Si es una función (router) - CASO 1
         if (typeof modulo === 'function') {
             console.log(`✅ ${nombre} es una función`);
             return modulo;
         }
         
-        // Caso 2: Es un objeto con .router
+        // Si es un objeto con .router - CASO 2
         if (modulo && typeof modulo === 'object') {
             if (typeof modulo.router === 'function') {
                 console.log(`✅ ${nombre} tiene .router`);
@@ -64,19 +81,22 @@ function cargarRutaSegura(rutaPath, nombre) {
                 console.log(`✅ ${nombre} tiene .default`);
                 return modulo.default;
             }
+            // Si tiene un router exportado como module.exports = { router }
+            if (modulo.router && typeof modulo.router === 'object') {
+                console.log(`✅ ${nombre} tiene router como objeto`);
+                return modulo.router;
+            }
         }
         
-        // Caso 3: No es válido
-        console.warn(`⚠️ ${nombre} no exporta una función válida`);
+        console.warn(`⚠️ ${nombre} no exporta una función válida, creando router vacío`);
         return null;
-        
     } catch (error) {
         console.error(`❌ Error cargando ${nombre}:`, error.message);
         return null;
     }
 }
 
-// Cargar rutas (si no se cargan, se crean routers vacíos)
+// Cargar rutas (SIEMPRE devuelven un router válido)
 let authRoutes = cargarRutaSegura('./routes/auth', 'auth');
 let productRoutes = cargarRutaSegura('./routes/products', 'product');
 let offerRoutes = cargarRutaSegura('./routes/offers', 'offer');
