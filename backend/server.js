@@ -140,6 +140,30 @@ app.get('/api/health', (req, res) => {
 });
 
 // ============================================
+// RUTA DE PRODUCTOS (DESDE productos.json)
+// ============================================
+const fs = require('fs');
+const path = require('path');
+
+app.get('/api/productos', (req, res) => {
+    try {
+        // Leer el archivo productos.json
+        const filePath = path.join(__dirname, 'productos.json');
+        const data = fs.readFileSync(filePath, 'utf8');
+        const productos = JSON.parse(data);
+        
+        // Devolver los productos con las rutas de imagen corregidas
+        res.json(productos);
+    } catch (error) {
+        console.error('❌ Error al leer productos.json:', error.message);
+        res.status(500).json({ 
+            error: 'Error al cargar los productos',
+            details: error.message 
+        });
+    }
+});
+
+// ============================================
 // CONEXIÓN A MONGODB
 // ============================================
 if (process.env.MONGODB_URI) {
