@@ -1,5 +1,5 @@
 // ============================================
-// SERVER.JS - VERSIÓN HÍBRIDA PARA CLOUDFLARE
+// SERVER.JS - VERSIÓN DEFINITIVA
 // ============================================
 
 require('dotenv').config();
@@ -25,11 +25,7 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 
 // ============================================
-// RUTAS
-// ============================================
-
-// ============================================
-// IMPORTAR RUTAS CON VERIFICACIÓN MEJORADA
+// IMPORTAR Y REGISTRAR RUTAS
 // ============================================
 
 let authRoutes, productRoutes, offerRoutes, userRoutes;
@@ -38,15 +34,24 @@ let authRoutes, productRoutes, offerRoutes, userRoutes;
 function cargarRuta(ruta) {
     try {
         const modulo = require(ruta);
-        // Si es una función, devolverla
+        console.log(`📂 Cargando módulo: ${ruta}`);
+        
         if (typeof modulo === 'function') {
+            console.log(`✅ ${ruta} es una función`);
             return modulo;
         }
-        // Si tiene un router exportado como .router o .default
+        
         if (modulo && typeof modulo === 'object') {
-            if (typeof modulo.router === 'function') return modulo.router;
-            if (typeof modulo.default === 'function') return modulo.default;
+            if (typeof modulo.router === 'function') {
+                console.log(`✅ ${ruta} tiene .router`);
+                return modulo.router;
+            }
+            if (typeof modulo.default === 'function') {
+                console.log(`✅ ${ruta} tiene .default`);
+                return modulo.default;
+            }
         }
+        
         console.warn(`⚠️ ${ruta} no exporta una función, creando router vacío`);
         return express.Router();
     } catch (e) {
@@ -55,29 +60,46 @@ function cargarRuta(ruta) {
     }
 }
 
+// Cargar rutas
 authRoutes = cargarRuta('./routes/auth');
 productRoutes = cargarRuta('./routes/products');
 offerRoutes = cargarRuta('./routes/offers');
 userRoutes = cargarRuta('./routes/users');
 
-// Verificar que son funciones válidas
-console.log('✅ authRoutes:', typeof authRoutes === 'function' ? 'función OK' : 'ERROR');
-console.log('✅ productRoutes:', typeof productRoutes === 'function' ? 'función OK' : 'ERROR');
-console.log('✅ offerRoutes:', typeof offerRoutes === 'function' ? 'función OK' : 'ERROR');
-console.log('✅ userRoutes:', typeof userRoutes === 'function' ? 'función OK' : 'ERROR');
+// Registrar rutas con verificación robusta
+console.log('📋 Registrando rutas...');
 
-// REGISTRAR RUTAS (solo si son funciones)
-if (typeof authRoutes === 'function') app.use('/api/auth', authRoutes);
-else console.warn('⚠️ authRoutes no es función, omitiendo ruta');
+const rutasConfig = [
+    { nombre: 'auth', ruta: authRoutes, path: '/api/auth' },
+    { nombre: 'product', ruta: productRoutes, path: '/api/products' },
+    { nombre: 'offer', ruta: offerRoutes, path: '/api/offers' },
+    { nombre: 'user', ruta: userRoutes, path: '/api/users' }
+];
 
-if (typeof productRoutes === 'function') app.use('/api/products', productRoutes);
-else console.warn('⚠️ productRoutes no es función, omitiendo ruta');
-
-if (typeof offerRoutes === 'function') app.use('/api/offers', offerRoutes);
-else console.warn('⚠️ offerRoutes no es función, omitiendo ruta');
-
-if (typeof userRoutes === 'function') app.use('/api/users', userRoutes);
-else console.warn('⚠️ userRoutes no es función, omitiendo ruta');
+rutasConfig.forEach(({ nombre, ruta, path }) => {
+    try {
+        if (typeof ruta === 'function') {
+            app.use(path, ruta);
+            console.log(`✅ Ruta ${nombre} registrada en ${path}`);
+        } else if (ruta && typeof ruta === 'object' && ruta.router) {
+            app.use(path, ruta.router);
+            console.log(`✅ Ruta ${nombre} registrada desde objeto.router en ${path}`);
+        } else {
+            console.warn(`⚠️ Ruta ${nombre} no es válida, creando router vacío para ${path}`);
+            const emptyRouter = express.Router();
+            emptyRouter.get('/', (req, res) => {
+                res.json({ 
+                    message: `Ruta ${nombre} en construcción`,
+                    status: 'pending'
+                });
+            });
+            app.use(path, emptyRouter);
+            console.log(`🔄 Ruta ${nombre} reemplazada por router vacío`);
+        }
+    } catch (error) {
+        console.error(`❌ Error registrando ruta ${nombre}:`, error.message);
+    }
+});
 
 // ============================================
 // RUTA DE SALUD
@@ -91,16 +113,34 @@ app.get('/api/health', (req, res) => {
 });
 
 // ============================================
-// CONEXIÓN A MONGODB (SOLO SI HAY URI)
+// CONEXIÓN A MONGODB (CORREGIDA PARA CLOUDFLARE)
 // ============================================
 if (process.env.MONGODB_URI) {
-    mongoose.connect(process.env.MONGODB_URI)
+    const mongoURI = process.env.MONGODB_URI;
+    console.log('📡 Intentando conectar a MongoDB...');
+    
+    // Opciones de conexión robustas
+    const mongooseOptions = {
+        serverSelectionTimeoutMS: 10000,  // 10 segundos
+        socketTimeoutMS: 45000,
+        retryWrites: true,
+        retryReads: true,
+    };
+    
+    // Solo añadir opciones SSL en desarrollo local
+    if (process.env.NODE_ENV !== 'production') {
+        console.log('🔧 Modo desarrollo: permitiendo certificados no válidos');
+        mongooseOptions.tlsAllowInvalidCertificates = true;
+    }
+    
+    mongoose.connect(mongoURI, mongooseOptions)
         .then(() => {
             console.log('✅ Conectado a MongoDB');
             inicializarSuperAdmin();
         })
         .catch(err => {
-            console.error('❌ Error al conectar a MongoDB:', err);
+            console.error('❌ Error al conectar a MongoDB:', err.message);
+            console.log('⚠️ El servidor continuará funcionando sin base de datos');
         });
 } else {
     console.log('⚠️ MONGODB_URI no configurada, modo sin base de datos');
@@ -111,7 +151,15 @@ if (process.env.MONGODB_URI) {
 // ============================================
 async function inicializarSuperAdmin() {
     try {
-        const User = require('./models/User');
+        // Verificar que el modelo existe
+        let User;
+        try {
+            User = require('./models/User');
+        } catch (e) {
+            console.warn('⚠️ Modelo User no encontrado, omitiendo creación de SuperAdmin');
+            return;
+        }
+        
         const superAdminExists = await User.findOne({ username: 'Texmadmin' });
 
         if (!superAdminExists) {
@@ -129,7 +177,7 @@ async function inicializarSuperAdmin() {
             console.log('👑 SuperAdmin ya existe');
         }
     } catch (error) {
-        console.error('❌ Error al crear SuperAdmin:', error);
+        console.error('❌ Error al crear SuperAdmin:', error.message);
     }
 }
 
@@ -144,7 +192,7 @@ app.use((req, res) => {
 // MANEJO DE ERRORES GLOBAL
 // ============================================
 app.use((err, req, res, next) => {
-    console.error('❌ Error:', err);
+    console.error('❌ Error:', err.message);
     res.status(err.status || 500).json({ 
         error: err.message || 'Error interno del servidor' 
     });
@@ -159,8 +207,10 @@ module.exports = app;
 // INICIAR LOCALMENTE (SOLO PARA PRUEBAS)
 // ============================================
 if (require.main === module) {
-    app.listen(process.env.PORT || 5000, () => {
-        console.log(`✅ Servidor corriendo en http://localhost:${process.env.PORT || 5000}`);
-        console.log(`📁 API disponible en http://localhost:${process.env.PORT || 5000}/api/health`);
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => {
+        console.log(`✅ Servidor corriendo en http://localhost:${PORT}`);
+        console.log(`📁 API disponible en http://localhost:${PORT}/api/health`);
+        console.log(`📁 Entorno: ${process.env.NODE_ENV || 'desarrollo'}`);
     });
 }
