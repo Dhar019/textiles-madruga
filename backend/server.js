@@ -25,21 +25,6 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 
 // ============================================
-// FUNCIÓN PARA CREAR UN ROUTER VACÍO VÁLIDO
-// ============================================
-function crearRouterVacio(nombre) {
-    const router = express.Router();
-    router.get('/', (req, res) => {
-        res.json({ 
-            message: `Ruta ${nombre} en construcción`,
-            status: 'pending'
-        });
-    });
-    console.log(`🔄 Router vacío creado para: ${nombre}`);
-    return router;
-}
-
-// ============================================
 // IMPORTAR Y REGISTRAR RUTAS (VERSIÓN ROBUSTA)
 // ============================================
 
