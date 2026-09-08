@@ -1,11 +1,13 @@
 // ============================================
-// SERVER.JS - VERSIÓN DEFINITIVA CON MANEJO DE RUTAS
+// SERVER.JS - VERSIÓN DEFINITIVA
 // ============================================
 
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
 
@@ -25,7 +27,7 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 
 // ============================================
-// IMPORTAR Y REGISTRAR RUTAS (VERSIÓN ROBUSTA)
+// FUNCIONES AUXILIARES PARA RUTAS
 // ============================================
 
 // Función para crear un router vacío válido
@@ -42,6 +44,30 @@ function crearRouterVacio(nombre) {
     });
     console.log(`🔄 Router vacío creado para: ${nombre}`);
     return router;
+}
+
+// Función para asegurar que cualquier cosa sea un router válido
+function asegurarRouter(router, nombre) {
+    try {
+        // Si ya es una función, devolverla
+        if (typeof router === 'function') {
+            return router;
+        }
+        
+        // Si es un objeto que podría tener un router
+        if (router && typeof router === 'object') {
+            // Intentar extraer .router o .default
+            if (typeof router.router === 'function') return router.router;
+            if (typeof router.default === 'function') return router.default;
+        }
+        
+        // Si llegamos aquí, crear un router vacío
+        console.warn(`⚠️ Creando router vacío para ${nombre}`);
+        return crearRouterVacio(nombre);
+    } catch (error) {
+        console.error(`❌ Error asegurando router ${nombre}:`, error.message);
+        return crearRouterVacio(nombre);
+    }
 }
 
 // Función para cargar una ruta de forma segura
@@ -81,57 +107,74 @@ function cargarRutaSegura(rutaPath, nombre) {
     }
 }
 
-// Cargar rutas (SIEMPRE devuelven un router válido)
+// ============================================
+// IMPORTAR RUTAS (CON MANEJO ROBUSTO)
+// ============================================
+
 let authRoutes = cargarRutaSegura('./routes/auth', 'auth');
 let productRoutes = cargarRutaSegura('./routes/products', 'product');
 let offerRoutes = cargarRutaSegura('./routes/offers', 'offer');
 let userRoutes = cargarRutaSegura('./routes/users', 'user');
 
-// Si alguna ruta es null, crear un router vacío
-if (!authRoutes) authRoutes = crearRouterVacio('auth');
-if (!productRoutes) productRoutes = crearRouterVacio('product');
-if (!offerRoutes) offerRoutes = crearRouterVacio('offer');
-if (!userRoutes) userRoutes = crearRouterVacio('user');
+// Asegurar que TODAS las rutas sean routers válidos
+authRoutes = asegurarRouter(authRoutes, 'auth');
+productRoutes = asegurarRouter(productRoutes, 'product');
+offerRoutes = asegurarRouter(offerRoutes, 'offer');
+userRoutes = asegurarRouter(userRoutes, 'user');
 
 // ============================================
-// REGISTRAR RUTAS (FORMA SEGURA)
+// REGISTRAR RUTAS (CADA UNA POR SEPARADO)
 // ============================================
 
 console.log('📋 Registrando rutas...');
 
-// Lista de rutas a registrar
-const rutasParaRegistrar = [
-    { nombre: 'auth', router: authRoutes, path: '/api/auth' },
-    { nombre: 'product', router: productRoutes, path: '/api/products' },
-    { nombre: 'offer', router: offerRoutes, path: '/api/offers' },
-    { nombre: 'user', router: userRoutes, path: '/api/users' }
-];
+// Verificar que todas son funciones antes de registrar
+console.log('✅ auth es función?', typeof authRoutes === 'function');
+console.log('✅ product es función?', typeof productRoutes === 'function');
+console.log('✅ offer es función?', typeof offerRoutes === 'function');
+console.log('✅ user es función?', typeof userRoutes === 'function');
 
-// Registrar cada ruta con verificación
-rutasParaRegistrar.forEach(({ nombre, router, path }) => {
-    try {
-        // Verificar que el router es una función ANTES de usar app.use()
-        if (typeof router === 'function') {
-            app.use(path, router);
-            console.log(`✅ Ruta ${nombre} registrada en ${path}`);
-        } else {
-            console.error(`❌ ERROR: router ${nombre} NO es una función, creando uno vacío`);
-            const routerVacio = crearRouterVacio(nombre);
-            app.use(path, routerVacio);
-            console.log(`🔄 Ruta ${nombre} reemplazada por router vacío en ${path}`);
-        }
-    } catch (error) {
-        console.error(`❌ Error registrando ruta ${nombre}:`, error.message);
-        // En caso de error extremo, crear un router vacío y registrarlo
-        try {
-            const routerEmergencia = crearRouterVacio(nombre);
-            app.use(path, routerEmergencia);
-            console.log(`🚨 Ruta ${nombre} registrada con router de emergencia`);
-        } catch (e) {
-            console.error(`💀 No se pudo recuperar la ruta ${nombre}:`, e.message);
-        }
-    }
-});
+// Registrar cada ruta con try/catch individual
+try {
+    app.use('/api/auth', authRoutes);
+    console.log('✅ Ruta auth registrada en /api/auth');
+} catch (error) {
+    console.error('❌ Error registrando auth:', error.message);
+    // Crear router de emergencia
+    const routerEmergencia = crearRouterVacio('auth');
+    app.use('/api/auth', routerEmergencia);
+    console.log('🔄 Ruta auth reemplazada por router de emergencia');
+}
+
+try {
+    app.use('/api/products', productRoutes);
+    console.log('✅ Ruta product registrada en /api/products');
+} catch (error) {
+    console.error('❌ Error registrando product:', error.message);
+    const routerEmergencia = crearRouterVacio('product');
+    app.use('/api/products', routerEmergencia);
+    console.log('🔄 Ruta product reemplazada por router de emergencia');
+}
+
+try {
+    app.use('/api/offers', offerRoutes);
+    console.log('✅ Ruta offer registrada en /api/offers');
+} catch (error) {
+    console.error('❌ Error registrando offer:', error.message);
+    const routerEmergencia = crearRouterVacio('offer');
+    app.use('/api/offers', routerEmergencia);
+    console.log('🔄 Ruta offer reemplazada por router de emergencia');
+}
+
+try {
+    app.use('/api/users', userRoutes);
+    console.log('✅ Ruta user registrada en /api/users');
+} catch (error) {
+    console.error('❌ Error registrando user:', error.message);
+    const routerEmergencia = crearRouterVacio('user');
+    app.use('/api/users', routerEmergencia);
+    console.log('🔄 Ruta user reemplazada por router de emergencia');
+}
 
 // ============================================
 // RUTA DE SALUD
@@ -147,17 +190,11 @@ app.get('/api/health', (req, res) => {
 // ============================================
 // RUTA DE PRODUCTOS (DESDE productos.json)
 // ============================================
-const fs = require('fs');
-const path = require('path');
-
 app.get('/api/productos', (req, res) => {
     try {
-        // Leer el archivo productos.json
         const filePath = path.join(__dirname, 'productos.json');
         const data = fs.readFileSync(filePath, 'utf8');
         const productos = JSON.parse(data);
-        
-        // Devolver los productos con las rutas de imagen corregidas
         res.json(productos);
     } catch (error) {
         console.error('❌ Error al leer productos.json:', error.message);
