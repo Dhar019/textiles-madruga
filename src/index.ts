@@ -1,72 +1,89 @@
-import { env } from "cloudflare:workers";
-import { httpServerHandler } from "cloudflare:node";
-import express from "express";
-import jwt from "jsonwebtoken";
-import { connectDB } from "./db.js";
-import authRoutes from "./routes/auth.js";
-import productosRoutes from "./routes/productos.js";
-import offersRoutes from "./routes/offers.js";
-import usersRoutes from "./routes/users.js";
+// ============================================
+// INDEX.TS - API TEXTILES MADRUGA (WORKERS)
+// ============================================
+
+import express from 'express';
 
 const app = express();
-app.use(express.json());
 
-// --- Connect to MongoDB on first request (lazy init) ---
-let dbConnected = false;
+// ============================================
+// MIDDLEWARE (SIN body-parser)
+// ============================================
 
-app.use(async (req, res, next) => {
-  if (!dbConnected) {
-    try {
-      await connectDB();
-      dbConnected = true;
-    } catch (err) {
-      console.error("MongoDB connection failed:", err);
-      return res.status(503).json({ error: "Database connection failed" });
+// ✅ Express ya incluye su propio parser
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// CORS
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
     }
-  }
-  next();
+    next();
 });
 
-// --- JWT Auth Middleware ---
-function authMiddleware(required: boolean = true) {
-  return (req: express.Request, res: express.Response, next: express.NextFunction) => {
-    const header = req.headers.authorization;
-    if (!header || !header.startsWith("Bearer ")) {
-      if (!required) return next();
-      return res.status(401).json({ error: "Token no proporcionado" });
-    }
-    const token = header.split(" ")[1];
-    try {
-      const decoded = jwt.verify(token, env.JWT_SECRET);
-      (req as any).user = decoded;
-      next();
-    } catch {
-      return res.status(401).json({ error: "Token inválido o expirado" });
-    }
-  };
-}
+// ============================================
+// RUTAS
+// ============================================
 
-// --- Routes ---
-app.use("/api/auth", authRoutes);
-app.use("/api/productos", productosRoutes);
-app.use("/api/offers", offersRoutes);
-app.use("/api/users", authMiddleware(true), usersRoutes);
-
-// --- Health check ---
-app.get("/api/health", (req, res) => {
-  res.json({ status: "ok", db: dbConnected ? "connected" : "disconnected", timestamp: new Date().toISOString() });
+// Health check
+app.get('/api/health', (req, res) => {
+    res.json({
+        status: 'ok',
+        message: 'API de Textiles Madruga funcionando en Cloudflare Workers',
+        timestamp: new Date().toISOString()
+    });
 });
 
-// --- 404 handler ---
+// Ruta de productos (prueba)
+app.get('/api/productos', (req, res) => {
+    res.json({
+        message: 'Lista de productos',
+        productos: [
+            { id: 1, nombre: 'Camisa Azul', precio: 25 },
+            { id: 2, nombre: 'Vestido Verano', precio: 45 }
+        ]
+    });
+});
+
+// Ruta raíz
+app.get('/', (req, res) => {
+    res.json({
+        message: 'API Textiles Madruga',
+        version: '1.0.0',
+        endpoints: [
+            '/api/health',
+            '/api/productos'
+        ]
+    });
+});
+
+// ============================================
+// MANEJO DE ERRORES
+// ============================================
+
+// Ruta no encontrada (404)
 app.use((req, res) => {
-  res.status(404).json({ error: "Ruta no encontrada" });
+    res.status(404).json({
+        error: 'Ruta no encontrada',
+        path: req.path
+    });
 });
 
-// --- Error handler ---
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error(err);
-  res.status(500).json({ error: "Error interno del servidor" });
+// Error global
+app.use((err, req, res, next) => {
+    console.error('❌ Error:', err.message);
+    res.status(err.status || 500).json({
+        error: err.message || 'Error interno del servidor',
+        timestamp: new Date().toISOString()
+    });
 });
 
-app.listen(3000);
-export default httpServerHandler({ port: 3000 });
+// ============================================
+// EXPORTAR PARA CLOUDFLARE WORKERS
+// ============================================
+
+export default app;
