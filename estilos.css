@@ -227,12 +227,13 @@ body {
 }
 
 /* ============================================ */
-/* 3. HERO                                    */
+/* 3. HERO - BANNER RESPONSIVE                 */
 /* ============================================ */
 .hero {
     min-height: 90vh;
     display: flex;
     align-items: center;
+    justify-content: center;
     background: 
         linear-gradient(135deg, rgba(0,0,0,0.85) 100%, rgba(0,0,0,0.5) 110%),
         url('assets/img/hero/hero-principal.jpg');
@@ -243,27 +244,59 @@ body {
     padding: 60px 0;
     text-align: center;
     position: relative;
+    overflow: hidden;
 }
 
+/* ✅ BANNER COMO FONDO DECORATIVO */
 .hero::before {
     content: '';
     position: absolute;
     top: 0;
-    right: 15vh;
-    width: 150%;
+    left: 0;
+    width: 100%;
     height: 100%;
     background: url('assets/img/banner-tm.png');
     background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
-    opacity: 0.5;
+    opacity: 0.3;  /* Ajusta la transparencia según prefieras */
     z-index: 0;
+    pointer-events: none;
 }
 
 .hero-content {
     position: relative;
     z-index: 1;
     width: 100%;
+}
+
+/* ✅ RESPONSIVE PARA MÓVILES */
+@media (max-width: 768px) {
+    .hero {
+        min-height: 60vh;
+        padding: 40px 0;
+        background-size: cover;
+        background-position: center;
+    }
+
+    .hero::before {
+        background-size: contain;
+        background-position: center;
+        opacity: 0.25;  /* Un poco más transparente en móvil */
+    }
+}
+
+@media (max-width: 480px) {
+    .hero {
+        min-height: 50vh;
+        padding: 30px 0;
+    }
+
+    .hero::before {
+        background-size: contain;
+        background-position: center;
+        opacity: 0.2;
+    }
 }
 
 .hero-text {
