@@ -1,0 +1,23 @@
+{
+  "name": "textiles-madruga-api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev src/index.js",
+    "deploy": "wrangler deploy src/index.js"
+  },
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "express": "^4.18.2",
+    "itty-router": "^5.0.24",
+    "jsonwebtoken": "^9.0.0",
+    "mongoose": "^7.8.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.5.0",
+    "typescript": "^7.0.2",
+    "wrangler": "^4.129.1"
+  }
+}

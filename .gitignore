@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # ============================================
 # Node.js
 # ============================================
@@ -135,3 +136,11 @@ build/
 .project
 .settings/
 *.sublime-*
+=======
+node_modules/
+dist/
+.wrangler/
+.dev.vars
+.env
+*.log
+>>>>>>> f84a3aaea5210254020d37b45e8f3ea18c9d5d38
