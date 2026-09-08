@@ -252,16 +252,15 @@ body {
     content: '';
     position: absolute;
     top: 0;
-    left: 0;
-    width: 100%;
+    right: 15vh;
+    width: 150%;
     height: 100%;
     background: url('assets/img/banner-tm.png');
-    background-size: cover;      /* ← En PC: ocupa todo el ancho (como antes) */
+    background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
-    opacity: 0.3;
+    opacity: 0.5;
     z-index: 0;
-    pointer-events: none;
 }
 
 .hero-content {
