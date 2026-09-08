@@ -9,6 +9,7 @@
 const API_URL = 'https://textiles-madruga-api.eldani000219.workers.dev/api';
 const USERS_KEY = 'tm_users';
 const SESSION_KEY = 'tm_session';
+const url = `${API_URL}/productos`;
 
 let datosGlobales = null;
 let adminDatos = null;

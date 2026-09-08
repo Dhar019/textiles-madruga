@@ -21,7 +21,7 @@
     <header class="header">
         <div class="container">
             <div class="logo">
-                <img src="frontend/assets/img/header/logo-up.PNG" alt="Textiles Madruga" class="logo-header">
+                <img src="assets/img/header/logo-up.PNG" alt="Textiles Madruga" class="logo-header">
                 <div>
                     <span class="logo-textiles">TEXTILES</span>
                     <span class="logo-madruga">Madruga</span>
@@ -52,7 +52,7 @@
                 <div class="logo-wrapper">
                     <span class="letra-textiles">TEXTILES</span>
                     <h1 class="letra-madruga">Madruga</h1>
-                    <img src="frontend/assets/img/header/logo.png" alt="Textiles Madruga" class="logo-hero">
+                    <img src="assets/img/header/logo.png" alt="Textiles Madruga" class="logo-hero">
                     <p class="hero-slogan">Catálogo de Confecciones</p>
                 </div>
                 <a href="#ofertas-ropa" class="btn-primary">Explorar colección</a>
@@ -68,19 +68,19 @@
             <h2 class="section-title">Nuestras ofertas</h2>
             <div class="grid-categorias">
                 <a href="#ofertas-ropa" class="categoria-card" style="--cat-color: #E87A20;">
-                    <span><img src="frontend/assets/img/categorías/categoria-ropa.jpg" alt="Textiles Madruga" class="logo-hero"></span>
+                    <span><img src="assets/img/categorías/categoria-ropa.jpg" alt="Textiles Madruga" class="logo-hero"></span>
                     <h3>Ropas</h3>
                 </a>
                 <a href="#telas" class="categoria-card" style="--cat-color: #F5E6D3;">
-                    <span><img src="frontend/assets/img/categorías/categoria-telas.jpg" alt="Textiles Madruga" class="logo-hero"></span>
+                    <span><img src="assets/img/categorías/categoria-telas.jpg" alt="Textiles Madruga" class="logo-hero"></span>
                     <h3>Telas</h3>
                 </a>
                 <a href="#otros" class="categoria-card" style="--cat-color: #D4A574;">
-                    <span><img src="frontend/assets/img/categorías/categoria-otros.jpg" alt="Textiles Madruga" class="logo-hero"></span>
+                    <span><img src="assets/img/categorías/categoria-otros.jpg" alt="Textiles Madruga" class="logo-hero"></span>
                     <h3>Otros</h3>
                 </a>
                 <a href="#personalizados" class="categoria-card" style="--cat-color: #B0B0B0;">
-                    <span><img src="frontend/assets/img/categorías/categoria-personalizados.jpg" alt="Textiles Madruga" class="logo-hero"></span>
+                    <span><img src="assets/img/categorías/categoria-personalizados.jpg" alt="Textiles Madruga" class="logo-hero"></span>
                     <h3>Personalizados</h3>
                 </a>
             </div>
@@ -116,15 +116,15 @@
                 <!-- Subcategoría: Hombre -->
                 <a href="#ropa-hombre" class="subcategoria-card subcategoria-card-imagen" 
                 style="background-image: url('assets/img/ropa/hombre/ropa-hombre-portada.jpg');">
-                    <span><img src="frontend/assets/img/categorías/collage-hombre.jpg" alt="Textiles Madruga" class="logo-hero"></span>
+                    <span><img src="assets/img/categorías/collage-hombre.jpg" alt="Textiles Madruga" class="logo-hero"></span>
                     <h3>Hombre</h3>
                     <p>Camisas, pantalones, chaquetas</p>
                 </a>
             
                 <!-- Subcategoría: Mujer -->
                 <a href="#ropa-mujer" class="subcategoria-card subcategoria-card-imagen" 
-                style="background-image: url('frontend/assets/img/ropa/mujer/ropa-mujer-portada.jpg');">
-                    <span><img src="frontend/assets/img/categorías/vestidos.jpg" alt="Textiles Madruga" class="logo-hero"></span>
+                style="background-image: url('assets/img/ropa/mujer/ropa-mujer-portada.jpg');">
+                    <span><img src="assets/img/categorías/vestidos.jpg" alt="Textiles Madruga" class="logo-hero"></span>
                     <h3>Mujer</h3>
                     <p>Vestidos, blusas, faldas</p>
                 </a>
@@ -398,6 +398,15 @@
         </div>
     </div>
 
+    <!-- ============================================ -->
+    <!-- SCRIPTS                                      -->
+    <!-- ============================================ -->
+    
+    <!-- ✅ URL DE LA API EN PRODUCCIÓN (Cloudflare Workers) -->
+    <script>
+        const API_URL = 'https://textiles-madruga-api.eldani000219.workers.dev/api';
+    </script>
+    
     <script src="script.js" defer></script>
 </body>
 </html>
