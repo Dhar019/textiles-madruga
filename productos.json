@@ -1,16 +1,12 @@
 {
-  "ofertas": [
-    4,
-    9,
-    12
-  ],
+  "ofertas": [4, 9, 12],
   "productos": {
     "hombre": [
       {
         "id": 4,
         "nombre": "Camisa Azul",
         "precio": 25,
-        "imagen": "assets/img/ropa/hombre/camisas/camisa-azul.jpg"
+        "imagen": "frontend/assets/img/ropa/hombre/camisas/camisa-azul.jpg"
       },
       {
         "id": 5,
@@ -92,6 +88,12 @@
         "nombre": "Mochila Artesanal",
         "precio": 40,
         "imagen": "https://placehold.co/280x250/D4A574/1A1A1A?text=Mochila"
+      },
+      {
+        "id": 17,
+        "nombre": "Taza Personalizada",
+        "precio": 10,
+        "imagen": "https://placehold.co/280x250/D4A574/1A1A1A?text=Taza"
       }
     ]
   }
