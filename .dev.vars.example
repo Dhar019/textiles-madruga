@@ -1,0 +1,9 @@
+# Copia este archivo a .dev.vars y completa los valores para desarrollo local
+# Tu connection string de MongoDB Atlas (mongodb+srv://...)
+MONGODB_URI=mongodb+srv://usuario:password@cluster0.fdbbgyi.mongodb.net/textiles?retryWrites=true&w=majority
+# Secreto para firmar tokens JWT
+JWT_SECRET=textiles_madruga_super_secret_key_2026
+# Tiempo de expiración de tokens
+JWT_EXPIRE=7d
+# Entorno
+NODE_ENV=production
