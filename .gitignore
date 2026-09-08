@@ -1,73 +1,121 @@
 # ============================================
-# ENTORNO Y CONFIGURACIÓN
-# ============================================
-.env
-.env.local
-.env.*.local
-*.env
-
-# ============================================
-# DEPENDENCIAS
+# Node.js
 # ============================================
 node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 package-lock.json
 yarn.lock
 pnpm-lock.yaml
 
 # ============================================
-# CLOUDFLARE
+# Cloudflare Workers
 # ============================================
 .wrangler/
-wrangler.toml
-wrangler.jsonc
+.dev.vars
+dist/
+worker/
+*.worker.js
+*.worker.mjs
 
 # ============================================
-# LOGS Y ARCHIVOS TEMPORALES
+# Backend
 # ============================================
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-*.pid
-*.seed
-*.pid.lock
+backend/node_modules/
+backend/dist/
+backend/.env
+backend/.env.local
+backend/.env.*.local
+backend/*.log
+backend/.wrangler/
 
 # ============================================
-# ARCHIVOS DEL SISTEMA
+# Frontend
+# ============================================
+frontend/node_modules/
+frontend/dist/
+frontend/.DS_Store
+frontend/*.log
+frontend/.env
+frontend/.env.local
+
+# ============================================
+# Archivos de sistema
 # ============================================
 .DS_Store
 Thumbs.db
-ehthumbs.db
-Desktop.ini
-
-# ============================================
-# IDE Y EDITORES
-# ============================================
-.vscode/
-.idea/
+desktop.ini
 *.swp
 *.swo
 *~
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
 # ============================================
-# ARCHIVOS DE BUILD
+# Archivos de entorno y secrets
+# ============================================
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+*.secret
+*.key
+*.pem
+*.crt
+
+# ============================================
+# Logs y archivos temporales
+# ============================================
+logs/
+*.log
+*.tmp
+*.temp
+.cache/
+tmp/
+temp/
+
+# ============================================
+# Archivos de build y compilación
 # ============================================
 dist/
 build/
-out/
-*.min.js
-*.min.css
+.out/
+*.tsbuildinfo
 
 # ============================================
-# ARCHIVOS DE PRUEBA
+# Archivos específicos de Cloudflare
 # ============================================
-coverage/
-.nyc_output/
-*.test.js
-*.spec.js
+.vercel/
+.netlify/
+*.pages.dev
+*.workers.dev
 
 # ============================================
-# ARCHIVOS DE BACKUP
+# Archivos del proyecto
+# ============================================
+*.iml
+*.class
+*.jar
+*.war
+*.ear
+
+# ============================================
+# Base de datos local
+# ============================================
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+
+# ============================================
+# Backups
 # ============================================
 *.bak
 *.backup
@@ -75,9 +123,15 @@ coverage/
 *.orig
 
 # ============================================
-# VARIOS
+# IDE y editores
 # ============================================
-*.swp
-*.swo
-*.tmp
-*.temp
+.vscode/
+.idea/
+*.iml
+*.code-workspace
+.vs/
+*.vsix
+.classpath
+.project
+.settings/
+*.sublime-*
