@@ -227,7 +227,7 @@ body {
 }
 
 /* ============================================ */
-/* 3. HERO - BANNER RESPONSIVE (PC y MÓVIL)    */
+/* 3. HERO - BANNER CON CONFIGURACIÓN FIJA     */
 /* ============================================ */
 .hero {
     min-height: 90vh;
@@ -247,21 +247,21 @@ body {
     overflow: hidden;
 }
 
-/* ✅ BANNER DECORATIVO (MISMA POSICIÓN EN PC Y MÓVIL) */
+/* ✅ BANNER CON CONFIGURACIÓN FIJA (IGUAL EN PC Y MÓVIL) */
 .hero::before {
     content: '';
     position: absolute;
     top: 0;
-    left: 0;                    /* ← Anclado a la izquierda (sin desplazamiento) */
-    width: 100%;                /* ← Ocupa todo el ancho */
-    height: 100%;               /* ← Ocupa todo el alto */
+    right: 15vh;           /* ← Se mantiene en todos los dispositivos */
+    width: 150%;           /* ← Se mantiene en todos los dispositivos */
+    height: 100%;          /* ← Se mantiene en todos los dispositivos */
     background: url('assets/img/banner-tm.png');
-    background-size: cover;     /* ← En PC y móvil: ocupa todo el ancho */
-    background-position: center; /* ← Centrado */
+    background-size: contain;    /* ← Se mantiene en todos los dispositivos */
+    background-position: center; /* ← Se mantiene en todos los dispositivos */
     background-repeat: no-repeat;
-    opacity: 0.3;               /* ← Misma transparencia en ambos */
+    opacity: 0.5;          /* ← Se mantiene en todos los dispositivos */
     z-index: 0;
-    pointer-events: none;
+    pointer-events: none;  /* ← Para que no interfiera con clics */
 }
 
 .hero-content {
