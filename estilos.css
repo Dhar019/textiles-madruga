@@ -1923,3 +1923,111 @@ section[id] {
         --header-height: 120px;
     }
 }
+
+/* ============================================ */
+/* MENÚ HAMBURGUESA (MÓVIL)                    */
+/* ============================================ */
+
+/* Ocultar el botón en PC */
+.menu-hamburguesa {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    z-index: 200;
+}
+
+.menu-hamburguesa .barra {
+    display: block;
+    width: 28px;
+    height: 3px;
+    background-color: var(--color-blanco);
+    border-radius: 3px;
+    transition: all 0.3s ease;
+}
+
+/* Animación del botón cuando está activo (se convierte en X) */
+.menu-hamburguesa.activo .barra:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px);
+}
+
+.menu-hamburguesa.activo .barra:nth-child(2) {
+    opacity: 0;
+}
+
+.menu-hamburguesa.activo .barra:nth-child(3) {
+    transform: rotate(-45deg) translate(5px, -5px);
+}
+
+/* ============================================ */
+/* RESPONSIVE: MENÚ HAMBURGUESA EN MÓVIL       */
+/* ============================================ */
+
+@media (max-width: 768px) {
+    /* Mostrar el botón hamburguesa en móvil */
+    .menu-hamburguesa {
+        display: flex;
+    }
+
+    /* Ocultar el menú de navegación por defecto en móvil */
+    .nav {
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        background-color: var(--color-negro);
+        padding: 20px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+        margin-left: 0;
+        z-index: 150;
+    }
+
+    /* Mostrar el menú cuando tiene la clase 'activo' */
+    .nav.activo {
+        display: flex;
+    }
+
+    /* Ajustar los enlaces del menú en móvil */
+    .nav a {
+        font-size: 1.1rem;
+        padding: 8px 0;
+        width: 100%;
+        text-align: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .nav a:last-child {
+        border-bottom: none;
+    }
+
+    /* Ajustar el header en móvil para que sea más compacto */
+    .header .container {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: nowrap;
+    }
+
+    .header-actions {
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+        width: auto;
+    }
+
+    /* Ocultar los botones de login en el header (se mostrarán en el menú) */
+    .btn-acceder,
+    .btn-cerrar-sesion {
+        display: none !important;
+    }
+
+    /* Mostrar el botón de login dentro del menú (opcional) */
+    /* Si quieres que aparezca en el menú, lo añadimos con JS */
+}

@@ -1269,3 +1269,37 @@ window.renderizarUsuariosAdmin = renderizarUsuariosAdmin;
 window.mostrarNotificacion = mostrarNotificacion;
 window.solicitarPedido = solicitarPedido;
 window.cargarUsuariosDesdeBackend = cargarUsuariosDesdeBackend;
+
+// ============================================ */
+// MENÚ HAMBURGUESA (MÓVIL)                    */
+// ============================================ */
+
+document.addEventListener('DOMContentLoaded', function() {
+    const hamburguesa = document.getElementById('menu-hamburguesa');
+    const nav = document.getElementById('nav-principal');
+
+    if (hamburguesa && nav) {
+        // Abrir/cerrar menú al hacer clic en el botón
+        hamburguesa.addEventListener('click', function(event) {
+            event.stopPropagation();
+            this.classList.toggle('activo');
+            nav.classList.toggle('activo');
+        });
+
+        // Cerrar menú al hacer clic en un enlace
+        nav.querySelectorAll('a').forEach(function(enlace) {
+            enlace.addEventListener('click', function() {
+                hamburguesa.classList.remove('activo');
+                nav.classList.remove('activo');
+            });
+        });
+
+        // Cerrar menú al hacer clic fuera de él
+        document.addEventListener('click', function(event) {
+            if (!nav.contains(event.target) && !hamburguesa.contains(event.target)) {
+                hamburguesa.classList.remove('activo');
+                nav.classList.remove('activo');
+            }
+        });
+    }
+});
