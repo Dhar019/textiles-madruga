@@ -1841,7 +1841,7 @@ html, body {
     .hero::before {
         right: 5vh;
         width: 120%;
-        opacity: 0.4;
+        opacity: 0.3;
     }
     .hero-slogan { font-size: 1.2rem; }
     .letra-madruga { font-size: 3.5rem; }
