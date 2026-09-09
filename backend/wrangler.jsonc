@@ -1,15 +1,15 @@
 {
-	"name": "textiles-madruga-api",
-	"main": "server.js",
-	"compatibility_date": "2026-09-03",
-	"compatibility_flags": [
-    	"nodejs_compat",
-    	"global_navigator",
-    	"streams_enable_constructors",
-    	"formdata_parser_supports_files"
-	],
-	"vars": {
-		"JWT_EXPIRE": "7d",
-		"NODE_ENV": "production"
-	}
+  "name": "textiles-madruga-api",
+  "main": "server.js",
+  "compatibility_date": "2026-09-03",
+  "compatibility_flags": [
+    "nodejs_compat",
+    "global_navigator",
+    "streams_enable_constructors",
+    "formdata_parser_supports_files"
+  ],
+  "vars": {
+    "JWT_EXPIRE": "7d",
+    "NODE_ENV": "production"
+  }
 }
