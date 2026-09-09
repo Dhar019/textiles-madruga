@@ -27,11 +27,10 @@ body {
     color: var(--color-negro);
     background-color: var(--color-blanco);
     line-height: 1.6;
-    overflow-x: hidden;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    padding-top: 0; /* ← CAMBIADO */
+    padding-top: 0;
 }
 
 /* ============================================ */
