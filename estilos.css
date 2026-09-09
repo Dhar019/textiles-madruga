@@ -1951,7 +1951,7 @@ section[id] {
 /* ============================================ */
 @media (max-width: 768px) {
     .menu-hamburguesa {
-        margin-left: 8px;
+        margin-right: 8px;
         padding: 6px 4px;
     }
 
