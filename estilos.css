@@ -1828,8 +1828,15 @@ html, body {
 /* RESPONSIVE - GLOBAL                         */
 /* ============================================ */
 @media (max-width: 768px) {
-    .logo-header { height: 30px; }
-    .logo-textiles, .logo-madruga { font-size: 1rem; }
+    .logo-header { height: 30px; margin-bottom: 2px; }
+    .logo-textiles,
+    .logo-madruga {
+        font-size: 0.8rem;   /* ← CAMBIADO DE 1rem a 0.8rem */
+        line-height: 1;      /* ← NUEVO */
+    }
+    .logo-madruga {
+        margin-top: -2px;    /* ← NUEVO: junta las líneas */
+    }
     .logo-hero { max-width: 140px; }
         .hero::before {
         right: 5vh;
@@ -1855,11 +1862,20 @@ html, body {
     .admin-tab { flex: 1 1 45%; }
 
     .header .container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
         gap: 5px;
+        flex-wrap: nowrap;
     }
 
     .logo {
-        gap: 10px;
+        display: flex;
+        flex-direction: column;   /* ← NUEVO: apila verticalmente */
+        align-items: flex-start;  /* ← NUEVO: alinea a la izquierda */
+        gap: 2px;
+        flex-shrink: 1;
+        min-width: 0;
     }
 
     .header-actions {
@@ -1868,12 +1884,13 @@ html, body {
 
     .btn-acceder,
     .btn-cerrar-sesion {
-        font-size: 0.7rem !important;
-        padding: 5px 12px !important;
+        font-size: 0.6rem !important;  /* ← CAMBIADO de 0.7rem a 0.6rem */
+        padding: 4px 8px !important;   /* ← CAMBIADO de 5px 12px a 4px 8px */
+        white-space: nowrap;
     }
 
-        .menu-hamburguesa {
-        display: flex !important;  /* ← ESTO ES LO QUE FALTABA */
+    .menu-hamburguesa {
+        display: flex !important;
         margin-left: 2px;
         padding: 6px 4px;
     }
