@@ -2004,8 +2004,8 @@ main, .main-content {
     }
 
     .categoria-card img {
-        width: 70px;
-        height: 70px;
+        width: 120px;
+        height: 120px;
         object-fit: cover;
         border-radius: 50%;
     }
@@ -2034,8 +2034,8 @@ main, .main-content {
     }
 
     .subcategoria-card-imagen img {
-        width: 90px;
-        height: 90px;
+        width: 150px;
+        height: 150px;
         object-fit: cover;
         border-radius: 50%;
     }
