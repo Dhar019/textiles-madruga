@@ -1983,6 +1983,70 @@ main, .main-content {
         display: inline-block;
         vertical-align: middle;
     }
+
+    /* ============================================ */
+    /* CATEGORÍAS DESTACADAS (Ropas, Telas...)     */
+    /* ============================================ */
+    .grid-categorias {
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+
+    .categoria-card {
+        padding: 20px 10px;
+        min-height: 120px;
+    }
+
+    .categoria-card span {
+        font-size: 3.5rem;
+        display: block;
+        margin-bottom: 8px;
+    }
+
+    .categoria-card img {
+        width: 70px;
+        height: 70px;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+
+    .categoria-card h3 {
+        font-size: 1rem;
+    }
+
+    /* ============================================ */
+    /* SUB-CATEGORÍAS (Hombre, Mujer)              */
+    /* ============================================ */
+    .grid-subcategorias {
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+
+    .subcategoria-card {
+        padding: 25px 15px;
+        min-height: 180px;
+    }
+
+    .subcategoria-card-imagen span {
+        font-size: 4.5rem;
+        display: block;
+        margin-bottom: 10px;
+    }
+
+    .subcategoria-card-imagen img {
+        width: 90px;
+        height: 90px;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+
+    .subcategoria-card-imagen h3 {
+        font-size: 1.2rem;
+    }
+
+    .subcategoria-card-imagen p {
+        font-size: 0.8rem;
+    }
 }
 
 /* ============================================ */
