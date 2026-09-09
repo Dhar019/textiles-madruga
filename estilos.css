@@ -1841,7 +1841,7 @@ html, body {
     .hero::before {
         right: 5vh;
         width: 120%;
-        opacity: 0.3;
+        opacity: 0.4;
     }
     .hero-slogan { font-size: 1.2rem; }
     .letra-madruga { font-size: 3.5rem; }
@@ -1980,5 +1980,17 @@ section[id] {
 @media (max-width: 768px) {
     :root {
         --header-height: 120px;
+    }
+}
+
+/* ============================================ */
+/* HEADER STICKY - FORZAR EN MÓVIL             */
+/* ============================================ */
+@media (max-width: 768px) {
+    .header {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 9999 !important;
+        background-color: var(--color-negro) !important;
     }
 }
