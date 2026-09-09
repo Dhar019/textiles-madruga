@@ -1975,7 +1975,7 @@ main, .main-content {
     .btn-cerrar-sesion img,
     .btn-primary img,
     .btn-secundario img {
-        max-width: 24px;
+        max-width: 36px;
         height: auto;
     }
 }
