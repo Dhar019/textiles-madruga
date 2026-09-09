@@ -1854,7 +1854,7 @@ section[id] {
 /* MENÚ HAMBURGUESA (SIEMPRE VISIBLE)          */
 /* ============================================ */
 .menu-hamburguesa {
-    display: flex;  /* ✅ Siempre visible en todos los dispositivos */
+    display: flex !important;  /* ← Forzar visibilidad en todos los dispositivos */
     flex-direction: column;
     gap: 5px;
     background: none;
@@ -1862,8 +1862,8 @@ section[id] {
     cursor: pointer;
     padding: 8px 5px;
     z-index: 200;
-    margin-left: 8px;  /* ← Separación del botón de login */
-    order: 3;  /* ← Al final del header-actions (a la derecha) */
+    margin-left: 8px;
+    order: 2;  /* ← Al final del header-actions */
 }
 
 .menu-hamburguesa .barra {
@@ -1891,44 +1891,44 @@ section[id] {
 /* HEADER ACTIONS - ALINEACIÓN A LA DERECHA   */
 /* ============================================ */
 .header-actions {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;  /* ← Todo a la derecha */
-    gap: 6px;
-    flex-wrap: nowrap;
-    width: auto;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;  /* ← Todo a la derecha */
+    gap: 6px !important;
+    flex-wrap: nowrap !important;
+    width: auto !important;
 }
 
 /* Botón de login - izquierda del hamburguesa */
 .btn-acceder,
 .btn-cerrar-sesion {
-    order: 1;  /* ← A la izquierda del hamburguesa */
-    margin-right: 2px;
+    order: 1 !important;  /* ← A la izquierda del hamburguesa */
+    margin-right: 2px !important;
 }
 
 /* Botón hamburguesa - a la derecha de todo */
 .menu-hamburguesa {
-    order: 2;  /* ← A la derecha de los botones */
+    order: 2 !important;  /* ← A la derecha de los botones */
 }
 
 /* ============================================ */
 /* NAV - SIEMPRE DESPLEGABLE                   */
 /* ============================================ */
 .nav {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    gap: 15px;
-    position: absolute;
-    top: 100%;
-    right: 0;  /* ← Alineado a la derecha */
-    width: 280px;
-    background-color: var(--color-negro);
-    padding: 20px;
-    box-shadow: -5px 10px 20px rgba(0, 0, 0, 0.5);
-    margin-left: 0;
-    z-index: 150;
-    border-radius: 0 0 0 12px;
+    display: none !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 15px !important;
+    position: absolute !important;
+    top: 100% !important;
+    right: 0 !important;  /* ← Alineado a la derecha */
+    width: 280px !important;
+    background-color: var(--color-negro) !important;
+    padding: 20px !important;
+    box-shadow: -5px 10px 20px rgba(0, 0, 0, 0.5) !important;
+    margin-left: 0 !important;
+    z-index: 150 !important;
+    border-radius: 0 0 0 12px !important;
 }
 
 .nav.activo {
@@ -1936,20 +1936,20 @@ section[id] {
 }
 
 .nav a {
-    font-size: 1rem;
-    padding: 12px 0;
-    width: 100%;
-    text-align: center;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    color: #FFFFFF;
+    font-size: 1rem !important;
+    padding: 12px 0 !important;
+    width: 100% !important;
+    text-align: center !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #FFFFFF !important;
 }
 
 .nav a:last-child {
-    border-bottom: none;
+    border-bottom: none !important;
 }
 
 /* ============================================ */
-/* RESPONSIVE - MÓVIL                         */
+/* RESPONSIVE - MÓVIL (SOLO AJUSTES DE TAMAÑO) */
 /* ============================================ */
 @media (max-width: 768px) {
     .menu-hamburguesa {
@@ -1963,9 +1963,9 @@ section[id] {
     }
 
     .nav {
-        width: 80%;
-        max-width: 300px;
-        right: 0;
+        width: 80% !important;
+        max-width: 300px !important;
+        right: 0 !important;
     }
 
     .btn-acceder,
@@ -1975,6 +1975,6 @@ section[id] {
     }
 
     .header-actions {
-        gap: 4px;
+        gap: 4px !important;
     }
 }
