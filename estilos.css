@@ -1854,7 +1854,7 @@ section[id] {
 /* MENÚ HAMBURGUESA (SIEMPRE VISIBLE)          */
 /* ============================================ */
 .menu-hamburguesa {
-    display: flex;
+    display: flex;  /* ✅ Siempre visible en todos los dispositivos */
     flex-direction: column;
     gap: 5px;
     background: none;
@@ -1862,8 +1862,8 @@ section[id] {
     cursor: pointer;
     padding: 8px 5px;
     z-index: 200;
-    margin-right: 8px;
-    order: 2;
+    margin-left: 8px;  /* ← Separación del botón de login */
+    order: 3;  /* ← Al final del header-actions (a la derecha) */
 }
 
 .menu-hamburguesa .barra {
@@ -1888,6 +1888,30 @@ section[id] {
 }
 
 /* ============================================ */
+/* HEADER ACTIONS - ALINEACIÓN A LA DERECHA   */
+/* ============================================ */
+.header-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;  /* ← Todo a la derecha */
+    gap: 6px;
+    flex-wrap: nowrap;
+    width: auto;
+}
+
+/* Botón de login - izquierda del hamburguesa */
+.btn-acceder,
+.btn-cerrar-sesion {
+    order: 1;  /* ← A la izquierda del hamburguesa */
+    margin-right: 2px;
+}
+
+/* Botón hamburguesa - a la derecha de todo */
+.menu-hamburguesa {
+    order: 2;  /* ← A la derecha de los botones */
+}
+
+/* ============================================ */
 /* NAV - SIEMPRE DESPLEGABLE                   */
 /* ============================================ */
 .nav {
@@ -1897,7 +1921,7 @@ section[id] {
     gap: 15px;
     position: absolute;
     top: 100%;
-    right: 0;
+    right: 0;  /* ← Alineado a la derecha */
     width: 280px;
     background-color: var(--color-negro);
     padding: 20px;
@@ -1925,11 +1949,32 @@ section[id] {
 }
 
 /* ============================================ */
-/* RESPONSIVE: MÓVIL (AJUSTES)                 */
+/* RESPONSIVE - MÓVIL                         */
 /* ============================================ */
 @media (max-width: 768px) {
+    .menu-hamburguesa {
+        margin-left: 4px;
+        padding: 6px 4px;
+    }
+
+    .menu-hamburguesa .barra {
+        width: 24px;
+        height: 2.5px;
+    }
+
     .nav {
         width: 80%;
         max-width: 300px;
+        right: 0;
+    }
+
+    .btn-acceder,
+    .btn-cerrar-sesion {
+        font-size: 0.7rem !important;
+        padding: 5px 10px !important;
+    }
+
+    .header-actions {
+        gap: 4px;
     }
 }
