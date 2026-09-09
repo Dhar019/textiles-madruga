@@ -1854,7 +1854,7 @@ section[id] {
 /* MENÚ HAMBURGUESA (SIEMPRE VISIBLE)          */
 /* ============================================ */
 .menu-hamburguesa {
-    display: flex !important;  /* ← Forzar visibilidad en todos los dispositivos */
+    display: flex !important;
     flex-direction: column;
     gap: 5px;
     background: none;
@@ -1863,7 +1863,7 @@ section[id] {
     padding: 8px 5px;
     z-index: 200;
     margin-left: 8px;
-    order: 2;  /* ← Al final del header-actions */
+    order: 2;
 }
 
 .menu-hamburguesa .barra {
@@ -1893,35 +1893,33 @@ section[id] {
 .header-actions {
     display: flex !important;
     align-items: center !important;
-    justify-content: flex-end !important;  /* ← Todo a la derecha */
+    justify-content: flex-end !important;
     gap: 6px !important;
     flex-wrap: nowrap !important;
     width: auto !important;
 }
 
-/* Botón de login - izquierda del hamburguesa */
 .btn-acceder,
 .btn-cerrar-sesion {
-    order: 1 !important;  /* ← A la izquierda del hamburguesa */
+    order: 1 !important;
     margin-right: 2px !important;
 }
 
-/* Botón hamburguesa - a la derecha de todo */
 .menu-hamburguesa {
-    order: 2 !important;  /* ← A la derecha de los botones */
+    order: 2 !important;
 }
 
 /* ============================================ */
-/* NAV - SIEMPRE DESPLEGABLE                   */
+/* NAV - DESPLEGABLE (OCULTO POR DEFECTO)      */
 /* ============================================ */
 .nav {
-    display: flex !important;
+    display: none !important;  /* ← Oculto por defecto */
     flex-direction: column !important;
     align-items: center !important;
     gap: 15px !important;
     position: absolute !important;
     top: 100% !important;
-    right: 0 !important;  /* ← Alineado a la derecha */
+    right: 0 !important;
     width: 280px !important;
     background-color: var(--color-negro) !important;
     padding: 20px !important;
@@ -1932,7 +1930,7 @@ section[id] {
 }
 
 .nav.activo {
-    display: none !important;
+    display: flex !important;
 }
 
 .nav a {
