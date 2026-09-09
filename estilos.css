@@ -227,7 +227,7 @@ body {
 }
 
 /* ============================================ */
-/* 3. HERO - BANNER RESPONSIVE (PC y MÓVIL)    */
+/* 3. HERO - BANNER ANCLADO A LA IZQUIERDA     */
 /* ============================================ */
 .hero {
     min-height: 90vh;
@@ -247,20 +247,21 @@ body {
     overflow: hidden;
 }
 
-/* ✅ BANNER DECORATIVO (PC: se ve completo detrás del contenido) */
+/* ✅ BANNER ANCLADO A LA IZQUIERDA */
 .hero::before {
     content: '';
     position: absolute;
     top: 0;
-    right: 15vh;
-    width: 150%;
+    left: 0;              /* ← Anclado a la izquierda */
+    width: 100%;
     height: 100%;
     background: url('assets/img/banner-tm.png');
-    background-size: contain;
-    background-position: center;
+    background-size: cover;
+    background-position: left center;  /* ← Alineado a la izquierda */
     background-repeat: no-repeat;
-    opacity: 0.5;
+    opacity: 0.3;
     z-index: 0;
+    pointer-events: none;
 }
 
 .hero-content {
@@ -269,7 +270,7 @@ body {
     width: 100%;
 }
 
-/* ✅ RESPONSIVE PARA MÓVIL (menos de 768px) */
+/* ✅ RESPONSIVE PARA MÓVIL */
 @media (max-width: 768px) {
     .hero {
         min-height: 60vh;
@@ -279,13 +280,12 @@ body {
     }
 
     .hero::before {
-        background-size: contain;  /* ← En móvil: se ve COMPLETA sin cortarse */
-        background-position: center;
+        background-size: contain;
+        background-position: left center;  /* ← También a la izquierda en móvil */
         opacity: 0.25;
     }
 }
 
-/* ✅ RESPONSIVE PARA MÓVILES MUY PEQUEÑOS (menos de 480px) */
 @media (max-width: 480px) {
     .hero {
         min-height: 50vh;
@@ -294,7 +294,7 @@ body {
 
     .hero::before {
         background-size: contain;
-        background-position: center;
+        background-position: left center;
         opacity: 0.2;
     }
 }
