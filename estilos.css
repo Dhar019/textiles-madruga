@@ -270,24 +270,20 @@ body {
     width: 100%;
 }
 
-/* ✅ RESPONSIVE PARA MÓVIL (menos de 768px) - MANTIENE LA MISMA POSICIÓN */
+/* ✅ RESPONSIVE PARA MÓVIL: BANNER SIMILAR PERO ESCALADO */
 @media (max-width: 768px) {
     .hero {
-        right: 15vh;           /* ← Se mantiene en todos los dispositivos */
-        width: 200%;           /* ← Se mantiene en todos los dispositivos */
-        height: 100%;
         min-height: 60vh;
         padding: 40px 0;
     }
 
     .hero::before {
-        background-size: contain;   /* ← Mismo que en PC */
-        background-position: center;
-        opacity: 0.3;             /* ← Misma transparencia */
+        right: 5vh;          /* ← Menor desplazamiento a la derecha */
+        width: 120%;         /* ← Más contenido en pantalla */
+        opacity: 0.4;        /* ← Un poco más suave para no saturar */
     }
 }
 
-/* ✅ RESPONSIVE PARA MÓVILES MUY PEQUEÑOS (menos de 480px) */
 @media (max-width: 480px) {
     .hero {
         min-height: 50vh;
@@ -295,11 +291,12 @@ body {
     }
 
     .hero::before {
-        background-size: cover;
-        background-position: center;
-        opacity: 0.3;
+        right: 2vh;         
+        width: 110%;         
+        opacity: 0.35;
     }
 }
+
 .hero-text {
     display: flex;
     flex-direction: column;
@@ -1855,5 +1852,74 @@ body {
         max-width: none;
         font-size: 0.8rem;
         padding: 12px 18px;
+    }
+}
+
+/* ============================================ */
+/* IMÁGENES DENTRO DE BOTONES (RESPONSIVE)     */
+/* ============================================ */
+.btn-acceder img,
+.btn-cerrar-sesion img,
+.btn-primary img,
+.btn-secundario img,
+.btn-admin img,
+.boton-categoria img {
+    max-width: 100%;
+    height: auto;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* En móvil, reduce el tamaño de las imágenes dentro de botones */
+@media (max-width: 768px) {
+    .btn-acceder img,
+    .btn-cerrar-sesion img,
+    .btn-primary img,
+    .btn-secundario img {
+        max-width: 24px;  /* Tamaño más pequeño para móvil */
+        height: auto;
+    }
+}
+
+/* ============================================ */
+/* AJUSTE DE SCROLL PARA SECCIONES             */
+/* ============================================ */
+
+/* Para todas las secciones que son destino de enlaces */
+section[id] {
+    scroll-margin-top: 80px;  /* Ajusta según la altura de tu header */
+}
+
+/* Específicamente para las secciones que fallan */
+#inicio,
+#ofertas-ropa,
+#ropa,
+#telas,
+#otros,
+#personalizados,
+#contacto,
+#ropa-hombre,
+#ropa-mujer {
+    scroll-margin-top: 80px;
+}
+
+/* En móvil, el header es más alto, así que aumentamos el margen */
+@media (max-width: 768px) {
+    section[id] {
+        scroll-margin-top: 120px;  /* Mayor espacio para el header en móvil */
+    }
+}
+
+:root {
+    --header-height: 80px;  /* Ajusta con la altura real de tu header */
+}
+
+section[id] {
+    scroll-margin-top: var(--header-height);
+}
+
+@media (max-width: 768px) {
+    :root {
+        --header-height: 120px;
     }
 }
