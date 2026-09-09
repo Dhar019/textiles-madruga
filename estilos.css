@@ -47,10 +47,11 @@ html, body {
     padding: 15px 0;
     background-color: var(--color-negro);
     color: var(--color-blanco);
-    position: sticky;
-    top: 0;
-    z-index: 100;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 9999 !important;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    width: 100%;
 }
 
 .header .container {
@@ -1980,17 +1981,5 @@ section[id] {
 @media (max-width: 768px) {
     :root {
         --header-height: 120px;
-    }
-}
-
-/* ============================================ */
-/* HEADER STICKY - FORZAR EN MÓVIL             */
-/* ============================================ */
-@media (max-width: 768px) {
-    .header {
-        position: sticky !important;
-        top: 0 !important;
-        z-index: 9999 !important;
-        background-color: var(--color-negro) !important;
     }
 }
