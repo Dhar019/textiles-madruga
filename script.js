@@ -18,7 +18,6 @@ let modoEdicion = null;
 // 2. SISTEMA DE AUTENTICACIÓN CON JWT
 // ============================================
 
-// 2.1 Obtener sesión desde localStorage (con token)
 function getSession() {
     const session = localStorage.getItem(SESSION_KEY);
     if (!session) return null;
@@ -34,20 +33,18 @@ function getSession() {
     }
 }
 
-// 2.2 Crear sesión con token y datos del usuario
 function createSession(token, user) {
     const session = {
         token,
         username: user.username,
         role: user.role,
         userId: user.id,
-        expiry: Date.now() + 7 * 24 * 60 * 60 * 1000 // 7 días
+        expiry: Date.now() + 7 * 24 * 60 * 60 * 1000
     };
     localStorage.setItem(SESSION_KEY, JSON.stringify(session));
     return session;
 }
 
-// 2.3 Cerrar sesión
 function logout() {
     localStorage.removeItem(SESSION_KEY);
     const adminPanel = document.getElementById('admin-panel');
@@ -60,7 +57,6 @@ function logout() {
     setTimeout(() => location.reload(), 500);
 }
 
-// 2.4 Login con el backend
 async function login(username, password) {
     try {
         const respuesta = await fetch(`${API_URL}/auth/login`, {
@@ -75,7 +71,6 @@ async function login(username, password) {
             return { success: false, message: data.error || 'Error al iniciar sesión' };
         }
 
-        // Guardar sesión con token
         const session = createSession(data.token, data.user);
         return { success: true, session };
     } catch (error) {
@@ -84,7 +79,6 @@ async function login(username, password) {
     }
 }
 
-// 2.5 Registro de usuario
 async function registerUser(username, password, role = 'user') {
     try {
         if (username.length > 40) {
@@ -109,7 +103,6 @@ async function registerUser(username, password, role = 'user') {
             return { success: false, message: data.error || 'Error al registrar usuario' };
         }
 
-        // Guardar sesión con token
         const session = createSession(data.token, data.user);
         return { success: true, session };
     } catch (error) {
@@ -118,7 +111,6 @@ async function registerUser(username, password, role = 'user') {
     }
 }
 
-// 2.6 Obtener perfil del usuario
 async function getProfile() {
     const session = getSession();
     if (!session) return null;
@@ -141,7 +133,6 @@ async function getProfile() {
     }
 }
 
-// 2.7 Verificar roles
 function isAdmin() {
     const session = getSession();
     return session && (session.role === 'admin' || session.role === 'superadmin');
@@ -169,7 +160,7 @@ function protegerAdmin() {
 }
 
 // ============================================
-// 3. NOTIFICACIONES (SIN EMOJIS)
+// 3. NOTIFICACIONES
 // ============================================
 
 function mostrarNotificacion(mensaje, tipo = 'info') {
@@ -209,7 +200,6 @@ async function cargarProductos() {
         const productos = await respuesta.json();
         console.log('📦 Productos cargados desde el servidor');
 
-        // Convertir al formato que espera el frontend
         const datos = {
             ofertas: productos.filter(p => p.enOferta).map(p => p._id),
             productos: {
@@ -224,7 +214,6 @@ async function cargarProductos() {
         return datos;
     } catch (error) {
         console.warn('⚠️ Error al cargar desde servidor:', error);
-        // Fallback a localStorage
         return cargarProductosLocal();
     }
 }
@@ -241,10 +230,8 @@ function cargarProductosLocal() {
         }
     }
     
-    // Fallback final: cargar desde JSON local
     try {
         const respuesta = fetch('productos.json');
-        // ... (código de fallback existente)
         return null;
     } catch (e) {
         console.error('❌ Error al cargar productos:', e);
@@ -319,7 +306,6 @@ function renderizarOfertas(ofertasIds, datos) {
         btn.addEventListener('click', function(e) {
             e.stopPropagation();
             const id = this.dataset.id;
-            console.log(`🖱️ Clic en oferta: ID ${id}`);
             const producto = obtenerProductoPorId(id, datos);
             if (producto) {
                 abrirModal(producto, datos);
@@ -604,7 +590,6 @@ async function toggleOfertaAdmin(id) {
 
         const data = await respuesta.json();
         
-        // Actualizar datos locales
         producto.enOferta = nuevaOferta;
         if (nuevaOferta) {
             adminDatos.ofertas = adminDatos.ofertas || [];
@@ -644,7 +629,6 @@ async function eliminarProductoAdmin(id) {
             throw new Error('Error al eliminar producto');
         }
 
-        // Eliminar de datos locales
         for (const categoria of ['hombre', 'mujer', 'telas', 'objetos']) {
             const productos = adminDatos.productos[categoria];
             if (productos) {
@@ -723,7 +707,6 @@ document.getElementById('producto-form').addEventListener('submit', async functi
         const productoData = { nombre, precio, imagen, categoria };
 
         if (modoEdicion) {
-            // Actualizar producto existente
             respuesta = await fetch(`${API_URL}/products/${modoEdicion}`, {
                 method: 'PUT',
                 headers: {
@@ -733,7 +716,6 @@ document.getElementById('producto-form').addEventListener('submit', async functi
                 body: JSON.stringify(productoData)
             });
         } else {
-            // Crear nuevo producto
             respuesta = await fetch(`${API_URL}/products`, {
                 method: 'POST',
                 headers: {
@@ -751,7 +733,6 @@ document.getElementById('producto-form').addEventListener('submit', async functi
         const data = await respuesta.json();
         const producto = data.product;
 
-        // Actualizar datos locales
         if (modoEdicion) {
             const oldProducto = obtenerProductoPorId(modoEdicion, adminDatos);
             if (oldProducto) {
@@ -791,7 +772,6 @@ btnGuardarCambios.addEventListener('click', async function() {
     if (!adminDatos) return;
     
     try {
-        // Guardar cambios en el backend (ya se guardan en cada operación)
         mostrarNotificacion('Cambios guardados correctamente', 'success');
     } catch (error) {
         console.error('❌ Error al guardar cambios:', error);
@@ -849,7 +829,6 @@ function renderizarUsuariosAdmin() {
     
     if (tabSeguridad) tabSeguridad.style.display = 'block';
     
-    // Cargar usuarios desde el backend
     cargarUsuariosDesdeBackend(container);
 }
 
@@ -1185,6 +1164,7 @@ document.getElementById('login-pass').addEventListener('keydown', function(e) {
 // ============================================
 // 12. OJITO PARA MOSTRAR/OCULTAR CONTRASEÑA
 // ============================================
+
 document.addEventListener('DOMContentLoaded', function() {
     const toggleButtons = document.querySelectorAll('.toggle-password');
     
@@ -1279,13 +1259,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const nav = document.getElementById('nav-principal');
 
     if (hamburguesa && nav) {
-        console.log('✅ Menú hamburguesa encontrado');  // Para depuración
+        console.log('✅ Menú hamburguesa encontrado');
 
         hamburguesa.addEventListener('click', function(event) {
             event.stopPropagation();
             this.classList.toggle('activo');
             nav.classList.toggle('activo');
-            console.log('🔄 Menú toggled');  // Para depuración
+            console.log('🔄 Menú toggled');
         });
 
         nav.querySelectorAll('a').forEach(function(enlace) {

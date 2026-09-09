@@ -15,6 +15,7 @@
     --color-gris: #6B6B6B;
     --font-serif: 'Playfair Display', serif;
     --font-sans: 'Inter', sans-serif;
+    --header-height: 80px;
 }
 
 html {
@@ -195,38 +196,6 @@ body {
 }
 
 /* ============================================ */
-/* RESPONSIVE HEADER                           */
-/* ============================================ */
-@media (max-width: 768px) {
-    .header .container {
-        flex-direction: column;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .header-actions {
-        flex-direction: column;
-        align-items: center;
-        gap: 10px;
-        width: 100%;
-    }
-
-    .btn-acceder,
-    .btn-cerrar-sesion {
-        width: 100%;
-        text-align: center;
-        padding: 10px;
-    }
-
-    .nav {
-        justify-content: center;
-        flex-wrap: wrap;
-        gap: 12px;
-        margin-left: 0;
-    }
-}
-
-/* ============================================ */
 /* 3. HERO - BANNER CON CONFIGURACIÓN FIJA     */
 /* ============================================ */
 .hero {
@@ -247,54 +216,26 @@ body {
     overflow: hidden;
 }
 
-/* ✅ BANNER CON CONFIGURACIÓN FIJA (IGUAL EN PC Y MÓVIL) */
 .hero::before {
     content: '';
     position: absolute;
     top: 0;
-    right: 15vh;           /* ← Se mantiene en todos los dispositivos */
-    width: 150%;           /* ← Se mantiene en todos los dispositivos */
-    height: 100%;          /* ← Se mantiene en todos los dispositivos */
+    right: 15vh;
+    width: 150%;
+    height: 100%;
     background: url('assets/img/banner-tm.png');
-    background-size: contain;    /* ← Se mantiene en todos los dispositivos */
-    background-position: center; /* ← Se mantiene en todos los dispositivos */
+    background-size: contain;
+    background-position: center;
     background-repeat: no-repeat;
-    opacity: 0.5;          /* ← Se mantiene en todos los dispositivos */
+    opacity: 0.5;
     z-index: 0;
-    pointer-events: none;  /* ← Para que no interfiera con clics */
+    pointer-events: none;
 }
 
 .hero-content {
     position: relative;
     z-index: 1;
     width: 100%;
-}
-
-/* ✅ RESPONSIVE PARA MÓVIL: BANNER SIMILAR PERO ESCALADO */
-@media (max-width: 768px) {
-    .hero {
-        min-height: 60vh;
-        padding: 40px 0;
-    }
-
-    .hero::before {
-        right: 5vh;          /* ← Menor desplazamiento a la derecha */
-        width: 120%;         /* ← Más contenido en pantalla */
-        opacity: 0.4;        /* ← Un poco más suave para no saturar */
-    }
-}
-
-@media (max-width: 480px) {
-    .hero {
-        min-height: 50vh;
-        padding: 30px 0;
-    }
-
-    .hero::before {
-        right: 2vh;         
-        width: 110%;         
-        opacity: 0.35;
-    }
 }
 
 .hero-text {
@@ -1767,7 +1708,7 @@ body {
 .login-footer a:hover { text-decoration: underline; }
 
 /* ============================================ */
-/* NOTIFICACIONES (SIN EMOJIS)                  */
+/* NOTIFICACIONES                              */
 /* ============================================ */
 .notificacion {
     position: fixed;
@@ -1809,7 +1750,7 @@ body {
 }
 
 /* ============================================ */
-/* RESPONSIVE                                  */
+/* RESPONSIVE - GLOBAL                         */
 /* ============================================ */
 @media (max-width: 768px) {
     .logo-header { height: 30px; }
@@ -1832,6 +1773,10 @@ body {
     .btn-admin { width: 100%; text-align: center; }
     .admin-tabs { flex-wrap: wrap; }
     .admin-tab { flex: 1 1 45%; }
+
+    section[id] {
+        scroll-margin-top: 120px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -1870,13 +1815,12 @@ body {
     vertical-align: middle;
 }
 
-/* En móvil, reduce el tamaño de las imágenes dentro de botones */
 @media (max-width: 768px) {
     .btn-acceder img,
     .btn-cerrar-sesion img,
     .btn-primary img,
     .btn-secundario img {
-        max-width: 24px;  /* Tamaño más pequeño para móvil */
+        max-width: 24px;
         height: auto;
     }
 }
@@ -1884,13 +1828,10 @@ body {
 /* ============================================ */
 /* AJUSTE DE SCROLL PARA SECCIONES             */
 /* ============================================ */
-
-/* Para todas las secciones que son destino de enlaces */
 section[id] {
-    scroll-margin-top: 80px;  /* Ajusta según la altura de tu header */
+    scroll-margin-top: var(--header-height);
 }
 
-/* Específicamente para las secciones que fallan */
 #inicio,
 #ofertas-ropa,
 #ropa,
@@ -1900,21 +1841,6 @@ section[id] {
 #contacto,
 #ropa-hombre,
 #ropa-mujer {
-    scroll-margin-top: 80px;
-}
-
-/* En móvil, el header es más alto, así que aumentamos el margen */
-@media (max-width: 768px) {
-    section[id] {
-        scroll-margin-top: 120px;  /* Mayor espacio para el header en móvil */
-    }
-}
-
-:root {
-    --header-height: 80px;  /* Ajusta con la altura real de tu header */
-}
-
-section[id] {
     scroll-margin-top: var(--header-height);
 }
 
@@ -1927,10 +1853,8 @@ section[id] {
 /* ============================================ */
 /* MENÚ HAMBURGUESA (MÓVIL)                    */
 /* ============================================ */
-
-/* Estilo base del botón hamburguesa */
 .menu-hamburguesa {
-    display: none;  /* Oculto por defecto en PC */
+    display: none;
     flex-direction: column;
     gap: 5px;
     background: none;
@@ -1939,22 +1863,20 @@ section[id] {
     padding: 8px 5px;
     z-index: 200;
     margin-right: 8px;
+    order: 2;
 }
 
-/* Las tres líneas del menú */
 .menu-hamburguesa .barra {
     display: block;
     width: 28px;
     height: 3px;
-    background-color: #FFFFFF;  /* Color blanco fijo */
+    background-color: #FFFFFF;
     border-radius: 3px;
     transition: all 0.3s ease;
 }
 
-/* Animación cuando está activo (se convierte en X) */
 .menu-hamburguesa.activo .barra:nth-child(1) {
     transform: rotate(45deg) translate(5px, 5px);
-    background-color: #FFFFFF;
 }
 
 .menu-hamburguesa.activo .barra:nth-child(2) {
@@ -1963,20 +1885,13 @@ section[id] {
 
 .menu-hamburguesa.activo .barra:nth-child(3) {
     transform: rotate(-45deg) translate(5px, -5px);
-    background-color: #FFFFFF;
 }
 
-/* ============================================ */
-/* RESPONSIVE: MENÚ HAMBURGUESA EN MÓVIL       */
-/* ============================================ */
-
 @media (max-width: 768px) {
-    /* Mostrar el botón hamburguesa en móvil */
     .menu-hamburguesa {
-        display: flex !important;  /* Forzar visibilidad */
+        display: flex !important;
     }
 
-    /* Menú de navegación oculto por defecto en móvil */
     .nav {
         display: none !important;
         flex-direction: column !important;
@@ -1984,24 +1899,24 @@ section[id] {
         gap: 15px !important;
         position: absolute !important;
         top: 100% !important;
-        left: 0 !important;
-        width: 100% !important;
+        right: 0 !important;
+        width: 80% !important;
+        max-width: 300px !important;
         background-color: var(--color-negro) !important;
         padding: 20px !important;
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5) !important;
+        box-shadow: -5px 10px 20px rgba(0, 0, 0, 0.5) !important;
         margin-left: 0 !important;
         z-index: 150 !important;
+        border-radius: 0 0 0 12px !important;
     }
 
-    /* Mostrar el menú cuando tiene la clase 'activo' */
     .nav.activo {
         display: flex !important;
     }
 
-    /* Enlaces del menú en móvil */
     .nav a {
-        font-size: 1.1rem !important;
-        padding: 10px 0 !important;
+        font-size: 1rem !important;
+        padding: 12px 0 !important;
         width: 100% !important;
         text-align: center !important;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
@@ -2012,27 +1927,23 @@ section[id] {
         border-bottom: none !important;
     }
 
-    /* Mantener los botones de login visibles en móvil */
+    .header-actions {
+        display: flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        width: auto !important;
+        flex-direction: row !important;
+    }
+
     .btn-acceder,
     .btn-cerrar-sesion {
-        display: inline-block !important;  /* ← Forzar visibilidad */
+        display: inline-block !important;
         font-size: 0.75rem !important;
         padding: 6px 14px !important;
+        order: 1 !important;
     }
 
-    /* Ajustar el header en móvil */
-    .header .container {
-        flex-direction: row !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-        flex-wrap: nowrap !important;
-        gap: 4px !important;
-    }
-
-    .header-actions {
-        flex-direction: row !important;
-        align-items: center !important;
-        gap: 4px !important;
-        width: auto !important;
+    .menu-hamburguesa {
+        order: 2 !important;
     }
 }
