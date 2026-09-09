@@ -1975,8 +1975,10 @@ main, .main-content {
     .btn-cerrar-sesion img,
     .btn-primary img,
     .btn-secundario img {
-        max-width: 36px;
+        max-width: 48px;
+        min-width: 36px;
         height: auto;
+        width: auto;
     }
 }
 
