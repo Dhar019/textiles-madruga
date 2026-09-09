@@ -1851,10 +1851,10 @@ section[id] {
 }
 
 /* ============================================ */
-/* MENÚ HAMBURGUESA (MÓVIL)                    */
+/* MENÚ HAMBURGUESA (SIEMPRE VISIBLE)          */
 /* ============================================ */
 .menu-hamburguesa {
-    display: none;
+    display: flex;
     flex-direction: column;
     gap: 5px;
     background: none;
@@ -1887,63 +1887,49 @@ section[id] {
     transform: rotate(-45deg) translate(5px, -5px);
 }
 
+/* ============================================ */
+/* NAV - SIEMPRE DESPLEGABLE                   */
+/* ============================================ */
+.nav {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 280px;
+    background-color: var(--color-negro);
+    padding: 20px;
+    box-shadow: -5px 10px 20px rgba(0, 0, 0, 0.5);
+    margin-left: 0;
+    z-index: 150;
+    border-radius: 0 0 0 12px;
+}
+
+.nav.activo {
+    display: flex !important;
+}
+
+.nav a {
+    font-size: 1rem;
+    padding: 12px 0;
+    width: 100%;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    color: #FFFFFF;
+}
+
+.nav a:last-child {
+    border-bottom: none;
+}
+
+/* ============================================ */
+/* RESPONSIVE: MÓVIL (AJUSTES)                 */
+/* ============================================ */
 @media (max-width: 768px) {
-    .menu-hamburguesa {
-        display: flex !important;
-    }
-
     .nav {
-        display: none !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        gap: 15px !important;
-        position: absolute !important;
-        top: 100% !important;
-        right: 0 !important;
-        width: 80% !important;
-        max-width: 300px !important;
-        background-color: var(--color-negro) !important;
-        padding: 20px !important;
-        box-shadow: -5px 10px 20px rgba(0, 0, 0, 0.5) !important;
-        margin-left: 0 !important;
-        z-index: 150 !important;
-        border-radius: 0 0 0 12px !important;
-    }
-
-    .nav.activo {
-        display: flex !important;
-    }
-
-    .nav a {
-        font-size: 1rem !important;
-        padding: 12px 0 !important;
-        width: 100% !important;
-        text-align: center !important;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-        color: #FFFFFF !important;
-    }
-
-    .nav a:last-child {
-        border-bottom: none !important;
-    }
-
-    .header-actions {
-        display: flex !important;
-        align-items: center !important;
-        gap: 6px !important;
-        width: auto !important;
-        flex-direction: row !important;
-    }
-
-    .btn-acceder,
-    .btn-cerrar-sesion {
-        display: inline-block !important;
-        font-size: 0.75rem !important;
-        padding: 6px 14px !important;
-        order: 1 !important;
-    }
-
-    .menu-hamburguesa {
-        order: 2 !important;
+        width: 80%;
+        max-width: 300px;
     }
 }
