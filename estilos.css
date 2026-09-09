@@ -273,12 +273,15 @@ body {
 /* ✅ RESPONSIVE PARA MÓVIL (menos de 768px) - MANTIENE LA MISMA POSICIÓN */
 @media (max-width: 768px) {
     .hero {
+        right: 15vh;           /* ← Se mantiene en todos los dispositivos */
+        width: 200%;           /* ← Se mantiene en todos los dispositivos */
+        height: 100%;
         min-height: 60vh;
         padding: 40px 0;
     }
 
     .hero::before {
-        background-size: cover;   /* ← Mismo que en PC */
+        background-size: contain;   /* ← Mismo que en PC */
         background-position: center;
         opacity: 0.3;             /* ← Misma transparencia */
     }
