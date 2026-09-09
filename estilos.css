@@ -29,6 +29,11 @@ body {
     line-height: 1.6;
 }
 
+html, body {
+    overflow-x: hidden;
+    width: 100%;
+}
+
 .container {
     max-width: 1200px;
     margin: 0 auto;
@@ -1826,6 +1831,11 @@ body {
     .logo-header { height: 30px; }
     .logo-textiles, .logo-madruga { font-size: 1rem; }
     .logo-hero { max-width: 140px; }
+        .hero::before {
+        right: 5vh;
+        width: 120%;
+        opacity: 0.4;
+    }
     .hero-slogan { font-size: 1.2rem; }
     .letra-madruga { font-size: 3.5rem; }
     .section-title { font-size: 2.2rem; }
@@ -1862,7 +1872,8 @@ body {
         padding: 5px 12px !important;
     }
 
-    .menu-hamburguesa {
+        .menu-hamburguesa {
+        display: flex !important;  /* ← ESTO ES LO QUE FALTABA */
         margin-left: 2px;
         padding: 6px 4px;
     }
@@ -1913,7 +1924,7 @@ body {
 .btn-secundario img,
 .btn-admin img,
 .boton-categoria img {
-    max-width: 200%;
+    max-width: 100%;
     height: auto;
     display: inline-block;
     vertical-align: middle;
