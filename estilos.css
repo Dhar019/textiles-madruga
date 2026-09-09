@@ -1932,7 +1932,7 @@ section[id] {
 }
 
 .nav.activo {
-    display: flex !important;
+    display: none !important;
 }
 
 .nav a {
