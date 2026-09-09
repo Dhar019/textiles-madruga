@@ -1259,15 +1259,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const nav = document.getElementById('nav-principal');
 
     if (hamburguesa && nav) {
-        // ✅ Inicializar menú oculto
-        nav.classList.remove('activo');
-        hamburguesa.classList.remove('activo');
-
         hamburguesa.addEventListener('click', function(event) {
             event.stopPropagation();
             this.classList.toggle('activo');
             nav.classList.toggle('activo');
-            console.log('🔄 Menú toggled');  // Para depuración
         });
 
         nav.querySelectorAll('a').forEach(function(enlace) {
