@@ -1945,3 +1945,34 @@ section[id] {
 .nav a:last-child {
     border-bottom: none !important;
 }
+
+/* ============================================ */
+/* RESPONSIVE - MÓVIL (SOLO AJUSTES DE TAMAÑO) */
+/* ============================================ */
+@media (max-width: 768px) {
+    .menu-hamburguesa {
+        margin-left: 8px;
+        padding: 6px 4px;
+    }
+
+    .menu-hamburguesa .barra {
+        width: 24px;
+        height: 2.5px;
+    }
+
+    .nav {
+        width: 80% !important;
+        max-width: 300px !important;
+        right: 0 !important;
+    }
+
+    .btn-acceder,
+    .btn-cerrar-sesion {
+        font-size: 0.7rem !important;
+        padding: 5px 10px !important;
+    }
+
+    .header-actions {
+        gap: 4px !important;
+    }
+}
