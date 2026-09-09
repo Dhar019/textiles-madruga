@@ -1915,7 +1915,7 @@ section[id] {
 /* NAV - SIEMPRE DESPLEGABLE                   */
 /* ============================================ */
 .nav {
-    display: none !important;
+    display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
     gap: 15px !important;
