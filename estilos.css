@@ -1838,7 +1838,7 @@ html, body {
         margin-top: -2px;    /* ← NUEVO: junta las líneas */
     }
     .logo-hero { max-width: 140px; }
-        .hero::before {
+    .hero::before {
         right: 5vh;
         width: 120%;
         opacity: 0.4;
