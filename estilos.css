@@ -1977,8 +1977,8 @@ main, .main-content {
     .btn-secundario img {
         max-width: 48px;
         min-width: 36px;
-        height: auto;
-        width: auto;
+        display: inline-block;
+        vertical-align: middle;
     }
 }
 
