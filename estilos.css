@@ -1913,10 +1913,21 @@ body {
 .btn-secundario img,
 .btn-admin img,
 .boton-categoria img {
-    max-width: 100%;
+    max-width: 200%;
     height: auto;
     display: inline-block;
     vertical-align: middle;
+}
+
+/* Ajuste específico para móvil */
+@media (max-width: 768px) {
+    .btn-acceder img,
+    .btn-cerrar-sesion img,
+    .btn-primary img,
+    .btn-secundario img {
+        max-width: 24px;
+        height: auto;
+    }
 }
 
 /* ============================================ */
