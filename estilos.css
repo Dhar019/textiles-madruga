@@ -1928,30 +1928,33 @@ section[id] {
 /* MENÚ HAMBURGUESA (MÓVIL)                    */
 /* ============================================ */
 
-/* Ocultar el botón en PC */
+/* Estilo base del botón hamburguesa */
 .menu-hamburguesa {
-    display: none;
+    display: none;  /* Oculto por defecto en PC */
     flex-direction: column;
     gap: 5px;
     background: none;
     border: none;
     cursor: pointer;
-    padding: 5px;
+    padding: 8px 5px;
     z-index: 200;
+    margin-right: 8px;
 }
 
+/* Las tres líneas del menú */
 .menu-hamburguesa .barra {
     display: block;
     width: 28px;
     height: 3px;
-    background-color: var(--color-blanco);
+    background-color: #FFFFFF;  /* Color blanco fijo */
     border-radius: 3px;
     transition: all 0.3s ease;
 }
 
-/* Animación del botón cuando está activo (se convierte en X) */
+/* Animación cuando está activo (se convierte en X) */
 .menu-hamburguesa.activo .barra:nth-child(1) {
     transform: rotate(45deg) translate(5px, 5px);
+    background-color: #FFFFFF;
 }
 
 .menu-hamburguesa.activo .barra:nth-child(2) {
@@ -1960,6 +1963,7 @@ section[id] {
 
 .menu-hamburguesa.activo .barra:nth-child(3) {
     transform: rotate(-45deg) translate(5px, -5px);
+    background-color: #FFFFFF;
 }
 
 /* ============================================ */
@@ -1969,65 +1973,66 @@ section[id] {
 @media (max-width: 768px) {
     /* Mostrar el botón hamburguesa en móvil */
     .menu-hamburguesa {
-        display: flex;
+        display: flex !important;  /* Forzar visibilidad */
     }
 
-    /* Ocultar el menú de navegación por defecto en móvil */
+    /* Menú de navegación oculto por defecto en móvil */
     .nav {
-        display: none;
-        flex-direction: column;
-        align-items: center;
-        gap: 15px;
-        position: absolute;
-        top: 100%;
-        left: 0;
-        width: 100%;
-        background-color: var(--color-negro);
-        padding: 20px;
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
-        margin-left: 0;
-        z-index: 150;
+        display: none !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 15px !important;
+        position: absolute !important;
+        top: 100% !important;
+        left: 0 !important;
+        width: 100% !important;
+        background-color: var(--color-negro) !important;
+        padding: 20px !important;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5) !important;
+        margin-left: 0 !important;
+        z-index: 150 !important;
     }
 
     /* Mostrar el menú cuando tiene la clase 'activo' */
     .nav.activo {
-        display: flex;
+        display: flex !important;
     }
 
-    /* Ajustar los enlaces del menú en móvil */
+    /* Enlaces del menú en móvil */
     .nav a {
-        font-size: 1.1rem;
-        padding: 8px 0;
-        width: 100%;
-        text-align: center;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        font-size: 1.1rem !important;
+        padding: 10px 0 !important;
+        width: 100% !important;
+        text-align: center !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        color: #FFFFFF !important;
     }
 
     .nav a:last-child {
-        border-bottom: none;
+        border-bottom: none !important;
     }
 
-    /* Ajustar el header en móvil para que sea más compacto */
+    /* Mantener los botones de login visibles en móvil */
+    .btn-acceder,
+    .btn-cerrar-sesion {
+        display: inline-block !important;  /* ← Forzar visibilidad */
+        font-size: 0.75rem !important;
+        padding: 6px 14px !important;
+    }
+
+    /* Ajustar el header en móvil */
     .header .container {
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: nowrap;
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        flex-wrap: nowrap !important;
+        gap: 4px !important;
     }
 
     .header-actions {
-        flex-direction: row;
-        align-items: center;
-        gap: 8px;
-        width: auto;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 4px !important;
+        width: auto !important;
     }
-
-    /* Ocultar los botones de login en el header (se mostrarán en el menú) */
-    .btn-acceder,
-    .btn-cerrar-sesion {
-        display: none !important;
-    }
-
-    /* Mostrar el botón de login dentro del menú (opcional) */
-    /* Si quieres que aparezca en el menú, lo añadimos con JS */
 }

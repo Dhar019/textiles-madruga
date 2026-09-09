@@ -1279,14 +1279,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const nav = document.getElementById('nav-principal');
 
     if (hamburguesa && nav) {
-        // Abrir/cerrar menú al hacer clic en el botón
+        console.log('✅ Menú hamburguesa encontrado');  // Para depuración
+
         hamburguesa.addEventListener('click', function(event) {
             event.stopPropagation();
             this.classList.toggle('activo');
             nav.classList.toggle('activo');
+            console.log('🔄 Menú toggled');  // Para depuración
         });
 
-        // Cerrar menú al hacer clic en un enlace
         nav.querySelectorAll('a').forEach(function(enlace) {
             enlace.addEventListener('click', function() {
                 hamburguesa.classList.remove('activo');
@@ -1294,12 +1295,13 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
 
-        // Cerrar menú al hacer clic fuera de él
         document.addEventListener('click', function(event) {
             if (!nav.contains(event.target) && !hamburguesa.contains(event.target)) {
                 hamburguesa.classList.remove('activo');
                 nav.classList.remove('activo');
             }
         });
+    } else {
+        console.error('❌ No se encontró el menú hamburguesa o el nav');
     }
 });
