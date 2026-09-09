@@ -27,17 +27,18 @@ body {
     color: var(--color-negro);
     background-color: var(--color-blanco);
     line-height: 1.6;
-}
-
-html, body {
     overflow-x: hidden;
-    width: 100%;
     min-height: 100vh;
-}
-
-body {
     display: flex;
     flex-direction: column;
+    padding-top: 0; /* ← CAMBIADO */
+}
+
+/* ============================================ */
+/* CONTENEDOR PRINCIPAL                       */
+/* ============================================ */
+main, .main-content {
+    flex: 1;
 }
 
 .container {
@@ -47,7 +48,7 @@ body {
 }
 
 /* ============================================ */
-/* 2. HEADER                                   */
+/* 2. HEADER - FIJO STICKY                    */
 /* ============================================ */
 .header {
     padding: 15px 0;
@@ -57,8 +58,8 @@ body {
     top: 0 !important;
     z-index: 9999 !important;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-    width: 100%;
     flex-shrink: 0;
+    width: 100%;
 }
 
 .header .container {
@@ -1836,21 +1837,51 @@ body {
 /* RESPONSIVE - GLOBAL                         */
 /* ============================================ */
 @media (max-width: 768px) {
-    .logo-header { height: 30px; margin-bottom: 2px; }
+    .header {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 9999 !important;
+    }
+
+    .header .container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 5px;
+        flex-wrap: nowrap;
+    }
+
+    .logo {
+        display: flex;
+        flex-direction: column;   /* ← Apila verticalmente */
+        align-items: flex-start;  /* ← Alinea a la izquierda */
+        gap: 2px;
+        flex-shrink: 1;
+        min-width: 0;
+    }
+
+    .logo-header {
+        height: 30px;
+        margin-bottom: 2px;
+    }
+
     .logo-textiles,
     .logo-madruga {
-        font-size: 0.8rem;   /* ← CAMBIADO DE 1rem a 0.8rem */
-        line-height: 1;      /* ← NUEVO */
+        font-size: 0.8rem;
+        line-height: 1;
     }
     .logo-madruga {
-        margin-top: -2px;    /* ← NUEVO: junta las líneas */
+        margin-top: -2px;
     }
+
     .logo-hero { max-width: 140px; }
+    
     .hero::before {
         right: 5vh;
         width: 120%;
         opacity: 0.4;
     }
+
     .hero-slogan { font-size: 1.2rem; }
     .letra-madruga { font-size: 3.5rem; }
     .section-title { font-size: 2.2rem; }
@@ -1869,38 +1900,14 @@ body {
     .admin-tabs { flex-wrap: wrap; }
     .admin-tab { flex: 1 1 45%; }
 
-    .header .container {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 5px;
-        flex-wrap: nowrap;
-    }
-
-    .header {
-        position: sticky !important;
-        top: 0 !important;
-        z-index: 9999 !important;
-        flex-shrink: 0;  /* ← NUEVO */
-    }
-
-    .logo {
-        display: flex;
-        flex-direction: column;   /* ← NUEVO: apila verticalmente */
-        align-items: flex-start;  /* ← NUEVO: alinea a la izquierda */
-        gap: 2px;
-        flex-shrink: 1;
-        min-width: 0;
-    }
-
     .header-actions {
         gap: 4px;
     }
 
     .btn-acceder,
     .btn-cerrar-sesion {
-        font-size: 0.6rem !important;  /* ← CAMBIADO de 0.7rem a 0.6rem */
-        padding: 4px 8px !important;   /* ← CAMBIADO de 5px 12px a 4px 8px */
+        font-size: 0.6rem !important;
+        padding: 4px 8px !important;
         white-space: nowrap;
     }
 
@@ -1996,14 +2003,4 @@ section[id] {
     :root {
         --header-height: 120px;
     }
-}
-
-/* ============================================ */
-/* BODY - EVITAR SCROLL HORIZONTAL             */
-/* ============================================ */
-body {
-    overflow-x: hidden;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
 }
