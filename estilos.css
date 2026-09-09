@@ -227,7 +227,7 @@ body {
 }
 
 /* ============================================ */
-/* 3. HERO - BANNER ANCLADO A LA IZQUIERDA     */
+/* 3. HERO - BANNER RESPONSIVE (PC y MÓVIL)    */
 /* ============================================ */
 .hero {
     min-height: 90vh;
@@ -247,19 +247,19 @@ body {
     overflow: hidden;
 }
 
-/* ✅ BANNER ANCLADO A LA IZQUIERDA */
+/* ✅ BANNER DECORATIVO (MISMA POSICIÓN EN PC Y MÓVIL) */
 .hero::before {
     content: '';
     position: absolute;
     top: 0;
-    left: 0;              /* ← Anclado a la izquierda */
-    width: 100%;
-    height: 100%;
+    left: 0;                    /* ← Anclado a la izquierda (sin desplazamiento) */
+    width: 100%;                /* ← Ocupa todo el ancho */
+    height: 100%;               /* ← Ocupa todo el alto */
     background: url('assets/img/banner-tm.png');
-    background-size: cover;
-    background-position: left center;  /* ← Alineado a la izquierda */
+    background-size: cover;     /* ← En PC y móvil: ocupa todo el ancho */
+    background-position: center; /* ← Centrado */
     background-repeat: no-repeat;
-    opacity: 0.3;
+    opacity: 0.3;               /* ← Misma transparencia en ambos */
     z-index: 0;
     pointer-events: none;
 }
@@ -270,22 +270,21 @@ body {
     width: 100%;
 }
 
-/* ✅ RESPONSIVE PARA MÓVIL */
+/* ✅ RESPONSIVE PARA MÓVIL (menos de 768px) - MANTIENE LA MISMA POSICIÓN */
 @media (max-width: 768px) {
     .hero {
         min-height: 60vh;
         padding: 40px 0;
-        background-size: cover;
-        background-position: center;
     }
 
     .hero::before {
-        background-size: contain;
-        background-position: left center;  /* ← También a la izquierda en móvil */
-        opacity: 0.25;
+        background-size: cover;   /* ← Mismo que en PC */
+        background-position: center;
+        opacity: 0.3;             /* ← Misma transparencia */
     }
 }
 
+/* ✅ RESPONSIVE PARA MÓVILES MUY PEQUEÑOS (menos de 480px) */
 @media (max-width: 480px) {
     .hero {
         min-height: 50vh;
@@ -293,12 +292,11 @@ body {
     }
 
     .hero::before {
-        background-size: contain;
-        background-position: left center;
-        opacity: 0.2;
+        background-size: cover;
+        background-position: center;
+        opacity: 0.3;
     }
 }
-
 .hero-text {
     display: flex;
     flex-direction: column;
