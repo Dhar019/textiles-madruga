@@ -193,13 +193,12 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
 
 async function cargarProductos() {
     try {
-        const respuesta = await fetch(`${API_URL}/products`);
-        if (!respuesta.ok) {
-            throw new Error('Error al cargar productos');
-        }
+        const respuesta = await fetch(`${API_URL}/productos`);
+        if (!respuesta.ok) throw new Error('Error al cargar productos');
         const productos = await respuesta.json();
         console.log('📦 Productos cargados desde el servidor');
 
+        // Convertir al formato que espera el frontend
         const datos = {
             ofertas: productos.filter(p => p.enOferta).map(p => p._id),
             productos: {
@@ -210,7 +209,6 @@ async function cargarProductos() {
             }
         };
 
-        localStorage.setItem('productos_data', JSON.stringify(datos));
         return datos;
     } catch (error) {
         console.warn('⚠️ Error al cargar desde servidor:', error);
