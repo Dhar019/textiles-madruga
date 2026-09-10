@@ -1212,10 +1212,10 @@ async function iniciar() {
     renderizarOfertas(datos.ofertas, datos);
     
     if (datos.productos) {
-        renderizarProductosConModal(datos.productos.hombre, '#ropa-hombre .grid-productos', datos);
-        renderizarProductosConModal(datos.productos.mujer, '#ropa-mujer .grid-productos', datos);
-        renderizarProductosConModal(datos.productos.telas, '#telas .grid-productos', datos);
-        renderizarProductosConModal(datos.productos.objetos, '#otros .grid-productos', datos);
+    renderizarProductosConModal(datos.productos.hombre, '#ropa-hombre .grid-productos', datos);
+    renderizarProductosConModal(datos.productos.mujer, '#ropa-mujer .grid-productos', datos);
+    renderizarProductosConModal(datos.productos.telas, '#telas .grid-productos', datos);
+    renderizarProductosConModal(datos.productos.objetos, '#otros .grid-productos', datos);
     }
 
     actualizarBotonAcceder();
