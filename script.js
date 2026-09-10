@@ -195,8 +195,14 @@ async function cargarProductos() {
     try {
         const respuesta = await fetch(`${API_URL}/productos`);
         if (!respuesta.ok) throw new Error('Error al cargar productos');
-        const productos = await respuesta.json();
-        console.log('📦 Productos cargados desde el servidor');
+        const data = await respuesta.json();
+        console.log('📦 Productos cargados desde el servidor', data);
+
+        // ✅ CORRECCIÓN: Extraer el array de productos
+        let productos = Array.isArray(data) ? data : data.productos;
+        if (!Array.isArray(productos)) {
+            throw new Error('La API no devolvió un array de productos');
+        }
 
         // Convertir al formato que espera el frontend
         const datos = {
@@ -209,6 +215,7 @@ async function cargarProductos() {
             }
         };
 
+        localStorage.setItem('productos_data', JSON.stringify(datos));
         return datos;
     } catch (error) {
         console.warn('⚠️ Error al cargar desde servidor:', error);
