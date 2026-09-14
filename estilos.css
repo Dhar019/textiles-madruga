@@ -2139,8 +2139,22 @@ section[id] {
 /* ============================================ */
 /* MODAL DE BIENVENIDA - ESTILO MODERNO         */
 /* ============================================ */
+
+/* ✅ VISIBILIDAD DEL MODAL */
 .bienvenida-oculto {
-    display: none;
+    display: none !important;
+}
+
+.bienvenida-visible {
+    display: block !important;
+}
+
+.bienvenida-visible .bienvenida-overlay {
+    display: block;
+}
+
+.bienvenida-visible .bienvenida-contenido {
+    display: flex;
 }
 
 .bienvenida-overlay {
