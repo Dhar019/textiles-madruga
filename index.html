@@ -397,7 +397,6 @@
     <div id="modal-bienvenida" class="bienvenida-oculto">
         <div class="bienvenida-overlay" id="modal-bienvenida-overlay"></div>
         <div class="bienvenida-contenido">
-            <!-- Lado izquierdo: Decoración diagonal -->
             <div class="bienvenida-decoracion">
                 <div class="bienvenida-diagonal"></div>
                 <div class="bienvenida-logo">
@@ -406,11 +405,8 @@
                     <span class="bienvenida-logo-madruga">Madruga</span>
                 </div>
             </div>
-
-            <!-- Lado derecho: Contenido -->
             <div class="bienvenida-info">
                 <button class="bienvenida-cerrar" id="modal-bienvenida-cerrar">✕</button>
-                
                 <div class="bienvenida-header">
                     <span class="bienvenida-icono">
                         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -420,7 +416,6 @@
                     <h1 class="bienvenida-titulo">Bienvenido a <span>Textiles Madruga</span></h1>
                     <p class="bienvenida-subtitulo">Descubre la mejor selección de confecciones cubanas</p>
                 </div>
-
                 <div class="bienvenida-beneficios">
                     <div class="bienvenida-beneficio">
                         <span class="beneficio-icono">
@@ -472,7 +467,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="bienvenida-acciones">
                     <button class="bienvenida-btn-primario" id="modal-bienvenida-crear">
                         Crear mi cuenta gratis
@@ -481,9 +475,40 @@
                         Explorar sin registrarme
                     </button>
                 </div>
-
                 <p class="bienvenida-nota">Al registrarte aceptas recibir notificaciones de Textiles Madruga</p>
             </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE PEDIDO (SIN REGISTRO) -->
+    <div id="modal-pedido" class="login-oculto">
+        <div class="login-overlay" id="modal-pedido-overlay"></div>
+        <div class="login-contenido">
+            <button class="login-cerrar" id="modal-pedido-cerrar">✕</button>
+            <div class="login-header">
+                <span class="login-icon">🛒</span>
+                <h2>Solicitar <span class="login-highlight">Pedido</span></h2>
+                <p class="login-subtitle" id="modal-pedido-producto"></p>
+            </div>
+            <form id="modal-pedido-form" class="login-form">
+                <div class="login-group">
+                    <label>Tu nombre</label>
+                    <input type="text" id="pedido-nombre" placeholder="Nombre completo" required>
+                </div>
+                <div class="login-group">
+                    <label>Tu teléfono o email</label>
+                    <input type="text" id="pedido-contacto" placeholder="Teléfono o email" required>
+                </div>
+                <div class="login-group">
+                    <label>Cantidad</label>
+                    <input type="number" id="pedido-cantidad" value="1" min="1" required>
+                </div>
+                <div class="login-group">
+                    <label>Notas adicionales (opcional)</label>
+                    <input type="text" id="pedido-notas" placeholder="Ej: Talla M, color azul...">
+                </div>
+                <button type="submit" class="btn-admin btn-primario btn-login">Enviar pedido</button>
+            </form>
         </div>
     </div>
 

@@ -320,14 +320,49 @@ function abrirModal(producto, datos) {
     document.body.style.overflow = 'hidden';
 }
 
+// ============================================
+// 6. SOLICITAR PEDIDO (SIN REGISTRO)
+// ============================================
 function solicitarPedido(producto) {
-    if (!isLoggedIn()) {
-        mostrarNotificacion('Debes iniciar sesión para solicitar un pedido', 'warning');
-        cerrarModal();
-        mostrarLogin();
+    const modalPedido = document.getElementById('modal-pedido');
+    if (!modalPedido) {
+        mostrarNotificacion(
+            `Contáctanos para pedir "${producto}": textilesmadruga@email.com`,
+            'success'
+        );
         return;
     }
-    mostrarNotificacion('Contáctanos para realizar el pedido: textilesmadruga@email.com', 'success');
+
+    document.getElementById('modal-pedido-producto').textContent = `Producto: ${producto}`;
+    modalPedido.className = 'login-visible';
+    document.body.style.overflow = 'hidden';
+
+    const cerrar = () => {
+        modalPedido.className = 'login-oculto';
+        document.body.style.overflow = 'auto';
+        document.getElementById('modal-pedido-form').reset();
+    };
+
+    document.getElementById('modal-pedido-cerrar').onclick = cerrar;
+    document.getElementById('modal-pedido-overlay').onclick = cerrar;
+
+    document.getElementById('modal-pedido-form').onsubmit = (e) => {
+        e.preventDefault();
+
+        const nombre = document.getElementById('pedido-nombre').value;
+        const contacto = document.getElementById('pedido-contacto').value;
+        const cantidad = document.getElementById('pedido-cantidad').value;
+        const notas = document.getElementById('pedido-notas').value;
+
+        console.log('📦 Pedido recibido:', { producto, nombre, contacto, cantidad, notas });
+
+        mostrarNotificacion(
+            `¡Pedido enviado! Te contactaremos pronto, ${nombre}.`,
+            'success'
+        );
+
+        cerrar();
+    };
 }
 
 function cerrarModal() {
@@ -340,7 +375,7 @@ modalOverlay?.addEventListener('click', cerrarModal);
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrarModal(); });
 
 // ============================================
-// 6. PANEL DE ADMINISTRACIÓN
+// 7. PANEL DE ADMINISTRACIÓN
 // ============================================
 const adminPanel = document.getElementById('admin-panel');
 const adminCerrar = document.getElementById('admin-cerrar');
@@ -392,7 +427,7 @@ function cargarAdminProductos() {
 }
 
 // ============================================
-// 6.1 CAMBIO DE PESTAÑAS
+// 7.1 CAMBIO DE PESTAÑAS
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.admin-tab').forEach(tab => {
@@ -412,7 +447,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ============================================
-// 6.2 ADMIN - PRODUCTOS
+// 7.2 ADMIN - PRODUCTOS
 // ============================================
 function renderizarAdminProductos() {
     if (!adminDatos) return;
@@ -627,7 +662,7 @@ adminCerrar?.addEventListener('click', cerrarAdmin);
 adminOverlay?.addEventListener('click', cerrarAdmin);
 
 // ============================================
-// 6.3 ADMIN - OFERTAS
+// 7.3 ADMIN - OFERTAS
 // ============================================
 async function cargarOfertasAdmin() {
     const container = document.getElementById('lista-ofertas-admin');
@@ -716,7 +751,7 @@ async function quitarOferta(productoId) {
 }
 
 // ============================================
-// 6.4 ADMIN - SEGURIDAD (USUARIOS)
+// 7.4 ADMIN - SEGURIDAD (USUARIOS)
 // ============================================
 async function renderizarUsuariosAdmin() {
     const container = document.getElementById('admin-usuarios-lista');
@@ -820,7 +855,7 @@ async function eliminarUsuario(userId) {
 }
 
 // ============================================
-// 6.5 ADMIN - NUEVO USUARIO (MODAL)
+// 7.5 ADMIN - NUEVO USUARIO (MODAL)
 // ============================================
 document.getElementById('btn-nuevo-usuario')?.addEventListener('click', function() {
     if (!isSuperAdmin()) {
@@ -880,7 +915,7 @@ document.getElementById('btn-nuevo-usuario')?.addEventListener('click', function
 });
 
 // ============================================
-// 7. BUSCADORES
+// 8. BUSCADORES
 // ============================================
 function filtrarProductosAdmin(termino) {
     const items = document.querySelectorAll('#admin-productos-lista .admin-producto-item');
@@ -910,7 +945,7 @@ function filtrarUsuariosAdmin(termino) {
 }
 
 // ============================================
-// 8. MODAL GENÉRICO
+// 9. MODAL GENÉRICO
 // ============================================
 function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit }) {
     const modal = document.getElementById('modal-generico');
@@ -961,7 +996,7 @@ function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit }) {
 }
 
 // ============================================
-// 9. MODAL DE BIENVENIDA
+// 10. MODAL DE BIENVENIDA
 // ============================================
 function mostrarModalBienvenida() {
     const modal = document.getElementById('modal-bienvenida');
@@ -1009,7 +1044,7 @@ document.getElementById('modal-bienvenida-cerrar')?.addEventListener('click', ce
 document.getElementById('modal-bienvenida-overlay')?.addEventListener('click', cerrarModalBienvenida);
 
 // ============================================
-// 10. LOGIN/LOGOUT
+// 11. LOGIN/LOGOUT
 // ============================================
 const btnAcceder = document.getElementById('btn-acceder');
 const btnCerrarSesion = document.getElementById('btn-cerrar-sesion');
@@ -1057,7 +1092,7 @@ if (btnCerrarSesion) {
 }
 
 // ============================================
-// 11. LOGIN Y REGISTRO
+// 12. LOGIN Y REGISTRO
 // ============================================
 document.getElementById('login-form')?.addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -1106,7 +1141,7 @@ loginCerrar?.addEventListener('click', cerrarLogin);
 loginOverlay?.addEventListener('click', cerrarLogin);
 
 // ============================================
-// 12. OJITO CONTRASEÑA
+// 13. OJITO CONTRASEÑA
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.toggle-password').forEach(button => {
@@ -1121,7 +1156,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ============================================
-// 13. INICIAR
+// 14. INICIAR
 // ============================================
 async function iniciar() {
     console.log('🚀 Cargando productos...');
@@ -1150,7 +1185,7 @@ async function iniciar() {
 document.addEventListener('DOMContentLoaded', iniciar);
 
 // ============================================
-// 14. EXPONER FUNCIONES GLOBALES
+// 15. EXPONER FUNCIONES GLOBALES
 // ============================================
 window.toggleOfertaAdmin = toggleOfertaAdmin;
 window.editarProductoAdmin = editarProductoAdmin;
@@ -1176,7 +1211,7 @@ window.cerrarModalBienvenida = cerrarModalBienvenida;
 window.eliminarUsuario = eliminarUsuario;
 
 // ============================================
-// 15. MENÚ HAMBURGUESA
+// 16. MENÚ HAMBURGUESA
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
     const hamburguesa = document.getElementById('menu-hamburguesa');
