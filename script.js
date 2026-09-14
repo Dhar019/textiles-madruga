@@ -1,11 +1,7 @@
 // ============================================
 // SCRIPT.JS - Textiles Madruga
-// Sistema completo con Backend + JWT
 // ============================================
 
-// ============================================
-// 1. CONFIGURACIÓN Y CONSTANTES
-// ============================================
 const API_URL = 'https://textiles-madruga-api.eldani000219.workers.dev/api';
 const SESSION_KEY = 'tm_session';
 
@@ -14,9 +10,8 @@ let adminDatos = null;
 let modoEdicion = null;
 
 // ============================================
-// 2. SISTEMA DE AUTENTICACIÓN CON JWT
+// 1. AUTENTICACIÓN
 // ============================================
-
 function getSession() {
     const session = localStorage.getItem(SESSION_KEY);
     if (!session) return null;
@@ -27,9 +22,7 @@ function getSession() {
             return null;
         }
         return data;
-    } catch {
-        return null;
-    }
+    } catch { return null; }
 }
 
 function createSession(token, user) {
@@ -68,7 +61,6 @@ async function login(username, password) {
         const session = createSession(data.token, data.user);
         return { success: true, session };
     } catch (error) {
-        console.error('Error en login:', error);
         return { success: false, message: 'Error de conexión con el servidor' };
     }
 }
@@ -82,7 +74,7 @@ async function registerUser(username, password) {
         const respuesta = await fetch(`${API_URL}/auth/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password, role: 'user' }) // ← FORZADO A 'user'
+            body: JSON.stringify({ username, password, role: 'user' })
         });
         const data = await respuesta.json();
         if (!respuesta.ok) {
@@ -91,7 +83,6 @@ async function registerUser(username, password) {
         const session = createSession(data.token, data.user);
         return { success: true, session };
     } catch (error) {
-        console.error('Error en registro:', error);
         return { success: false, message: 'Error de conexión con el servidor' };
     }
 }
@@ -112,9 +103,7 @@ function isLoggedIn() {
 
 function protegerAdmin() {
     if (!isAdmin()) {
-        if (isLoggedIn()) {
-            mostrarNotificacion('No tienes permisos de administrador', 'error');
-        }
+        if (isLoggedIn()) mostrarNotificacion('No tienes permisos de administrador', 'error');
         cerrarAdmin();
         mostrarLogin();
         return false;
@@ -123,9 +112,8 @@ function protegerAdmin() {
 }
 
 // ============================================
-// 3. NOTIFICACIONES
+// 2. NOTIFICACIONES
 // ============================================
-
 function mostrarNotificacion(mensaje, tipo = 'info') {
     const existente = document.querySelector('.notificacion');
     if (existente) existente.remove();
@@ -143,9 +131,8 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
 }
 
 // ============================================
-// 4. CARGA DE DATOS DESDE EL BACKEND
+// 3. CARGA DE PRODUCTOS
 // ============================================
-
 async function cargarProductos() {
     try {
         const respuesta = await fetch(`${API_URL}/productos`);
@@ -175,9 +162,7 @@ async function cargarProductos() {
 function cargarProductosLocal() {
     const datosGuardados = localStorage.getItem('productos_data');
     if (datosGuardados) {
-        try {
-            return JSON.parse(datosGuardados);
-        } catch (e) {}
+        try { return JSON.parse(datosGuardados); } catch (e) {}
     }
     return null;
 }
@@ -195,9 +180,8 @@ function obtenerProductoPorId(id, datos) {
 }
 
 // ============================================
-// 5. RENDERIZADO DE PRODUCTOS Y OFERTAS
+// 4. RENDERIZADO DE PRODUCTOS
 // ============================================
-
 function renderizarOfertas(ofertasIds, datos) {
     const contenedor = document.querySelector('#ofertas-ropa .grid-productos');
     if (!contenedor) return;
@@ -281,9 +265,8 @@ function renderizarProductosConModal(productos, contenedorSelector, datos) {
 }
 
 // ============================================
-// 6. MODAL DE DETALLE DE PRODUCTO
+// 5. MODAL DE DETALLE
 // ============================================
-
 const modal = document.getElementById('modal-detalle');
 const modalBody = document.getElementById('modal-body');
 const modalCerrar = document.getElementById('modal-cerrar');
@@ -352,14 +335,13 @@ function cerrarModal() {
     document.body.style.overflow = 'auto';
 }
 
-modalCerrar.addEventListener('click', cerrarModal);
-modalOverlay.addEventListener('click', cerrarModal);
+modalCerrar?.addEventListener('click', cerrarModal);
+modalOverlay?.addEventListener('click', cerrarModal);
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrarModal(); });
 
 // ============================================
-// 7. PANEL DE ADMINISTRACIÓN
+// 6. PANEL DE ADMINISTRACIÓN
 // ============================================
-
 const adminPanel = document.getElementById('admin-panel');
 const adminCerrar = document.getElementById('admin-cerrar');
 const adminOverlay = document.getElementById('admin-overlay');
@@ -398,8 +380,7 @@ function abrirAdmin() {
 function cerrarAdmin() {
     adminPanel.className = 'admin-oculto';
     document.body.style.overflow = 'auto';
-    const formProductoEl = document.getElementById('form-producto');
-    if (formProductoEl) formProductoEl.className = 'form-oculto';
+    if (formProducto) formProducto.className = 'form-oculto';
 }
 
 function cargarAdminProductos() {
@@ -411,36 +392,27 @@ function cargarAdminProductos() {
 }
 
 // ============================================
-// 7.1 CAMBIO DE PESTAÑAS EN EL PANEL DE ADMIN
+// 6.1 CAMBIO DE PESTAÑAS
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.admin-tab').forEach(tab => {
         tab.addEventListener('click', function() {
             const tabName = this.dataset.tab;
-
-            // Quitar activo de todas
             document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.remove('active'));
-
-            // Activar la clickeada
             this.classList.add('active');
             const tabContent = document.getElementById(`tab-${tabName}`);
             if (tabContent) tabContent.classList.add('active');
 
-            // Cargar datos según la pestaña
-            if (tabName === 'ofertas') {
-                cargarOfertasAdmin();
-            } else if (tabName === 'seguridad') {
-                renderizarUsuariosAdmin();
-            } else if (tabName === 'productos') {
-                renderizarAdminProductos();
-            }
+            if (tabName === 'ofertas') cargarOfertasAdmin();
+            else if (tabName === 'seguridad') renderizarUsuariosAdmin();
+            else if (tabName === 'productos') renderizarAdminProductos();
         });
     });
 });
 
 // ============================================
-// 7.2 ADMIN - PRODUCTOS
+// 6.2 ADMIN - PRODUCTOS
 // ============================================
 function renderizarAdminProductos() {
     if (!adminDatos) return;
@@ -510,7 +482,6 @@ async function toggleOfertaAdmin(id) {
         cargarOfertasAdmin();
         renderizarOfertas(adminDatos.ofertas, adminDatos);
     } catch (error) {
-        console.error('Error:', error);
         mostrarNotificacion('Error al actualizar oferta', 'error');
     }
 }
@@ -656,17 +627,19 @@ adminCerrar?.addEventListener('click', cerrarAdmin);
 adminOverlay?.addEventListener('click', cerrarAdmin);
 
 // ============================================
-// 7.3 ADMIN - OFERTAS
+// 6.3 ADMIN - OFERTAS
 // ============================================
 async function cargarOfertasAdmin() {
     const container = document.getElementById('lista-ofertas-admin');
     if (!container) return;
 
+    container.innerHTML = '<p style="text-align:center;padding:40px;color:var(--color-gris);">Cargando ofertas...</p>';
+
     try {
         const respuesta = await fetch(`${API_URL}/productos`);
+        if (!respuesta.ok) throw new Error('Error al cargar');
         const data = await respuesta.json();
         const productos = Array.isArray(data) ? data : data.productos;
-
         const ofertas = productos.filter(p => p.enOferta);
 
         if (ofertas.length === 0) {
@@ -701,7 +674,6 @@ async function cargarOfertasAdmin() {
 
         container.innerHTML = html;
     } catch (error) {
-        console.error('Error al cargar ofertas:', error);
         container.innerHTML = '<p style="text-align:center;padding:40px;color:var(--color-gris);">Error al cargar ofertas.</p>';
     }
 }
@@ -738,20 +710,17 @@ async function quitarOferta(productoId) {
         });
         mostrarNotificacion('Oferta eliminada', 'success');
         cargarOfertasAdmin();
-        cargarProductos().then(d => { datosGlobales = d; renderizarOfertas(d.ofertas, d); });
     } catch (error) {
         mostrarNotificacion('Error al quitar oferta', 'error');
     }
 }
 
 // ============================================
-// 7.4 ADMIN - SEGURIDAD (USUARIOS)
+// 6.4 ADMIN - SEGURIDAD (USUARIOS)
 // ============================================
-function renderizarUsuariosAdmin() {
+async function renderizarUsuariosAdmin() {
     const container = document.getElementById('admin-usuarios-lista');
     if (!container) return;
-
-    const tabSeguridad = document.querySelector('[data-tab="seguridad"]');
 
     if (!isSuperAdmin()) {
         container.innerHTML = `
@@ -761,15 +730,11 @@ function renderizarUsuariosAdmin() {
                 <p style="font-size:0.85rem;">Solo el SuperAdministrador puede gestionar usuarios</p>
             </div>
         `;
-        if (tabSeguridad) tabSeguridad.style.display = 'none';
         return;
     }
 
-    if (tabSeguridad) tabSeguridad.style.display = 'block';
-    cargarUsuariosDesdeBackend(container);
-}
+    container.innerHTML = '<p style="text-align:center;padding:40px;color:var(--color-gris);">Cargando usuarios...</p>';
 
-async function cargarUsuariosDesdeBackend(container) {
     try {
         const session = getSession();
         const respuesta = await fetch(`${API_URL}/users`, {
@@ -811,7 +776,7 @@ async function cargarUsuariosDesdeBackend(container) {
 
         container.innerHTML = html;
     } catch (error) {
-        container.innerHTML = '<p style="text-align:center;padding:30px;color:var(--color-gris);">Error al cargar usuarios.</p>';
+        container.innerHTML = '<p style="text-align:center;padding:30px;color:var(--color-gris);">Error al cargar usuarios. <button onclick="renderizarUsuariosAdmin()" class="btn-admin btn-secundario" style="margin-top:10px;">Reintentar</button></p>';
     }
 }
 
@@ -854,49 +819,68 @@ async function eliminarUsuario(userId) {
     }
 }
 
-document.getElementById('btn-nuevo-usuario')?.addEventListener('click', async function() {
-    if (!isSuperAdmin()) { mostrarNotificacion('Solo el SuperAdmin', 'error'); return; }
-
-    const username = prompt('Nombre de usuario (3-40 caracteres):');
-    if (!username || username.length < 3 || username.length > 40) {
-        mostrarNotificacion('Nombre inválido', 'error');
+// ============================================
+// 6.5 ADMIN - NUEVO USUARIO (MODAL)
+// ============================================
+document.getElementById('btn-nuevo-usuario')?.addEventListener('click', function() {
+    if (!isSuperAdmin()) {
+        mostrarNotificacion('Solo el SuperAdministrador puede crear usuarios', 'error');
         return;
     }
 
-    const password = prompt('Contraseña (mínimo 6 caracteres):');
-    if (!password || password.length < 6) {
-        mostrarNotificacion('Contraseña inválida', 'error');
-        return;
-    }
+    abrirModalGenerico({
+        titulo: 'Nuevo Usuario',
+        subtitulo: 'Crea una cuenta con rol de admin o usuario',
+        campos: [
+            { id: 'username', label: 'Usuario', type: 'text', placeholder: 'Nombre de usuario', required: true },
+            { id: 'password', label: 'Contraseña', type: 'password', placeholder: 'Mínimo 6 caracteres', required: true },
+            { id: 'role', label: 'Rol', type: 'select', opciones: [
+                { value: 'user', label: 'Usuario' },
+                { value: 'admin', label: 'Administrador' }
+            ]}
+        ],
+        onSubmit: async (datos) => {
+            if (!datos.username || datos.username.length < 3) {
+                mostrarNotificacion('Nombre inválido (mínimo 3 caracteres)', 'error');
+                return false;
+            }
+            if (!datos.password || datos.password.length < 6) {
+                mostrarNotificacion('Contraseña inválida (mínimo 6 caracteres)', 'error');
+                return false;
+            }
 
-    const esAdmin = confirm('¿Hacer admin? (Sí = Admin, No = Usuario)');
-    const role = esAdmin ? 'admin' : 'user';
+            try {
+                const session = getSession();
+                const respuesta = await fetch(`${API_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session.token}`
+                    },
+                    body: JSON.stringify({
+                        username: datos.username,
+                        password: datos.password,
+                        role: datos.role
+                    })
+                });
 
-    try {
-        const session = getSession();
-        const respuesta = await fetch(`${API_URL}/auth/register`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${session.token}`
-            },
-            body: JSON.stringify({ username, password, role })
-        });
+                if (!respuesta.ok) {
+                    const data = await respuesta.json();
+                    throw new Error(data.error || 'Error al crear usuario');
+                }
 
-        if (!respuesta.ok) {
-            const data = await respuesta.json();
-            throw new Error(data.error);
+                mostrarNotificacion(`Usuario "${datos.username}" creado`, 'success');
+                renderizarUsuariosAdmin();
+            } catch (error) {
+                mostrarNotificacion(error.message, 'error');
+                return false;
+            }
         }
-
-        mostrarNotificacion(`Usuario "${username}" creado`, 'success');
-        renderizarUsuariosAdmin();
-    } catch (error) {
-        mostrarNotificacion(error.message || 'Error al crear usuario', 'error');
-    }
+    });
 });
 
 // ============================================
-// 8. BUSCADORES DEL PANEL DE ADMIN
+// 7. BUSCADORES
 // ============================================
 function filtrarProductosAdmin(termino) {
     const items = document.querySelectorAll('#admin-productos-lista .admin-producto-item');
@@ -926,7 +910,106 @@ function filtrarUsuariosAdmin(termino) {
 }
 
 // ============================================
-// 9. BOTONES DE LOGIN/LOGOUT
+// 8. MODAL GENÉRICO
+// ============================================
+function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit }) {
+    const modal = document.getElementById('modal-generico');
+    const overlay = document.getElementById('modal-generico-overlay');
+    const cerrar = document.getElementById('modal-generico-cerrar');
+    const form = document.getElementById('modal-generico-form');
+    const camposContainer = document.getElementById('modal-generico-campos');
+    const submitBtn = document.getElementById('modal-generico-submit');
+
+    document.getElementById('modal-generico-titulo').textContent = titulo;
+    document.getElementById('modal-generico-subtitulo').textContent = subtitulo;
+
+    let html = '';
+    campos.forEach(campo => {
+        html += `
+            <div class="login-group">
+                <label>${campo.label}</label>
+                ${campo.type === 'select' 
+                    ? `<select id="${campo.id}">${campo.opciones.map(o => `<option value="${o.value}">${o.label}</option>`).join('')}</select>`
+                    : `<input type="${campo.type || 'text'}" id="${campo.id}" placeholder="${campo.placeholder || ''}" ${campo.required ? 'required' : ''}>`
+                }
+            </div>
+        `;
+    });
+    camposContainer.innerHTML = html;
+    submitBtn.textContent = 'Aceptar';
+
+    modal.className = 'login-visible';
+    document.body.style.overflow = 'hidden';
+
+    const cerrarModal = () => {
+        modal.className = 'login-oculto';
+        document.body.style.overflow = 'auto';
+        form.reset();
+    };
+    cerrar.onclick = cerrarModal;
+    overlay.onclick = cerrarModal;
+
+    form.onsubmit = async (e) => {
+        e.preventDefault();
+        const datos = {};
+        campos.forEach(campo => {
+            datos[campo.id] = document.getElementById(campo.id).value;
+        });
+        const resultado = await onSubmit(datos);
+        if (resultado !== false) cerrarModal();
+    };
+}
+
+// ============================================
+// 9. MODAL DE BIENVENIDA
+// ============================================
+function mostrarModalBienvenida() {
+    const modal = document.getElementById('modal-bienvenida');
+    if (!modal) return;
+    modal.className = 'bienvenida-visible';
+    document.body.style.overflow = 'hidden';
+}
+
+function cerrarModalBienvenida() {
+    const modal = document.getElementById('modal-bienvenida');
+    if (!modal) return;
+    modal.className = 'bienvenida-oculto';
+    document.body.style.overflow = 'auto';
+    localStorage.setItem('tm_bienvenida_vista', Date.now().toString());
+}
+
+document.getElementById('modal-bienvenida-crear')?.addEventListener('click', function() {
+    cerrarModalBienvenida();
+    abrirModalGenerico({
+        titulo: 'Crear Cuenta',
+        subtitulo: 'Es rápido, gratis y seguro',
+        campos: [
+            { id: 'username', label: 'Usuario', type: 'text', placeholder: 'Tu nombre de usuario', required: true },
+            { id: 'password', label: 'Contraseña', type: 'password', placeholder: 'Mínimo 6 caracteres', required: true }
+        ],
+        onSubmit: async (datos) => {
+            const result = await registerUser(datos.username, datos.password);
+            if (result.success) {
+                actualizarBotonAcceder();
+                mostrarNotificacion('¡Bienvenido a Textiles Madruga!', 'success');
+            } else {
+                mostrarNotificacion(result.message, 'error');
+                return false;
+            }
+        }
+    });
+});
+
+document.getElementById('modal-bienvenida-continuar')?.addEventListener('click', function() {
+    cerrarModalBienvenida();
+    mostrarNotificacion('¡Disfruta explorando nuestro catálogo!', 'info');
+});
+
+document.getElementById('modal-bienvenida-cerrar')?.addEventListener('click', cerrarModalBienvenida);
+document.getElementById('modal-bienvenida-overlay')?.addEventListener('click', cerrarModalBienvenida);
+
+// ============================================
+// 10. LOGIN/LOGOUT
 // ============================================
 const btnAcceder = document.getElementById('btn-acceder');
 const btnCerrarSesion = document.getElementById('btn-cerrar-sesion');
@@ -936,11 +1019,8 @@ if (btnAcceder) {
         e.preventDefault();
         const session = getSession();
         if (session) {
-            if (isAdmin()) {
-                abrirAdmin();
-            } else {
-                mostrarNotificacion('Sesión activa como: ' + session.username, 'info');
-            }
+            if (isAdmin()) abrirAdmin();
+            else mostrarNotificacion('Sesión activa como: ' + session.username, 'info');
         } else {
             mostrarLogin();
         }
@@ -964,11 +1044,8 @@ function actualizarBotonAcceder() {
 function actualizarBotonCerrarSesion() {
     const session = getSession();
     if (btnCerrarSesion) {
-        if (session) {
-            btnCerrarSesion.classList.add('visible');
-        } else {
-            btnCerrarSesion.classList.remove('visible');
-        }
+        if (session) btnCerrarSesion.classList.add('visible');
+        else btnCerrarSesion.classList.remove('visible');
     }
 }
 
@@ -980,7 +1057,7 @@ if (btnCerrarSesion) {
 }
 
 // ============================================
-// 10. LOGIN Y REGISTRO
+// 11. LOGIN Y REGISTRO
 // ============================================
 document.getElementById('login-form')?.addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -1002,43 +1079,40 @@ document.getElementById('login-form')?.addEventListener('submit', async function
     }
 });
 
-document.getElementById('login-registro-link')?.addEventListener('click', async function(e) {
+document.getElementById('login-registro-link')?.addEventListener('click', function(e) {
     e.preventDefault();
-
-    const username = prompt('Nombre de usuario (3-40 caracteres):');
-    if (!username || username.length < 3 || username.length > 40) {
-        mostrarNotificacion('Nombre inválido', 'error');
-        return;
-    }
-
-    const password = prompt('Contraseña (mínimo 6 caracteres):');
-    if (!password || password.length < 6) {
-        mostrarNotificacion('Contraseña inválida', 'error');
-        return;
-    }
-
-    const result = await registerUser(username, password);
-    if (result.success) {
-        cerrarLogin();
-        actualizarBotonAcceder();
-        mostrarNotificacion('Usuario creado. Sesión iniciada.', 'success');
-    } else {
-        mostrarNotificacion(result.message, 'error');
-    }
+    cerrarLogin();
+    abrirModalGenerico({
+        titulo: 'Crear Cuenta',
+        subtitulo: 'Es rápido, gratis y seguro',
+        campos: [
+            { id: 'username', label: 'Usuario', type: 'text', placeholder: 'Tu nombre de usuario', required: true },
+            { id: 'password', label: 'Contraseña', type: 'password', placeholder: 'Mínimo 6 caracteres', required: true }
+        ],
+        onSubmit: async (datos) => {
+            const result = await registerUser(datos.username, datos.password);
+            if (result.success) {
+                actualizarBotonAcceder();
+                mostrarNotificacion('Usuario creado. Sesión iniciada.', 'success');
+            } else {
+                mostrarNotificacion(result.message, 'error');
+                return false;
+            }
+        }
+    });
 });
 
 loginCerrar?.addEventListener('click', cerrarLogin);
 loginOverlay?.addEventListener('click', cerrarLogin);
 
 // ============================================
-// 11. OJITO PARA CONTRASEÑA
+// 12. OJITO CONTRASEÑA
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.toggle-password').forEach(button => {
         button.addEventListener('click', function() {
             const input = this.parentElement.querySelector('input[type="password"], input[type="text"]');
             if (!input) return;
-
             const isPassword = input.type === 'password';
             input.type = isPassword ? 'text' : 'password';
             this.classList.toggle('visible');
@@ -1047,7 +1121,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ============================================
-// 12. FUNCIÓN PRINCIPAL (INICIAR)
+// 13. INICIAR
 // ============================================
 async function iniciar() {
     console.log('🚀 Cargando productos...');
@@ -1066,12 +1140,18 @@ async function iniciar() {
 
     actualizarBotonAcceder();
     console.log('✅ Productos cargados correctamente');
+
+    if (!isLoggedIn()) {
+        const ultimaVista = localStorage.getItem('tm_bienvenida_vista');
+        const yaVista = ultimaVista && (Date.now() - parseInt(ultimaVista)) < 24 * 60 * 60 * 1000;
+        if (!yaVista) setTimeout(mostrarModalBienvenida, 1500);
+    }
 }
 
 document.addEventListener('DOMContentLoaded', iniciar);
 
 // ============================================
-// 13. EXPONER FUNCIONES GLOBALES
+// 14. EXPONER FUNCIONES GLOBALES
 // ============================================
 window.toggleOfertaAdmin = toggleOfertaAdmin;
 window.editarProductoAdmin = editarProductoAdmin;
@@ -1091,9 +1171,13 @@ window.quitarOferta = quitarOferta;
 window.filtrarProductosAdmin = filtrarProductosAdmin;
 window.filtrarOfertasAdmin = filtrarOfertasAdmin;
 window.filtrarUsuariosAdmin = filtrarUsuariosAdmin;
+window.abrirModalGenerico = abrirModalGenerico;
+window.mostrarModalBienvenida = mostrarModalBienvenida;
+window.cerrarModalBienvenida = cerrarModalBienvenida;
+window.eliminarUsuario = eliminarUsuario;
 
 // ============================================
-// 14. MENÚ HAMBURGUESA
+// 15. MENÚ HAMBURGUESA
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
     const hamburguesa = document.getElementById('menu-hamburguesa');

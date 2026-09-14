@@ -376,6 +376,90 @@
         </div>
     </div>
 
+    <!-- MODAL GENÉRICO -->
+    <div id="modal-generico" class="login-oculto">
+        <div class="login-overlay" id="modal-generico-overlay"></div>
+        <div class="login-contenido">
+            <button class="login-cerrar" id="modal-generico-cerrar">✕</button>
+            <div class="login-header">
+                <span class="login-icon">◈</span>
+                <h2 id="modal-generico-titulo">Título</h2>
+                <p class="login-subtitle" id="modal-generico-subtitulo">Subtítulo</p>
+            </div>
+            <form id="modal-generico-form" class="login-form">
+                <div id="modal-generico-campos"></div>
+                <button type="submit" class="btn-admin btn-primario btn-login" id="modal-generico-submit">Aceptar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE BIENVENIDA -->
+    <div id="modal-bienvenida" class="bienvenida-oculto">
+        <div class="bienvenida-overlay" id="modal-bienvenida-overlay"></div>
+        <div class="bienvenida-contenido">
+            <div class="bienvenida-decoracion">
+                <div class="bienvenida-diagonal"></div>
+                <div class="bienvenida-logo">
+                    <img src="assets/img/header/logo-up.PNG" alt="Textiles Madruga" class="bienvenida-logo-img">
+                    <span class="bienvenida-logo-textiles">TEXTILES</span>
+                    <span class="bienvenida-logo-madruga">Madruga</span>
+                </div>
+            </div>
+
+            <div class="bienvenida-info">
+                <button class="bienvenida-cerrar" id="modal-bienvenida-cerrar">✕</button>
+                
+                <div class="bienvenida-header">
+                    <span class="bienvenida-icono">✨</span>
+                    <h1 class="bienvenida-titulo">Bienvenido a <span>Textiles Madruga</span></h1>
+                    <p class="bienvenida-subtitulo">Descubre la mejor selección de confecciones cubanas</p>
+                </div>
+
+                <div class="bienvenida-beneficios">
+                    <div class="bienvenida-beneficio">
+                        <span class="beneficio-icono">🔔</span>
+                        <div>
+                            <strong>Notificaciones de ofertas</strong>
+                            <p>Entérate primero de nuestras promociones</p>
+                        </div>
+                    </div>
+                    <div class="bienvenida-beneficio">
+                        <span class="beneficio-icono">💎</span>
+                        <div>
+                            <strong>Acceso anticipado</strong>
+                            <p>Productos exclusivos antes que nadie</p>
+                        </div>
+                    </div>
+                    <div class="bienvenida-beneficio">
+                        <span class="beneficio-icono">❤️</span>
+                        <div>
+                            <strong>Sugerencias personalizadas</strong>
+                            <p>Basadas en tus gustos y preferencias</p>
+                        </div>
+                    </div>
+                    <div class="bienvenida-beneficio">
+                        <span class="beneficio-icono">🎁</span>
+                        <div>
+                            <strong>Descuentos exclusivos</strong>
+                            <p>Solo para clientes registrados</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bienvenida-acciones">
+                    <button class="bienvenida-btn-primario" id="modal-bienvenida-crear">
+                        Crear mi cuenta gratis
+                    </button>
+                    <button class="bienvenida-btn-secundario" id="modal-bienvenida-continuar">
+                        Explorar sin registrarme
+                    </button>
+                </div>
+
+                <p class="bienvenida-nota">Al registrarte aceptas recibir notificaciones de Textiles Madruga</p>
+            </div>
+        </div>
+    </div>
+
     <script src="script.js" defer></script>
 </body>
 </html>
