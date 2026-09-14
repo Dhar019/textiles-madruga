@@ -144,3 +144,16 @@ dist/
 .env
 *.log
 >>>>>>> f84a3aaea5210254020d37b45e8f3ea18c9d5d38
+
+# Archivos de seed (contienen contraseñas)
+seed.cjs
+seed-mongo.js
+seed.js
+
+# Archivos temporales
+flags
+npx
+
+# Archivos de configuración local
+*.local
+.dev.vars
