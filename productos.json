@@ -6,7 +6,7 @@
         "id": 4,
         "nombre": "Camisa Azul",
         "precio": 25,
-        "imagen": "frontend/assets/img/ropa/hombre/camisas/camisa-azul.jpg"
+        "imagen": "assets/img/ropa/hombre/camisas/camisa-azul.jpg"
       },
       {
         "id": 5,

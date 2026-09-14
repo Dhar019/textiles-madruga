@@ -111,7 +111,6 @@ main, .main-content {
     margin-left: auto;
 }
 
-/* Botones de login - a la izquierda del hamburguesa */
 .btn-acceder,
 .btn-cerrar-sesion {
     order: 1;
@@ -1853,8 +1852,8 @@ main, .main-content {
 
     .logo {
         display: flex;
-        flex-direction: column;   /* ← Apila verticalmente */
-        align-items: flex-start;  /* ← Alinea a la izquierda */
+        flex-direction: column;
+        align-items: flex-start;
         gap: 2px;
         flex-shrink: 1;
         min-width: 0;
@@ -1969,7 +1968,6 @@ main, .main-content {
     vertical-align: middle;
 }
 
-/* Ajuste específico para móvil */
 @media (max-width: 768px) {
     .btn-acceder img,
     .btn-cerrar-sesion img,
@@ -1985,81 +1983,82 @@ main, .main-content {
     }
 
     /* ============================================ */
-/* CATEGORÍAS DESTACADAS (Ropas, Telas...)     */
-/* ============================================ */
-.grid-categorias {
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;                   
-}
+    /* CATEGORÍAS DESTACADAS (Ropas, Telas...)     */
+    /* ============================================ */
+    .grid-categorias {
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;                   
+    }
 
-.categoria-card {
-    padding: 20px 15px;
-    min-height: 160px;           
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
+    .categoria-card {
+        padding: 20px 15px;
+        min-height: 160px;           
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
 
-.categoria-card span {
-    font-size: 3.5rem;
-    display: block;
-    margin-bottom: 8px;
-}
+    .categoria-card span {
+        font-size: 3.5rem;
+        display: block;
+        margin-bottom: 8px;
+    }
 
-.categoria-card img {
-    width: 100%;                 
-    max-width: 120px;            
-    height: 120px;               
-    object-fit: cover;
-    border-radius: 0;           
-    display: block;
-}
+    .categoria-card img {
+        width: 100%;                 
+        max-width: 120px;            
+        height: 120px;               
+        object-fit: cover;
+        border-radius: 0;           
+        display: block;
+    }
 
-.categoria-card h3 {
-    font-size: 1rem;
-    margin-top: 8px;
-}
+    .categoria-card h3 {
+        font-size: 1rem;
+        margin-top: 8px;
+    }
 
-/* ============================================ */
-/* SUB-CATEGORÍAS (Hombre, Mujer)              */
-/* ============================================ */
-.grid-subcategorias {
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;                   
-}
+    /* ============================================ */
+    /* SUB-CATEGORÍAS (Hombre, Mujer)              */
+    /* ============================================ */
+    .grid-subcategorias {
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;                   
+    }
 
-.subcategoria-card {
-    padding: 25px 15px;
-    min-height: 220px;           
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
+    .subcategoria-card {
+        padding: 25px 15px;
+        min-height: 220px;           
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
 
-.subcategoria-card-imagen span {
-    font-size: 4.5rem;
-    display: block;
-    margin-bottom: 10px;
-}
+    .subcategoria-card-imagen span {
+        font-size: 4.5rem;
+        display: block;
+        margin-bottom: 10px;
+    }
 
-.subcategoria-card-imagen img {
-    width: 100%;                 
-    max-width: 150px;            
-    height: 150px;               
-    object-fit: cover;
-    border-radius: 10%;            
-    display: block;
-}
+    .subcategoria-card-imagen img {
+        width: 100%;                 
+        max-width: 150px;            
+        height: 150px;               
+        object-fit: cover;
+        border-radius: 10%;            
+        display: block;
+    }
 
-.subcategoria-card-imagen h3 {
-    font-size: 1.2rem;
-    margin-top: 8px;
-}
+    .subcategoria-card-imagen h3 {
+        font-size: 1.2rem;
+        margin-top: 8px;
+    }
 
-.subcategoria-card-imagen p {
-    font-size: 0.8rem;
+    .subcategoria-card-imagen p {
+        font-size: 0.8rem;
+    }
 }
 
 /* ============================================ */
@@ -2085,31 +2084,6 @@ section[id] {
     :root {
         --header-height: 120px;
     }
-}
-}
-
-/* ============================================ */
-/* BUSCADORES DEL PANEL DE ADMIN                */
-/* ============================================ */
-.admin-buscador {
-    margin-bottom: 15px;
-}
-
-.admin-buscador input {
-    width: 100%;
-    padding: 10px 16px;
-    border: 2px solid #EDE8E1;
-    border-radius: 12px;
-    font-size: 0.9rem;
-    font-family: var(--font-sans);
-    background: white;
-    transition: border-color 0.3s ease;
-}
-
-.admin-buscador input:focus {
-    border-color: var(--color-naranja);
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(232, 122, 32, 0.1);
 }
 
 /* ============================================ */
@@ -2150,13 +2124,14 @@ section[id] {
 }
 
 .bienvenida-visible .bienvenida-overlay {
-    display: block;
+    display: block !important;
 }
 
 .bienvenida-visible .bienvenida-contenido {
-    display: flex;
+    display: flex !important;
 }
 
+/* Overlay */
 .bienvenida-overlay {
     position: fixed;
     top: 0;
@@ -2165,7 +2140,7 @@ section[id] {
     height: 100%;
     background: rgba(26, 26, 26, 0.7);
     backdrop-filter: blur(8px);
-    z-index: 4000;
+    z-index: 99998 !important;
     animation: bienvenidaFadeIn 0.4s ease;
 }
 
@@ -2174,6 +2149,7 @@ section[id] {
     to { opacity: 1; }
 }
 
+/* Contenido del modal */
 .bienvenida-contenido {
     position: fixed;
     top: 50%;
@@ -2186,7 +2162,7 @@ section[id] {
     border-radius: 24px;
     overflow: hidden;
     display: flex;
-    z-index: 4001;
+    z-index: 99999 !important;
     box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
     animation: bienvenidaSlideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -2196,6 +2172,9 @@ section[id] {
     to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 
+/* ============================================ */
+/* DECORACIÓN DIAGONAL (IZQUIERDA)              */
+/* ============================================ */
 .bienvenida-decoracion {
     position: relative;
     width: 40%;
@@ -2269,6 +2248,9 @@ section[id] {
     text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 }
 
+/* ============================================ */
+/* INFORMACIÓN (DERECHA)                        */
+/* ============================================ */
 .bienvenida-info {
     flex: 1;
     padding: 40px 45px;
@@ -2307,6 +2289,7 @@ section[id] {
     display: block;
     margin-bottom: 10px;
     animation: bienvenidaPulse 2s ease-in-out infinite;
+    color: var(--color-naranja);
 }
 
 @keyframes bienvenidaPulse {
@@ -2334,6 +2317,9 @@ section[id] {
     font-weight: 300;
 }
 
+/* ============================================ */
+/* BENEFICIOS                                   */
+/* ============================================ */
 .bienvenida-beneficios {
     flex: 1;
     display: grid;
@@ -2363,6 +2349,18 @@ section[id] {
     font-size: 1.5rem;
     flex-shrink: 0;
     line-height: 1;
+    color: var(--color-naranja);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+}
+
+.beneficio-icono svg {
+    width: 24px;
+    height: 24px;
+    stroke: var(--color-naranja);
 }
 
 .bienvenida-beneficio strong {
@@ -2380,6 +2378,9 @@ section[id] {
     margin: 0;
 }
 
+/* ============================================ */
+/* ACCIONES                                     */
+/* ============================================ */
 .bienvenida-acciones {
     display: flex;
     flex-direction: column;
@@ -2435,6 +2436,9 @@ section[id] {
     line-height: 1.4;
 }
 
+/* ============================================ */
+/* RESPONSIVE DEL MODAL DE BIENVENIDA           */
+/* ============================================ */
 @media (max-width: 768px) {
     .bienvenida-contenido {
         flex-direction: column;

@@ -975,7 +975,7 @@ function cerrarModalBienvenida() {
     if (!modal) return;
     modal.className = 'bienvenida-oculto';
     document.body.style.overflow = 'auto';
-    localStorage.setItem('tm_bienvenida_vista', Date.now().toString());
+    // ✅ SIN localStorage - el modal aparecerá siempre al recargar
 }
 
 document.getElementById('modal-bienvenida-crear')?.addEventListener('click', function() {
@@ -1141,10 +1141,9 @@ async function iniciar() {
     actualizarBotonAcceder();
     console.log('✅ Productos cargados correctamente');
 
+    // ✅ Mostrar el modal SIEMPRE al recargar (si no está logueado)
     if (!isLoggedIn()) {
-        const ultimaVista = localStorage.getItem('tm_bienvenida_vista');
-        const yaVista = ultimaVista && (Date.now() - parseInt(ultimaVista)) < 24 * 60 * 60 * 1000;
-        if (!yaVista) setTimeout(mostrarModalBienvenida, 1500);
+        setTimeout(mostrarModalBienvenida, 1500);
     }
 }
 
