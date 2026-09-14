@@ -7,7 +7,6 @@
 // 1. CONFIGURACIÓN Y CONSTANTES
 // ============================================
 const API_URL = 'https://textiles-madruga-api.eldani000219.workers.dev/api';
-const USERS_KEY = 'tm_users';
 const SESSION_KEY = 'tm_session';
 
 let datosGlobales = null;
@@ -48,9 +47,7 @@ function createSession(token, user) {
 function logout() {
     localStorage.removeItem(SESSION_KEY);
     const adminPanel = document.getElementById('admin-panel');
-    if (adminPanel) {
-        adminPanel.className = 'admin-oculto';
-    }
+    if (adminPanel) adminPanel.className = 'admin-oculto';
     actualizarBotonAcceder();
     actualizarBotonCerrarSesion();
     mostrarNotificacion('Sesión cerrada correctamente', 'info');
@@ -64,13 +61,10 @@ async function login(username, password) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
         });
-
         const data = await respuesta.json();
-
         if (!respuesta.ok) {
             return { success: false, message: data.error || 'Error al iniciar sesión' };
         }
-
         const session = createSession(data.token, data.user);
         return { success: true, session };
     } catch (error) {
@@ -79,57 +73,26 @@ async function login(username, password) {
     }
 }
 
-async function registerUser(username, password, role = 'user') {
+async function registerUser(username, password) {
     try {
-        if (username.length > 40) {
-            return { success: false, message: 'El nombre de usuario no puede tener más de 40 caracteres.' };
-        }
-        if (username.length < 3) {
-            return { success: false, message: 'El nombre de usuario debe tener al menos 3 caracteres.' };
-        }
-        if (password.length < 6) {
-            return { success: false, message: 'La contraseña debe tener al menos 6 caracteres.' };
-        }
+        if (username.length > 40) return { success: false, message: 'El nombre no puede tener más de 40 caracteres.' };
+        if (username.length < 3) return { success: false, message: 'El nombre debe tener al menos 3 caracteres.' };
+        if (password.length < 6) return { success: false, message: 'La contraseña debe tener al menos 6 caracteres.' };
 
         const respuesta = await fetch(`${API_URL}/auth/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password, role })
+            body: JSON.stringify({ username, password, role: 'user' }) // ← FORZADO A 'user'
         });
-
         const data = await respuesta.json();
-
         if (!respuesta.ok) {
             return { success: false, message: data.error || 'Error al registrar usuario' };
         }
-
         const session = createSession(data.token, data.user);
         return { success: true, session };
     } catch (error) {
         console.error('Error en registro:', error);
         return { success: false, message: 'Error de conexión con el servidor' };
-    }
-}
-
-async function getProfile() {
-    const session = getSession();
-    if (!session) return null;
-
-    try {
-        const respuesta = await fetch(`${API_URL}/auth/me`, {
-            headers: {
-                'Authorization': `Bearer ${session.token}`
-            }
-        });
-
-        if (!respuesta.ok) {
-            return null;
-        }
-
-        return await respuesta.json();
-    } catch (error) {
-        console.error('Error al obtener perfil:', error);
-        return null;
     }
 }
 
@@ -140,7 +103,7 @@ function isAdmin() {
 
 function isSuperAdmin() {
     const session = getSession();
-    return session && session.role === 'superadmin' && session.username === 'Texmadmin';
+    return session && session.role === 'superadmin';
 }
 
 function isLoggedIn() {
@@ -164,26 +127,18 @@ function protegerAdmin() {
 // ============================================
 
 function mostrarNotificacion(mensaje, tipo = 'info') {
-    const notificacionExistente = document.querySelector('.notificacion');
-    if (notificacionExistente) {
-        notificacionExistente.remove();
-    }
-    
+    const existente = document.querySelector('.notificacion');
+    if (existente) existente.remove();
+
     const notificacion = document.createElement('div');
     notificacion.className = 'notificacion notificacion-' + tipo;
     notificacion.textContent = mensaje;
-    
     document.body.appendChild(notificacion);
-    
-    setTimeout(() => {
-        notificacion.classList.add('visible');
-    }, 10);
-    
+
+    setTimeout(() => notificacion.classList.add('visible'), 10);
     setTimeout(() => {
         notificacion.classList.remove('visible');
-        setTimeout(() => {
-            notificacion.remove();
-        }, 300);
+        setTimeout(() => notificacion.remove(), 300);
     }, 4000);
 }
 
@@ -196,15 +151,9 @@ async function cargarProductos() {
         const respuesta = await fetch(`${API_URL}/productos`);
         if (!respuesta.ok) throw new Error('Error al cargar productos');
         const data = await respuesta.json();
-        console.log('📦 Productos cargados desde el servidor', data);
-
-        // ✅ CORRECCIÓN: Extraer el array de productos
         let productos = Array.isArray(data) ? data : data.productos;
-        if (!Array.isArray(productos)) {
-            throw new Error('La API no devolvió un array de productos');
-        }
+        if (!Array.isArray(productos)) throw new Error('La API no devolvió un array');
 
-        // Convertir al formato que espera el frontend
         const datos = {
             ofertas: productos.filter(p => p.enOferta).map(p => p._id),
             productos: {
@@ -227,31 +176,15 @@ function cargarProductosLocal() {
     const datosGuardados = localStorage.getItem('productos_data');
     if (datosGuardados) {
         try {
-            const datos = JSON.parse(datosGuardados);
-            console.log('📦 Datos cargados desde localStorage (fallback)');
-            return datos;
-        } catch (e) {
-            console.log('⚠️ Error al parsear localStorage');
-        }
+            return JSON.parse(datosGuardados);
+        } catch (e) {}
     }
-    
-    try {
-        const respuesta = fetch('productos.json');
-        return null;
-    } catch (e) {
-        console.error('❌ Error al cargar productos:', e);
-        return null;
-    }
+    return null;
 }
-
-// ============================================
-// 5. FUNCIONES DE BÚSQUEDA Y UTILIDADES
-// ============================================
 
 function obtenerProductoPorId(id, datos) {
     if (!datos || !datos.productos) return null;
-    const todasLasCategorias = ['hombre', 'mujer', 'telas', 'objetos'];
-    for (const categoria of todasLasCategorias) {
+    for (const categoria of ['hombre', 'mujer', 'telas', 'objetos']) {
         const productos = datos.productos[categoria];
         if (productos) {
             const encontrado = productos.find(p => p._id === id || p.id === id);
@@ -262,24 +195,19 @@ function obtenerProductoPorId(id, datos) {
 }
 
 // ============================================
-// 6. RENDERIZADO DE PRODUCTOS Y OFERTAS
+// 5. RENDERIZADO DE PRODUCTOS Y OFERTAS
 // ============================================
 
 function renderizarOfertas(ofertasIds, datos) {
     const contenedor = document.querySelector('#ofertas-ropa .grid-productos');
-    if (!contenedor) {
-        console.warn('⚠️ Contenedor de ofertas no encontrado');
-        return;
-    }
+    if (!contenedor) return;
 
     if (!ofertasIds || ofertasIds.length === 0) {
         contenedor.innerHTML = '<p style="text-align:center;padding:40px;color:var(--color-gris);">No hay ofertas disponibles.</p>';
         return;
     }
 
-    const productosOferta = ofertasIds
-        .map(id => obtenerProductoPorId(id, datos))
-        .filter(p => p !== null);
+    const productosOferta = ofertasIds.map(id => obtenerProductoPorId(id, datos)).filter(p => p !== null);
 
     if (productosOferta.length === 0) {
         contenedor.innerHTML = '<p style="text-align:center;padding:40px;color:var(--color-gris);">No hay ofertas disponibles.</p>';
@@ -288,9 +216,8 @@ function renderizarOfertas(ofertasIds, datos) {
 
     let html = '';
     productosOferta.forEach(producto => {
-        const descuento = producto.descuento || Math.floor(Math.random() * 20) + 10;
+        const descuento = producto.descuento || 15;
         const precioOferta = producto.precio * (1 - descuento / 100);
-
         html += `
             <div class="producto-card oferta-destacada">
                 <span class="badge-oferta">-${descuento}%</span>
@@ -305,43 +232,29 @@ function renderizarOfertas(ofertasIds, datos) {
     });
 
     contenedor.innerHTML = html;
-
-    const botones = contenedor.querySelectorAll('.btn-detalle');
-    botones.forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            const id = this.dataset.id;
-            const producto = obtenerProductoPorId(id, datos);
-            if (producto) {
-                abrirModal(producto, datos);
-            } else {
-                console.error('❌ Producto no encontrado con ID:', id);
-                mostrarNotificacion('Error: Producto no encontrado', 'error');
-            }
+    contenedor.querySelectorAll('.btn-detalle').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const producto = obtenerProductoPorId(this.dataset.id, datos);
+            if (producto) abrirModal(producto, datos);
         });
     });
 }
 
 function renderizarProductosConModal(productos, contenedorSelector, datos) {
     const contenedor = document.querySelector(contenedorSelector);
-    if (!contenedor) {
-        console.warn('⚠️ Contenedor no encontrado:', contenedorSelector);
-        return;
-    }
+    if (!contenedor) return;
 
     if (!productos || productos.length === 0) {
-        contenedor.innerHTML = '<p style="text-align:center;padding:40px;color:var(--color-gris);">No hay productos disponibles en esta categoría.</p>';
+        contenedor.innerHTML = '<p style="text-align:center;padding:40px;color:var(--color-gris);">No hay productos en esta categoría.</p>';
         return;
     }
 
     let html = '';
     productos.forEach(producto => {
-        const precio = producto.precio;
         const unidad = producto.unidad || '';
-        
         const enOferta = producto.enOferta || false;
-        const descuento = enOferta ? (producto.descuento || Math.floor(Math.random() * 20) + 10) : 0;
-        const precioOferta = enOferta ? precio * (1 - descuento / 100) : null;
+        const descuento = enOferta ? (producto.descuento || 15) : 0;
+        const precioOferta = enOferta ? producto.precio * (1 - descuento / 100) : null;
 
         html += `
             <div class="producto-card ${enOferta ? 'oferta-destacada' : ''}">
@@ -350,8 +263,8 @@ function renderizarProductosConModal(productos, contenedorSelector, datos) {
                 <h3 class="producto-nombre">${producto.nombre}</h3>
                 <p class="producto-precio">
                     ${enOferta 
-                        ? `<span class="tachado">$${precio.toFixed(2)}</span> $${precioOferta.toFixed(2)}${unidad}` 
-                        : `$${precio.toFixed(2)}${unidad}`}
+                        ? `<span class="tachado">$${producto.precio.toFixed(2)}</span> $${precioOferta.toFixed(2)}${unidad}` 
+                        : `$${producto.precio.toFixed(2)}${unidad}`}
                 </p>
                 <button class="btn-secundario btn-detalle" data-id="${producto._id || producto.id}">Ver detalle</button>
             </div>
@@ -359,23 +272,16 @@ function renderizarProductosConModal(productos, contenedorSelector, datos) {
     });
 
     contenedor.innerHTML = html;
-
-    const botones = contenedor.querySelectorAll('.btn-detalle');
-    botones.forEach(btn => {
+    contenedor.querySelectorAll('.btn-detalle').forEach(btn => {
         btn.addEventListener('click', function() {
-            const id = this.dataset.id;
-            const producto = obtenerProductoPorId(id, datos);
-            if (producto) {
-                abrirModal(producto, datos);
-            } else {
-                console.error('❌ Producto no encontrado con ID:', id);
-            }
+            const producto = obtenerProductoPorId(this.dataset.id, datos);
+            if (producto) abrirModal(producto, datos);
         });
     });
 }
 
 // ============================================
-// 7. MODAL DE DETALLE DE PRODUCTO
+// 6. MODAL DE DETALLE DE PRODUCTO
 // ============================================
 
 const modal = document.getElementById('modal-detalle');
@@ -388,15 +294,10 @@ function abrirModal(producto, datos) {
 
     const unidad = producto.unidad || '';
     const enOferta = producto.enOferta || false;
-    const descuento = enOferta ? (producto.descuento || Math.floor(Math.random() * 20) + 10) : 0;
+    const descuento = enOferta ? (producto.descuento || 15) : 0;
     const precioOferta = enOferta ? (producto.precio * (1 - descuento / 100)).toFixed(2) : null;
 
-    const categoriaMap = {
-        'hombre': 'Hombre',
-        'mujer': 'Mujer',
-        'telas': 'Telas',
-        'objetos': 'Otros'
-    };
+    const categoriaMap = { 'hombre': 'Hombre', 'mujer': 'Mujer', 'telas': 'Telas', 'objetos': 'Otros' };
     let categoriaTexto = 'Producto';
     for (const [key, value] of Object.entries(datos.productos)) {
         if (value.some(p => p._id === producto._id || p.id === producto.id)) {
@@ -426,12 +327,8 @@ function abrirModal(producto, datos) {
                     <span class="precio">${enOferta ? `$${precioOferta}` : `$${producto.precio.toFixed(2)}`}${unidad}</span>
                 </div>
                 <p class="descripcion">${descripcion}</p>
-                <p style="font-size: 0.9rem; color: var(--color-gris);">
-                    Disponible para pedido por encargo
-                </p>
-                <button class="btn-comprar" onclick="solicitarPedido('${producto.nombre}')">
-                    Solicitar pedido
-                </button>
+                <p style="font-size: 0.9rem; color: var(--color-gris);">Disponible para pedido por encargo</p>
+                <button class="btn-comprar" onclick="solicitarPedido('${producto.nombre}')">Solicitar pedido</button>
             </div>
         </div>
     `;
@@ -447,7 +344,7 @@ function solicitarPedido(producto) {
         mostrarLogin();
         return;
     }
-    mostrarNotificacion('Gracias por tu interés. Contáctanos para realizar el pedido: textilesmadruga@email.com', 'success');
+    mostrarNotificacion('Contáctanos para realizar el pedido: textilesmadruga@email.com', 'success');
 }
 
 function cerrarModal() {
@@ -457,12 +354,10 @@ function cerrarModal() {
 
 modalCerrar.addEventListener('click', cerrarModal);
 modalOverlay.addEventListener('click', cerrarModal);
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') cerrarModal();
-});
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrarModal(); });
 
 // ============================================
-// 8. PANEL DE ADMINISTRACIÓN
+// 7. PANEL DE ADMINISTRACIÓN
 // ============================================
 
 const adminPanel = document.getElementById('admin-panel');
@@ -503,7 +398,6 @@ function abrirAdmin() {
 function cerrarAdmin() {
     adminPanel.className = 'admin-oculto';
     document.body.style.overflow = 'auto';
-    
     const formProductoEl = document.getElementById('form-producto');
     if (formProductoEl) formProductoEl.className = 'form-oculto';
 }
@@ -512,22 +406,49 @@ function cargarAdminProductos() {
     if (!datosGlobales) return;
     adminDatos = JSON.parse(JSON.stringify(datosGlobales));
     renderizarAdminProductos();
+    cargarOfertasAdmin();
     renderizarUsuariosAdmin();
 }
 
+// ============================================
+// 7.1 CAMBIO DE PESTAÑAS EN EL PANEL DE ADMIN
+// ============================================
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.admin-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            const tabName = this.dataset.tab;
+
+            // Quitar activo de todas
+            document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.remove('active'));
+
+            // Activar la clickeada
+            this.classList.add('active');
+            const tabContent = document.getElementById(`tab-${tabName}`);
+            if (tabContent) tabContent.classList.add('active');
+
+            // Cargar datos según la pestaña
+            if (tabName === 'ofertas') {
+                cargarOfertasAdmin();
+            } else if (tabName === 'seguridad') {
+                renderizarUsuariosAdmin();
+            } else if (tabName === 'productos') {
+                renderizarAdminProductos();
+            }
+        });
+    });
+});
+
+// ============================================
+// 7.2 ADMIN - PRODUCTOS
+// ============================================
 function renderizarAdminProductos() {
     if (!adminDatos) return;
-    
-    let html = '';
-    const todasLasCategorias = ['hombre', 'mujer', 'telas', 'objetos'];
-    const categoriaNombres = {
-        'hombre': 'Hombre',
-        'mujer': 'Mujer',
-        'telas': 'Telas',
-        'objetos': 'Otros'
-    };
 
-    for (const categoria of todasLasCategorias) {
+    let html = '';
+    const categoriaNombres = { 'hombre': 'Hombre', 'mujer': 'Mujer', 'telas': 'Telas', 'objetos': 'Otros' };
+
+    for (const categoria of ['hombre', 'mujer', 'telas', 'objetos']) {
         const productos = adminDatos.productos[categoria] || [];
         productos.forEach(producto => {
             const enOferta = producto.enOferta || false;
@@ -556,18 +477,10 @@ function renderizarAdminProductos() {
     adminProductosLista.innerHTML = html;
 }
 
-// ============================================
-// 8.1 ADMIN - Toggle oferta (Backend)
-// ============================================
-
 async function toggleOfertaAdmin(id) {
     if (!adminDatos) return;
-    
     const producto = obtenerProductoPorId(id, adminDatos);
-    if (!producto) {
-        mostrarNotificacion('Producto no encontrado', 'error');
-        return;
-    }
+    if (!producto) return;
 
     const nuevaOferta = !producto.enOferta;
 
@@ -579,85 +492,58 @@ async function toggleOfertaAdmin(id) {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${session.token}`
             },
-            body: JSON.stringify({ 
-                enOferta: nuevaOferta,
-                ofertaData: {
-                    tipo: 'porcentaje',
-                    detalles: '',
-                    colores: ''
-                }
-            })
+            body: JSON.stringify({ enOferta: nuevaOferta })
         });
 
-        if (!respuesta.ok) {
-            throw new Error('Error al actualizar oferta');
-        }
+        if (!respuesta.ok) throw new Error('Error al actualizar oferta');
 
-        const data = await respuesta.json();
-        
         producto.enOferta = nuevaOferta;
         if (nuevaOferta) {
             adminDatos.ofertas = adminDatos.ofertas || [];
-            if (!adminDatos.ofertas.includes(id)) {
-                adminDatos.ofertas.push(id);
-            }
+            if (!adminDatos.ofertas.includes(id)) adminDatos.ofertas.push(id);
         } else {
             adminDatos.ofertas = adminDatos.ofertas.filter(o => o !== id);
         }
 
-        mostrarNotificacion(nuevaOferta ? 'Producto añadido a ofertas' : 'Producto quitado de ofertas', 'success');
+        mostrarNotificacion(nuevaOferta ? 'Añadido a ofertas' : 'Quitado de ofertas', 'success');
         renderizarAdminProductos();
+        cargarOfertasAdmin();
         renderizarOfertas(adminDatos.ofertas, adminDatos);
     } catch (error) {
-        console.error('Error al toggle oferta:', error);
+        console.error('Error:', error);
         mostrarNotificacion('Error al actualizar oferta', 'error');
     }
 }
 
-// ============================================
-// 8.2 ADMIN - Eliminar producto (Backend)
-// ============================================
-
 async function eliminarProductoAdmin(id) {
     if (!confirm('¿Seguro que quieres eliminar este producto?')) return;
-    
+
     try {
         const session = getSession();
         const respuesta = await fetch(`${API_URL}/products/${id}`, {
             method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${session.token}`
-            }
+            headers: { 'Authorization': `Bearer ${session.token}` }
         });
 
-        if (!respuesta.ok) {
-            throw new Error('Error al eliminar producto');
-        }
+        if (!respuesta.ok) throw new Error('Error al eliminar');
 
         for (const categoria of ['hombre', 'mujer', 'telas', 'objetos']) {
             const productos = adminDatos.productos[categoria];
             if (productos) {
                 const index = productos.findIndex(p => (p._id || p.id) === id);
-                if (index !== -1) {
-                    productos.splice(index, 1);
-                    break;
-                }
+                if (index !== -1) { productos.splice(index, 1); break; }
             }
         }
         adminDatos.ofertas = adminDatos.ofertas.filter(o => o !== id);
 
-        mostrarNotificacion('Producto eliminado correctamente', 'success');
+        mostrarNotificacion('Producto eliminado', 'success');
         renderizarAdminProductos();
+        cargarOfertasAdmin();
         renderizarOfertas(adminDatos.ofertas, adminDatos);
     } catch (error) {
-        console.error('Error al eliminar producto:', error);
         mostrarNotificacion('Error al eliminar producto', 'error');
     }
 }
-
-// ============================================
-// 8.3 ADMIN - Editar producto (Backend)
-// ============================================
 
 function editarProductoAdmin(id) {
     modoEdicion = id;
@@ -667,7 +553,7 @@ function editarProductoAdmin(id) {
     document.getElementById('prod-nombre').value = producto.nombre;
     document.getElementById('prod-precio').value = producto.precio;
     document.getElementById('prod-imagen').value = producto.imagen || '';
-    
+
     for (const categoria of ['hombre', 'mujer', 'telas', 'objetos']) {
         if (adminDatos.productos[categoria]?.some(p => (p._id || p.id) === id)) {
             document.getElementById('prod-categoria').value = categoria;
@@ -680,36 +566,27 @@ function editarProductoAdmin(id) {
     document.getElementById('form-title').textContent = '✎ Editar Producto';
 }
 
-// ============================================
-// 8.4 ADMIN - Guardar producto (Backend)
-// ============================================
-
-document.getElementById('producto-form').addEventListener('submit', async function(e) {
+document.getElementById('producto-form')?.addEventListener('submit', async function(e) {
     e.preventDefault();
-    
+
     const nombre = document.getElementById('prod-nombre').value.trim();
     const precio = parseFloat(document.getElementById('prod-precio').value);
     let imagen = document.getElementById('prod-imagen').value.trim();
     const categoria = document.getElementById('prod-categoria').value;
 
     if (!nombre || !precio) {
-        mostrarNotificacion('Completa los campos obligatorios (nombre y precio)', 'error');
+        mostrarNotificacion('Completa nombre y precio', 'error');
         return;
     }
 
-    if (!imagen) {
-        imagen = 'https://placehold.co/280x250/1A1A1A/F5E6D3?text=Sin+Imagen';
-    }
+    if (!imagen) imagen = 'https://placehold.co/280x250/1A1A1A/F5E6D3?text=Sin+Imagen';
 
     const session = getSession();
-    if (!session) {
-        mostrarNotificacion('No hay sesión activa', 'error');
-        return;
-    }
+    if (!session) { mostrarNotificacion('No hay sesión activa', 'error'); return; }
 
     try {
-        let respuesta;
         const productoData = { nombre, precio, imagen, categoria };
+        let respuesta;
 
         if (modoEdicion) {
             respuesta = await fetch(`${API_URL}/products/${modoEdicion}`, {
@@ -731,12 +608,10 @@ document.getElementById('producto-form').addEventListener('submit', async functi
             });
         }
 
-        if (!respuesta.ok) {
-            throw new Error('Error al guardar producto');
-        }
+        if (!respuesta.ok) throw new Error('Error al guardar');
 
         const data = await respuesta.json();
-        const producto = data.product;
+        const producto = data.product || data;
 
         if (modoEdicion) {
             const oldProducto = obtenerProductoPorId(modoEdicion, adminDatos);
@@ -747,79 +622,137 @@ document.getElementById('producto-form').addEventListener('submit', async functi
                 oldProducto.categoria = producto.categoria;
             }
         } else {
+            if (!adminDatos.productos[categoria]) adminDatos.productos[categoria] = [];
             adminDatos.productos[categoria].push(producto);
         }
 
         modoEdicion = null;
         formProducto.className = 'form-oculto';
-        document.getElementById('producto-form').reset();
+        this.reset();
         document.querySelector('#producto-form button[type="submit"]').textContent = '✦ Crear';
         document.getElementById('form-title').textContent = '✦ Nuevo Producto';
-        
-        mostrarNotificacion('Producto guardado correctamente', 'success');
+
+        mostrarNotificacion('Producto guardado', 'success');
         renderizarAdminProductos();
         renderizarOfertas(adminDatos.ofertas, adminDatos);
     } catch (error) {
-        console.error('Error al guardar producto:', error);
         mostrarNotificacion('Error al guardar producto', 'error');
     }
 });
 
-btnCancelarForm.addEventListener('click', function() {
+btnCancelarForm?.addEventListener('click', function() {
     formProducto.className = 'form-oculto';
     modoEdicion = null;
-    document.querySelector('#producto-form button[type="submit"]').textContent = '✦ Crear';
-    document.getElementById('form-title').textContent = '✦ Nuevo Producto';
     document.getElementById('producto-form').reset();
 });
 
-btnGuardarCambios.addEventListener('click', async function() {
-    if (!adminDatos) return;
-    
-    try {
-        mostrarNotificacion('Cambios guardados correctamente', 'success');
-    } catch (error) {
-        console.error('❌ Error al guardar cambios:', error);
-        mostrarNotificacion('Error al guardar cambios. Intenta de nuevo.', 'error');
-    }
-});
-
-btnRestaurar.addEventListener('click', function() {
-    if (!confirm('⚠️ Esto restaurará los datos originales. ¿Continuar?')) return;
-    localStorage.removeItem('productos_data');
-    mostrarNotificacion('Datos restaurados. Recargando...', 'info');
-    setTimeout(() => location.reload(), 1000);
-});
-
-btnNuevoProducto.addEventListener('click', function() {
+btnNuevoProducto?.addEventListener('click', function() {
     modoEdicion = null;
     document.getElementById('producto-form').reset();
-    document.querySelector('#producto-form button[type="submit"]').textContent = '✦ Crear';
-    document.getElementById('form-title').textContent = '✦ Nuevo Producto';
     formProducto.className = 'form-visible';
 });
 
-adminCerrar.addEventListener('click', cerrarAdmin);
-adminOverlay.addEventListener('click', cerrarAdmin);
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && adminPanel.className === 'admin-visible') {
-        cerrarAdmin();
+adminCerrar?.addEventListener('click', cerrarAdmin);
+adminOverlay?.addEventListener('click', cerrarAdmin);
+
+// ============================================
+// 7.3 ADMIN - OFERTAS
+// ============================================
+async function cargarOfertasAdmin() {
+    const container = document.getElementById('lista-ofertas-admin');
+    if (!container) return;
+
+    try {
+        const respuesta = await fetch(`${API_URL}/productos`);
+        const data = await respuesta.json();
+        const productos = Array.isArray(data) ? data : data.productos;
+
+        const ofertas = productos.filter(p => p.enOferta);
+
+        if (ofertas.length === 0) {
+            container.innerHTML = '<p style="text-align:center;padding:40px;color:var(--color-gris);">No hay ofertas activas.</p>';
+            return;
+        }
+
+        let html = '';
+        ofertas.forEach(producto => {
+            const descuento = producto.descuento || 15;
+            const precioOferta = producto.precio * (1 - descuento / 100);
+
+            html += `
+                <div class="oferta-editar-item">
+                    <div class="header">
+                        <span class="nombre">${producto.nombre}</span>
+                        <span class="precio">
+                            <span class="tachado">$${producto.precio.toFixed(2)}</span>
+                            $${precioOferta.toFixed(2)}
+                        </span>
+                    </div>
+                    <div class="campos">
+                        <div class="campo">
+                            <label>Descuento (%)</label>
+                            <input type="number" value="${descuento}" min="0" max="100" onchange="actualizarDescuento('${producto._id}', this.value)">
+                        </div>
+                    </div>
+                    <button class="btn-admin btn-peligro" onclick="quitarOferta('${producto._id}')">Quitar oferta</button>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+    } catch (error) {
+        console.error('Error al cargar ofertas:', error);
+        container.innerHTML = '<p style="text-align:center;padding:40px;color:var(--color-gris);">Error al cargar ofertas.</p>';
     }
-});
+}
+
+async function actualizarDescuento(productoId, descuento) {
+    try {
+        const session = getSession();
+        await fetch(`${API_URL}/products/${productoId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.token}`
+            },
+            body: JSON.stringify({ descuento: parseInt(descuento) })
+        });
+        mostrarNotificacion('Descuento actualizado', 'success');
+    } catch (error) {
+        mostrarNotificacion('Error al actualizar descuento', 'error');
+    }
+}
+
+async function quitarOferta(productoId) {
+    if (!confirm('¿Quitar esta oferta?')) return;
+
+    try {
+        const session = getSession();
+        await fetch(`${API_URL}/offers/toggle/${productoId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.token}`
+            },
+            body: JSON.stringify({ enOferta: false })
+        });
+        mostrarNotificacion('Oferta eliminada', 'success');
+        cargarOfertasAdmin();
+        cargarProductos().then(d => { datosGlobales = d; renderizarOfertas(d.ofertas, d); });
+    } catch (error) {
+        mostrarNotificacion('Error al quitar oferta', 'error');
+    }
+}
 
 // ============================================
-// 8.5 GESTIÓN DE USUARIOS (SOLO SUPERADMIN)
+// 7.4 ADMIN - SEGURIDAD (USUARIOS)
 // ============================================
-
 function renderizarUsuariosAdmin() {
     const container = document.getElementById('admin-usuarios-lista');
-    if (!container) {
-        console.warn('⚠️ Contenedor admin-usuarios-lista no encontrado');
-        return;
-    }
-    
+    if (!container) return;
+
     const tabSeguridad = document.querySelector('[data-tab="seguridad"]');
-    
+
     if (!isSuperAdmin()) {
         container.innerHTML = `
             <div style="text-align:center;padding:30px;color:var(--color-gris);background:white;border-radius:12px;border:1px dashed #EDE8E1;">
@@ -831,9 +764,8 @@ function renderizarUsuariosAdmin() {
         if (tabSeguridad) tabSeguridad.style.display = 'none';
         return;
     }
-    
+
     if (tabSeguridad) tabSeguridad.style.display = 'block';
-    
     cargarUsuariosDesdeBackend(container);
 }
 
@@ -841,24 +773,15 @@ async function cargarUsuariosDesdeBackend(container) {
     try {
         const session = getSession();
         const respuesta = await fetch(`${API_URL}/users`, {
-            headers: {
-                'Authorization': `Bearer ${session.token}`
-            }
+            headers: { 'Authorization': `Bearer ${session.token}` }
         });
 
-        if (!respuesta.ok) {
-            throw new Error('Error al cargar usuarios');
-        }
+        if (!respuesta.ok) throw new Error('Error al cargar usuarios');
 
         const users = await respuesta.json();
-        
+
         if (users.length === 0) {
-            container.innerHTML = `
-                <div style="text-align:center;padding:30px;color:var(--color-gris);background:white;border-radius:12px;border:1px dashed #EDE8E1;">
-                    <span style="font-size:2rem;display:block;margin-bottom:10px;">👤</span>
-                    <p style="font-weight:600;color:var(--color-negro);">No hay usuarios registrados</p>
-                </div>
-            `;
+            container.innerHTML = '<p style="text-align:center;padding:30px;color:var(--color-gris);">No hay usuarios.</p>';
             return;
         }
 
@@ -866,7 +789,7 @@ async function cargarUsuariosDesdeBackend(container) {
         users.forEach(user => {
             const rolClase = user.role === 'superadmin' ? 'superadmin' : user.role === 'admin' ? 'admin' : 'user';
             const rolTexto = user.role === 'superadmin' ? 'SuperAdmin' : user.role === 'admin' ? 'Admin' : 'Usuario';
-            
+
             html += `
                 <div class="usuario-item">
                     <div class="info">
@@ -885,25 +808,16 @@ async function cargarUsuariosDesdeBackend(container) {
                 </div>
             `;
         });
-        
+
         container.innerHTML = html;
     } catch (error) {
-        console.error('Error al cargar usuarios:', error);
-        container.innerHTML = `
-            <div style="text-align:center;padding:30px;color:var(--color-gris);">
-                <p>Error al cargar usuarios</p>
-                <button onclick="renderizarUsuariosAdmin()" class="btn-admin btn-secundario" style="margin-top:10px;">Reintentar</button>
-            </div>
-        `;
+        container.innerHTML = '<p style="text-align:center;padding:30px;color:var(--color-gris);">Error al cargar usuarios.</p>';
     }
 }
 
 async function cambiarRolUsuario(userId, nuevoRol) {
-    if (!isSuperAdmin()) {
-        mostrarNotificacion('Solo el SuperAdministrador puede gestionar usuarios', 'error');
-        return;
-    }
-    
+    if (!isSuperAdmin()) { mostrarNotificacion('Solo el SuperAdmin', 'error'); return; }
+
     try {
         const session = getSession();
         const respuesta = await fetch(`${API_URL}/users/${userId}/role`, {
@@ -915,75 +829,49 @@ async function cambiarRolUsuario(userId, nuevoRol) {
             body: JSON.stringify({ role: nuevoRol })
         });
 
-        if (!respuesta.ok) {
-            const data = await respuesta.json();
-            throw new Error(data.error || 'Error al actualizar rol');
-        }
-
-        mostrarNotificacion('Rol actualizado correctamente', 'success');
+        if (!respuesta.ok) throw new Error('Error');
+        mostrarNotificacion('Rol actualizado', 'success');
         renderizarUsuariosAdmin();
     } catch (error) {
-        console.error('Error al cambiar rol:', error);
-        mostrarNotificacion(error.message || 'Error al actualizar rol', 'error');
+        mostrarNotificacion('Error al actualizar rol', 'error');
     }
 }
 
 async function eliminarUsuario(userId) {
-    if (!isSuperAdmin()) {
-        mostrarNotificacion('Solo el SuperAdministrador puede eliminar usuarios', 'error');
-        return;
-    }
-    if (!confirm('¿Seguro que quieres eliminar este usuario?')) return;
-    
+    if (!isSuperAdmin()) { mostrarNotificacion('Solo el SuperAdmin', 'error'); return; }
+    if (!confirm('¿Eliminar este usuario?')) return;
+
     try {
         const session = getSession();
-        const respuesta = await fetch(`${API_URL}/users/${userId}`, {
+        await fetch(`${API_URL}/users/${userId}`, {
             method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${session.token}`
-            }
+            headers: { 'Authorization': `Bearer ${session.token}` }
         });
-
-        if (!respuesta.ok) {
-            const data = await respuesta.json();
-            throw new Error(data.error || 'Error al eliminar usuario');
-        }
-
-        mostrarNotificacion('Usuario eliminado correctamente', 'success');
+        mostrarNotificacion('Usuario eliminado', 'success');
         renderizarUsuariosAdmin();
     } catch (error) {
-        console.error('Error al eliminar usuario:', error);
-        mostrarNotificacion(error.message || 'Error al eliminar usuario', 'error');
+        mostrarNotificacion('Error al eliminar usuario', 'error');
     }
 }
 
 document.getElementById('btn-nuevo-usuario')?.addEventListener('click', async function() {
-    if (!isSuperAdmin()) {
-        mostrarNotificacion('Solo el SuperAdministrador puede crear usuarios', 'error');
-        return;
-    }
-    
+    if (!isSuperAdmin()) { mostrarNotificacion('Solo el SuperAdmin', 'error'); return; }
+
     const username = prompt('Nombre de usuario (3-40 caracteres):');
-    if (!username) return;
-    if (username.length > 40) {
-        mostrarNotificacion('El nombre no puede tener más de 40 caracteres', 'error');
+    if (!username || username.length < 3 || username.length > 40) {
+        mostrarNotificacion('Nombre inválido', 'error');
         return;
     }
-    if (username.length < 3) {
-        mostrarNotificacion('El nombre debe tener al menos 3 caracteres', 'error');
-        return;
-    }
-    
+
     const password = prompt('Contraseña (mínimo 6 caracteres):');
-    if (!password) return;
-    if (password.length < 6) {
-        mostrarNotificacion('La contraseña debe tener al menos 6 caracteres', 'error');
+    if (!password || password.length < 6) {
+        mostrarNotificacion('Contraseña inválida', 'error');
         return;
     }
-    
-    const esAdmin = confirm('¿Quieres que este usuario sea administrador? (Sí = Admin, No = Usuario)');
+
+    const esAdmin = confirm('¿Hacer admin? (Sí = Admin, No = Usuario)');
     const role = esAdmin ? 'admin' : 'user';
-    
+
     try {
         const session = getSession();
         const respuesta = await fetch(`${API_URL}/auth/register`, {
@@ -995,25 +883,53 @@ document.getElementById('btn-nuevo-usuario')?.addEventListener('click', async fu
             body: JSON.stringify({ username, password, role })
         });
 
-        const data = await respuesta.json();
-
         if (!respuesta.ok) {
-            throw new Error(data.error || 'Error al crear usuario');
+            const data = await respuesta.json();
+            throw new Error(data.error);
         }
 
-        mostrarNotificacion(`Usuario "${username}" creado correctamente`, 'success');
+        mostrarNotificacion(`Usuario "${username}" creado`, 'success');
         renderizarUsuariosAdmin();
     } catch (error) {
-        console.error('Error al crear usuario:', error);
         mostrarNotificacion(error.message || 'Error al crear usuario', 'error');
     }
 });
 
 // ============================================
-// 9. BOTÓN ACCEDER - LOGIN
+// 8. BUSCADORES DEL PANEL DE ADMIN
 // ============================================
+function filtrarProductosAdmin(termino) {
+    const items = document.querySelectorAll('#admin-productos-lista .admin-producto-item');
+    termino = termino.toLowerCase();
+    items.forEach(item => {
+        const nombre = item.querySelector('.nombre')?.textContent.toLowerCase() || '';
+        item.style.display = nombre.includes(termino) ? 'flex' : 'none';
+    });
+}
 
+function filtrarOfertasAdmin(termino) {
+    const items = document.querySelectorAll('#lista-ofertas-admin .oferta-editar-item');
+    termino = termino.toLowerCase();
+    items.forEach(item => {
+        const nombre = item.querySelector('.nombre')?.textContent.toLowerCase() || '';
+        item.style.display = nombre.includes(termino) ? 'block' : 'none';
+    });
+}
+
+function filtrarUsuariosAdmin(termino) {
+    const items = document.querySelectorAll('#admin-usuarios-lista .usuario-item');
+    termino = termino.toLowerCase();
+    items.forEach(item => {
+        const nombre = item.querySelector('.nombre')?.textContent.toLowerCase() || '';
+        item.style.display = nombre.includes(termino) ? 'flex' : 'none';
+    });
+}
+
+// ============================================
+// 9. BOTONES DE LOGIN/LOGOUT
+// ============================================
 const btnAcceder = document.getElementById('btn-acceder');
+const btnCerrarSesion = document.getElementById('btn-cerrar-sesion');
 
 if (btnAcceder) {
     btnAcceder.addEventListener('click', function(e) {
@@ -1022,7 +938,6 @@ if (btnAcceder) {
         if (session) {
             if (isAdmin()) {
                 abrirAdmin();
-                cargarAdminProductos();
             } else {
                 mostrarNotificacion('Sesión activa como: ' + session.username, 'info');
             }
@@ -1038,47 +953,19 @@ function actualizarBotonAcceder() {
         if (session) {
             btnAcceder.textContent = 'Sesión activa';
             btnAcceder.classList.add('activo');
-            btnAcceder.title = isAdmin() ? 'Hacer clic para gestionar' : 'Sesión activa';
-            btnAcceder.style.cursor = isAdmin() ? 'pointer' : 'default';
-            if (isAdmin()) {
-                btnAcceder.classList.add('admin');
-            } else {
-                btnAcceder.classList.remove('admin');
-            }
         } else {
             btnAcceder.textContent = 'Acceder a la cuenta';
             btnAcceder.classList.remove('activo');
-            btnAcceder.classList.remove('admin');
-            btnAcceder.title = 'Iniciar sesión';
-            btnAcceder.style.cursor = 'pointer';
         }
     }
     actualizarBotonCerrarSesion();
 }
-
-if (btnAcceder) {
-    btnAcceder.addEventListener('dblclick', function(e) {
-        e.preventDefault();
-        if (isLoggedIn()) {
-            if (confirm('¿Seguro que quieres cerrar sesión?')) {
-                logout();
-            }
-        }
-    });
-}
-
-// ============================================
-// 10. BOTÓN CERRAR SESIÓN
-// ============================================
-
-const btnCerrarSesion = document.getElementById('btn-cerrar-sesion');
 
 function actualizarBotonCerrarSesion() {
     const session = getSession();
     if (btnCerrarSesion) {
         if (session) {
             btnCerrarSesion.classList.add('visible');
-            btnCerrarSesion.textContent = 'Cerrar sesión';
         } else {
             btnCerrarSesion.classList.remove('visible');
         }
@@ -1088,27 +975,18 @@ function actualizarBotonCerrarSesion() {
 if (btnCerrarSesion) {
     btnCerrarSesion.addEventListener('click', function(e) {
         e.preventDefault();
-        if (confirm('¿Seguro que quieres cerrar sesión?')) {
-            logout();
-        }
+        if (confirm('¿Cerrar sesión?')) logout();
     });
 }
 
-document.getElementById('btn-cerrar-sesion-admin')?.addEventListener('click', function() {
-    if (confirm('¿Seguro que quieres cerrar sesión?')) {
-        logout();
-    }
-});
-
 // ============================================
-// 11. LOGIN - EVENTOS Y REGISTRO
+// 10. LOGIN Y REGISTRO
 // ============================================
-
-document.getElementById('login-form').addEventListener('submit', async function(e) {
+document.getElementById('login-form')?.addEventListener('submit', async function(e) {
     e.preventDefault();
     const username = document.getElementById('login-user').value.trim();
     const password = document.getElementById('login-pass').value;
-    
+
     const result = await login(username, password);
     if (result.success) {
         cerrarLogin();
@@ -1116,7 +994,6 @@ document.getElementById('login-form').addEventListener('submit', async function(
         if (isAdmin()) {
             mostrarNotificacion('Bienvenido administrador', 'success');
             abrirAdmin();
-            cargarAdminProductos();
         } else {
             mostrarNotificacion('Bienvenido ' + username, 'success');
         }
@@ -1127,117 +1004,74 @@ document.getElementById('login-form').addEventListener('submit', async function(
 
 document.getElementById('login-registro-link')?.addEventListener('click', async function(e) {
     e.preventDefault();
-    
-    const username = prompt('Crear nuevo usuario\n\nEl nombre de usuario debe tener entre 3 y 40 caracteres:');
-    if (!username) return;
-    
-    if (username.length > 40) {
-        mostrarNotificacion('El nombre de usuario no puede tener más de 40 caracteres.', 'error');
+
+    const username = prompt('Nombre de usuario (3-40 caracteres):');
+    if (!username || username.length < 3 || username.length > 40) {
+        mostrarNotificacion('Nombre inválido', 'error');
         return;
     }
-    if (username.length < 3) {
-        mostrarNotificacion('El nombre de usuario debe tener al menos 3 caracteres.', 'error');
-        return;
-    }
-    
+
     const password = prompt('Contraseña (mínimo 6 caracteres):');
-    if (!password) return;
-    if (password.length < 6) {
-        mostrarNotificacion('La contraseña debe tener al menos 6 caracteres.', 'error');
+    if (!password || password.length < 6) {
+        mostrarNotificacion('Contraseña inválida', 'error');
         return;
     }
-    
-    const result = await registerUser(username, password, 'user');
+
+    const result = await registerUser(username, password);
     if (result.success) {
         cerrarLogin();
         actualizarBotonAcceder();
-        mostrarNotificacion('Usuario creado correctamente. Sesión iniciada.', 'success');
+        mostrarNotificacion('Usuario creado. Sesión iniciada.', 'success');
     } else {
         mostrarNotificacion(result.message, 'error');
     }
 });
 
-loginCerrar.addEventListener('click', cerrarLogin);
-loginOverlay.addEventListener('click', cerrarLogin);
-
-document.getElementById('login-pass').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') {
-        document.getElementById('login-form').dispatchEvent(new Event('submit'));
-    }
-});
+loginCerrar?.addEventListener('click', cerrarLogin);
+loginOverlay?.addEventListener('click', cerrarLogin);
 
 // ============================================
-// 12. OJITO PARA MOSTRAR/OCULTAR CONTRASEÑA
+// 11. OJITO PARA CONTRASEÑA
 // ============================================
-
 document.addEventListener('DOMContentLoaded', function() {
-    const toggleButtons = document.querySelectorAll('.toggle-password');
-    
-    toggleButtons.forEach(button => {
+    document.querySelectorAll('.toggle-password').forEach(button => {
         button.addEventListener('click', function() {
             const input = this.parentElement.querySelector('input[type="password"], input[type="text"]');
             if (!input) return;
-            
+
             const isPassword = input.type === 'password';
             input.type = isPassword ? 'text' : 'password';
-            const svg = this.querySelector('.icono-ojo');
-            if (svg) {
-                if (isPassword) {
-                    svg.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
-                } else {
-                    svg.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
-                }
-            }
             this.classList.toggle('visible');
         });
     });
 });
 
 // ============================================
-// 13. FUNCIÓN PRINCIPAL (INICIAR)
+// 12. FUNCIÓN PRINCIPAL (INICIAR)
 // ============================================
-
 async function iniciar() {
     console.log('🚀 Cargando productos...');
 
-    let datos = await cargarProductos();
-    if (!datos) {
-        console.error('❌ No se pudieron cargar los datos');
-        return;
-    }
-    
+    const datos = await cargarProductos();
+    if (!datos) { console.error('❌ No se pudieron cargar los datos'); return; }
+
     datosGlobales = datos;
     adminDatos = JSON.parse(JSON.stringify(datos));
 
     renderizarOfertas(datos.ofertas, datos);
-    
-    if (datos.productos) {
     renderizarProductosConModal(datos.productos.hombre, '#ropa-hombre .grid-productos', datos);
     renderizarProductosConModal(datos.productos.mujer, '#ropa-mujer .grid-productos', datos);
     renderizarProductosConModal(datos.productos.telas, '#telas .grid-productos', datos);
     renderizarProductosConModal(datos.productos.objetos, '#otros .grid-productos', datos);
-    }
 
     actualizarBotonAcceder();
-
-    const session = getSession();
-    const sesionEstado = document.getElementById('sesion-estado');
-    const sesionRol = document.getElementById('sesion-rol');
-    if (sesionEstado) {
-        sesionEstado.textContent = session ? 'Activa' : 'Inactiva';
-        sesionEstado.style.color = session ? '#27ae60' : '#e74c3c';
-    }
-    if (sesionRol) {
-        sesionRol.textContent = session ? (session.role === 'superadmin' ? 'SuperAdministrador' : session.role === 'admin' ? 'Administrador' : 'Usuario') : 'Sin sesión';
-    }
-
     console.log('✅ Productos cargados correctamente');
 }
 
 document.addEventListener('DOMContentLoaded', iniciar);
 
 // ============================================
-// 14. EXPONER FUNCIONES PARA USO EN HTML
+// 13. EXPONER FUNCIONES GLOBALES
 // ============================================
 window.toggleOfertaAdmin = toggleOfertaAdmin;
 window.editarProductoAdmin = editarProductoAdmin;
@@ -1247,18 +1081,20 @@ window.cerrarAdmin = cerrarAdmin;
 window.mostrarLogin = mostrarLogin;
 window.cerrarLogin = cerrarLogin;
 window.logout = logout;
-window.isAdmin = isAdmin;
-window.isSuperAdmin = isSuperAdmin;
 window.cambiarRolUsuario = cambiarRolUsuario;
 window.renderizarUsuariosAdmin = renderizarUsuariosAdmin;
 window.mostrarNotificacion = mostrarNotificacion;
 window.solicitarPedido = solicitarPedido;
-window.cargarUsuariosDesdeBackend = cargarUsuariosDesdeBackend;
+window.cargarOfertasAdmin = cargarOfertasAdmin;
+window.actualizarDescuento = actualizarDescuento;
+window.quitarOferta = quitarOferta;
+window.filtrarProductosAdmin = filtrarProductosAdmin;
+window.filtrarOfertasAdmin = filtrarOfertasAdmin;
+window.filtrarUsuariosAdmin = filtrarUsuariosAdmin;
 
-// ============================================ */
-// MENÚ HAMBURGUESA (PC Y MÓVIL)               */
-// ============================================ */
-
+// ============================================
+// 14. MENÚ HAMBURGUESA
+// ============================================
 document.addEventListener('DOMContentLoaded', function() {
     const hamburguesa = document.getElementById('menu-hamburguesa');
     const nav = document.getElementById('nav-principal');
@@ -1270,8 +1106,8 @@ document.addEventListener('DOMContentLoaded', function() {
             nav.classList.toggle('activo');
         });
 
-        nav.querySelectorAll('a').forEach(function(enlace) {
-            enlace.addEventListener('click', function() {
+        nav.querySelectorAll('a').forEach(enlace => {
+            enlace.addEventListener('click', () => {
                 hamburguesa.classList.remove('activo');
                 nav.classList.remove('activo');
             });
@@ -1283,7 +1119,5 @@ document.addEventListener('DOMContentLoaded', function() {
                 nav.classList.remove('activo');
             }
         });
-    } else {
-        console.error('❌ No se encontró el menú hamburguesa o el nav');
     }
 });

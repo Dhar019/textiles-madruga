@@ -2086,3 +2086,28 @@ section[id] {
         --header-height: 120px;
     }
 }
+}
+
+/* ============================================ */
+/* BUSCADORES DEL PANEL DE ADMIN                */
+/* ============================================ */
+.admin-buscador {
+    margin-bottom: 15px;
+}
+
+.admin-buscador input {
+    width: 100%;
+    padding: 10px 16px;
+    border: 2px solid #EDE8E1;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-family: var(--font-sans);
+    background: white;
+    transition: border-color 0.3s ease;
+}
+
+.admin-buscador input:focus {
+    border-color: var(--color-naranja);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(232, 122, 32, 0.1);
+}
