@@ -206,6 +206,15 @@ function renderizarOfertas(ofertasIds, datos) {
             <div class="producto-card oferta-destacada">
                 <span class="badge-oferta">-${descuento}%</span>
                 <img src="${producto.imagen}" alt="${producto.nombre}" class="producto-img" onclick="abrirLightbox('${producto.imagen}', '${producto.nombre}')" style="cursor: zoom-in;">
+                <p class="producto-hint">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;">
+                        <circle cx="11" cy="11" r="8"/>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        <line x1="11" y1="8" x2="11" y2="14"/>
+                        <line x1="8" y1="11" x2="14" y2="11"/>
+                    </svg>
+                    Toca la imagen para verla completa
+                </p>
                 <h3 class="producto-nombre">${producto.nombre}</h3>
                 <p class="producto-precio">
                     <span class="tachado">$${producto.precio.toFixed(2)}</span> $${precioOferta.toFixed(2)}
@@ -244,6 +253,15 @@ function renderizarProductosConModal(productos, contenedorSelector, datos) {
             <div class="producto-card ${enOferta ? 'oferta-destacada' : ''}">
                 ${enOferta ? `<span class="badge-oferta">-${descuento}%</span>` : ''}
                 <img src="${producto.imagen}" alt="${producto.nombre}" class="producto-img" loading="lazy" onclick="abrirLightbox('${producto.imagen}', '${producto.nombre}')" style="cursor: zoom-in;">
+                <p class="producto-hint">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;">
+                        <circle cx="11" cy="11" r="8"/>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        <line x1="11" y1="8" x2="11" y2="14"/>
+                        <line x1="8" y1="11" x2="14" y2="11"/>
+                    </svg>
+                    Toca la imagen para verla completa
+                </p>
                 <h3 class="producto-nombre">${producto.nombre}</h3>
                 <p class="producto-precio">
                     ${enOferta 
@@ -300,7 +318,7 @@ function abrirModal(producto, datos) {
     modalBody.innerHTML = `
         <div class="modal-producto">
             <div class="modal-producto-imagen">
-                <img src="${producto.imagen}" alt="${producto.nombre}">
+                <img src="${producto.imagen}" alt="${producto.nombre}" onclick="abrirLightbox('${producto.imagen}', '${producto.nombre}')" style="cursor: zoom-in;">
             </div>
             <div class="modal-producto-info">
                 <span class="categoria">${categoriaTexto}</span>
@@ -318,10 +336,62 @@ function abrirModal(producto, datos) {
 
     modal.className = 'modal-visible';
     document.body.style.overflow = 'hidden';
+    document.body.classList.add('modal-abierto');
 }
 
+function cerrarModal() {
+    modal.className = 'modal-oculto';
+    document.body.style.overflow = 'auto';
+    document.body.classList.remove('modal-abierto');
+}
+
+modalCerrar?.addEventListener('click', cerrarModal);
+modalOverlay?.addEventListener('click', cerrarModal);
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrarModal(); });
+
 // ============================================
-// 6. SOLICITAR PEDIDO (SIN REGISTRO)
+// 6. LIGHTBOX DE IMAGEN
+// ============================================
+const lightbox = document.getElementById('lightbox');
+const lightboxImg = document.getElementById('lightbox-img');
+const lightboxOverlay = document.getElementById('lightbox-overlay');
+const lightboxCerrar = document.getElementById('lightbox-cerrar');
+
+function abrirLightbox(src, alt) {
+    if (!lightbox) return;
+    lightboxImg.src = src;
+    lightboxImg.alt = alt || 'Imagen ampliada';
+    lightbox.className = 'lightbox-visible';
+    document.body.style.overflow = 'hidden';
+    document.body.classList.add('lightbox-abierto');
+}
+
+function cerrarLightbox() {
+    if (!lightbox) return;
+    lightbox.className = 'lightbox-oculto';
+    document.body.style.overflow = 'auto';
+    document.body.classList.remove('lightbox-abierto');
+}
+
+lightboxImg?.addEventListener('click', function(e) {
+    e.stopPropagation();
+    cerrarLightbox();
+});
+
+lightboxCerrar?.addEventListener('click', cerrarLightbox);
+lightboxOverlay?.addEventListener('click', cerrarLightbox);
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && lightbox?.className === 'lightbox-visible') {
+        cerrarLightbox();
+    }
+});
+
+window.abrirLightbox = abrirLightbox;
+window.cerrarLightbox = cerrarLightbox;
+
+// ============================================
+// 7. SOLICITAR PEDIDO (SIN REGISTRO)
 // ============================================
 function solicitarPedido(producto) {
     const modalPedido = document.getElementById('modal-pedido');
@@ -348,7 +418,6 @@ function solicitarPedido(producto) {
 
     document.getElementById('modal-pedido-form').onsubmit = (e) => {
         e.preventDefault();
-
         const nombre = document.getElementById('pedido-nombre').value;
         const contacto = document.getElementById('pedido-contacto').value;
         const cantidad = document.getElementById('pedido-cantidad').value;
@@ -360,22 +429,12 @@ function solicitarPedido(producto) {
             `¡Pedido enviado! Te contactaremos pronto, ${nombre}.`,
             'success'
         );
-
         cerrar();
     };
 }
 
-function cerrarModal() {
-    modal.className = 'modal-oculto';
-    document.body.style.overflow = 'auto';
-}
-
-modalCerrar?.addEventListener('click', cerrarModal);
-modalOverlay?.addEventListener('click', cerrarModal);
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrarModal(); });
-
 // ============================================
-// 7. PANEL DE ADMINISTRACIÓN
+// 8. PANEL DE ADMINISTRACIÓN
 // ============================================
 const adminPanel = document.getElementById('admin-panel');
 const adminCerrar = document.getElementById('admin-cerrar');
@@ -426,9 +485,6 @@ function cargarAdminProductos() {
     renderizarUsuariosAdmin();
 }
 
-// ============================================
-// 7.1 CAMBIO DE PESTAÑAS
-// ============================================
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.admin-tab').forEach(tab => {
         tab.addEventListener('click', function() {
@@ -446,9 +502,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// ============================================
-// 7.2 ADMIN - PRODUCTOS
-// ============================================
 function renderizarAdminProductos() {
     if (!adminDatos) return;
 
@@ -471,10 +524,10 @@ function renderizarAdminProductos() {
                     </div>
                     <div class="acciones">
                         <button class="btn-oferta ${enOferta ? 'activo' : ''}" onclick="toggleOfertaAdmin('${id}')">
-                            ${enOferta ? '✕ Quitar oferta' : '✓ Oferta'}
+                            ${enOferta ? 'Quitar oferta' : 'Oferta'}
                         </button>
-                        <button class="btn-editar" onclick="editarProductoAdmin('${id}')">✎</button>
-                        <button class="btn-eliminar" onclick="eliminarProductoAdmin('${id}')">✕</button>
+                        <button class="btn-editar" onclick="editarProductoAdmin('${id}')">Editar</button>
+                        <button class="btn-eliminar" onclick="eliminarProductoAdmin('${id}')">Eliminar</button>
                     </div>
                 </div>
             `;
@@ -568,8 +621,8 @@ function editarProductoAdmin(id) {
     }
 
     formProducto.className = 'form-visible';
-    document.querySelector('#producto-form button[type="submit"]').textContent = '✎ Actualizar';
-    document.getElementById('form-title').textContent = '✎ Editar Producto';
+    document.querySelector('#producto-form button[type="submit"]').textContent = 'Actualizar';
+    document.getElementById('form-title').textContent = 'Editar Producto';
 }
 
 document.getElementById('producto-form')?.addEventListener('submit', async function(e) {
@@ -635,8 +688,8 @@ document.getElementById('producto-form')?.addEventListener('submit', async funct
         modoEdicion = null;
         formProducto.className = 'form-oculto';
         this.reset();
-        document.querySelector('#producto-form button[type="submit"]').textContent = '✦ Crear';
-        document.getElementById('form-title').textContent = '✦ Nuevo Producto';
+        document.querySelector('#producto-form button[type="submit"]').textContent = 'Crear';
+        document.getElementById('form-title').textContent = 'Nuevo Producto';
 
         mostrarNotificacion('Producto guardado', 'success');
         renderizarAdminProductos();
@@ -661,9 +714,6 @@ btnNuevoProducto?.addEventListener('click', function() {
 adminCerrar?.addEventListener('click', cerrarAdmin);
 adminOverlay?.addEventListener('click', cerrarAdmin);
 
-// ============================================
-// 7.3 ADMIN - OFERTAS
-// ============================================
 async function cargarOfertasAdmin() {
     const container = document.getElementById('lista-ofertas-admin');
     if (!container) return;
@@ -750,9 +800,6 @@ async function quitarOferta(productoId) {
     }
 }
 
-// ============================================
-// 7.4 ADMIN - SEGURIDAD (USUARIOS)
-// ============================================
 async function renderizarUsuariosAdmin() {
     const container = document.getElementById('admin-usuarios-lista');
     if (!container) return;
@@ -760,7 +807,6 @@ async function renderizarUsuariosAdmin() {
     if (!isSuperAdmin()) {
         container.innerHTML = `
             <div style="text-align:center;padding:30px;color:var(--color-gris);background:white;border-radius:12px;border:1px dashed #EDE8E1;">
-                <span style="font-size:2rem;display:block;margin-bottom:10px;">🔒</span>
                 <p style="font-weight:600;color:var(--color-negro);">Acceso restringido</p>
                 <p style="font-size:0.85rem;">Solo el SuperAdministrador puede gestionar usuarios</p>
             </div>
@@ -802,7 +848,7 @@ async function renderizarUsuariosAdmin() {
                                 `<button class="btn-hacer-admin" onclick="cambiarRolUsuario('${user._id}', 'admin')">Hacer admin</button>` :
                                 `<button class="btn-quitar-admin" onclick="cambiarRolUsuario('${user._id}', 'user')">Quitar admin</button>`
                             }
-                            <button class="btn-eliminar-usuario" onclick="eliminarUsuario('${user._id}')">✕</button>
+                            <button class="btn-eliminar-usuario" onclick="eliminarUsuario('${user._id}')">Eliminar</button>
                         ` : '<span style="color:var(--color-gris);font-size:0.75rem;font-weight:500;">Protegido</span>'}
                     </div>
                 </div>
@@ -854,9 +900,6 @@ async function eliminarUsuario(userId) {
     }
 }
 
-// ============================================
-// 7.5 ADMIN - NUEVO USUARIO (MODAL)
-// ============================================
 document.getElementById('btn-nuevo-usuario')?.addEventListener('click', function() {
     if (!isSuperAdmin()) {
         mostrarNotificacion('Solo el SuperAdministrador puede crear usuarios', 'error');
@@ -914,9 +957,6 @@ document.getElementById('btn-nuevo-usuario')?.addEventListener('click', function
     });
 });
 
-// ============================================
-// 8. BUSCADORES
-// ============================================
 function filtrarProductosAdmin(termino) {
     const items = document.querySelectorAll('#admin-productos-lista .admin-producto-item');
     termino = termino.toLowerCase();
@@ -944,9 +984,6 @@ function filtrarUsuariosAdmin(termino) {
     });
 }
 
-// ============================================
-// 9. MODAL GENÉRICO
-// ============================================
 function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit }) {
     const modal = document.getElementById('modal-generico');
     const overlay = document.getElementById('modal-generico-overlay');
@@ -995,14 +1032,12 @@ function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit }) {
     };
 }
 
-// ============================================
-// 10. MODAL DE BIENVENIDA
-// ============================================
 function mostrarModalBienvenida() {
     const modal = document.getElementById('modal-bienvenida');
     if (!modal) return;
     modal.className = 'bienvenida-visible';
     document.body.style.overflow = 'hidden';
+    document.body.classList.add('bienvenida-abierta');
 }
 
 function cerrarModalBienvenida() {
@@ -1010,7 +1045,7 @@ function cerrarModalBienvenida() {
     if (!modal) return;
     modal.className = 'bienvenida-oculto';
     document.body.style.overflow = 'auto';
-    // ✅ SIN localStorage - el modal aparecerá siempre al recargar
+    document.body.classList.remove('bienvenida-abierta');
 }
 
 document.getElementById('modal-bienvenida-crear')?.addEventListener('click', function() {
@@ -1043,9 +1078,6 @@ document.getElementById('modal-bienvenida-continuar')?.addEventListener('click',
 document.getElementById('modal-bienvenida-cerrar')?.addEventListener('click', cerrarModalBienvenida);
 document.getElementById('modal-bienvenida-overlay')?.addEventListener('click', cerrarModalBienvenida);
 
-// ============================================
-// 11. LOGIN/LOGOUT
-// ============================================
 const btnAcceder = document.getElementById('btn-acceder');
 const btnCerrarSesion = document.getElementById('btn-cerrar-sesion');
 
@@ -1091,9 +1123,6 @@ if (btnCerrarSesion) {
     });
 }
 
-// ============================================
-// 12. LOGIN Y REGISTRO
-// ============================================
 document.getElementById('login-form')?.addEventListener('submit', async function(e) {
     e.preventDefault();
     const username = document.getElementById('login-user').value.trim();
@@ -1140,9 +1169,6 @@ document.getElementById('login-registro-link')?.addEventListener('click', functi
 loginCerrar?.addEventListener('click', cerrarLogin);
 loginOverlay?.addEventListener('click', cerrarLogin);
 
-// ============================================
-// 13. OJITO CONTRASEÑA
-// ============================================
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.toggle-password').forEach(button => {
         button.addEventListener('click', function() {
@@ -1155,9 +1181,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// ============================================
-// 14. INICIAR
-// ============================================
 async function iniciar() {
     console.log('🚀 Cargando productos...');
 
@@ -1176,7 +1199,6 @@ async function iniciar() {
     actualizarBotonAcceder();
     console.log('✅ Productos cargados correctamente');
 
-    // ✅ Mostrar el modal SIEMPRE al recargar (si no está logueado)
     if (!isLoggedIn()) {
         setTimeout(mostrarModalBienvenida, 1500);
     }
@@ -1184,9 +1206,6 @@ async function iniciar() {
 
 document.addEventListener('DOMContentLoaded', iniciar);
 
-// ============================================
-// 15. EXPONER FUNCIONES GLOBALES
-// ============================================
 window.toggleOfertaAdmin = toggleOfertaAdmin;
 window.editarProductoAdmin = editarProductoAdmin;
 window.eliminarProductoAdmin = eliminarProductoAdmin;
@@ -1210,9 +1229,6 @@ window.mostrarModalBienvenida = mostrarModalBienvenida;
 window.cerrarModalBienvenida = cerrarModalBienvenida;
 window.eliminarUsuario = eliminarUsuario;
 
-// ============================================
-// 16. MENÚ HAMBURGUESA
-// ============================================
 document.addEventListener('DOMContentLoaded', function() {
     const hamburguesa = document.getElementById('menu-hamburguesa');
     const nav = document.getElementById('nav-principal');
@@ -1239,36 +1255,3 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
-
-// ============================================
-// LIGHTBOX DE IMAGEN
-// ============================================
-const lightbox = document.getElementById('lightbox');
-const lightboxImg = document.getElementById('lightbox-img');
-const lightboxOverlay = document.getElementById('lightbox-overlay');
-const lightboxCerrar = document.getElementById('lightbox-cerrar');
-
-function abrirLightbox(src, alt) {
-    if (!lightbox) return;
-    lightboxImg.src = src;
-    lightboxImg.alt = alt || 'Imagen ampliada';
-    lightbox.className = 'lightbox-visible';
-    document.body.style.overflow = 'hidden';
-}
-
-function cerrarLightbox() {
-    if (!lightbox) return;
-    lightbox.className = 'lightbox-oculto';
-    document.body.style.overflow = 'auto';
-}
-
-lightboxCerrar?.addEventListener('click', cerrarLightbox);
-lightboxOverlay?.addEventListener('click', cerrarLightbox);
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && lightbox?.className === 'lightbox-visible') {
-        cerrarLightbox();
-    }
-});
-
-window.abrirLightbox = abrirLightbox;
-window.cerrarLightbox = cerrarLightbox;

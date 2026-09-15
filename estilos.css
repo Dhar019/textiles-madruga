@@ -495,6 +495,12 @@ main, .main-content {
     object-fit: cover;
     border-radius: 12px;
     background-color: var(--color-crema);
+    cursor: zoom-in;
+    transition: transform 0.3s ease;
+}
+
+.producto-img:hover {
+    transform: scale(1.02);
 }
 
 .producto-nombre {
@@ -527,6 +533,33 @@ main, .main-content {
 .btn-secundario:hover {
     background-color: var(--color-negro);
     color: var(--color-blanco);
+}
+
+/* ============================================ */
+/* AVISO EN LA TARJETA DE PRODUCTO              */
+/* ============================================ */
+.producto-hint {
+    font-size: 0.7rem;
+    color: var(--color-gris);
+    text-align: center;
+    margin-top: 8px;
+    margin-bottom: 0;
+    font-style: italic;
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.producto-hint svg {
+    flex-shrink: 0;
+}
+
+.producto-card:hover .producto-hint {
+    opacity: 1;
+    color: var(--color-naranja);
 }
 
 /* ============================================ */
@@ -763,6 +796,15 @@ main, .main-content {
     font-size: 1.4rem;
     margin-bottom: 15px;
     color: var(--color-naranja);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.personalizado-card h3 svg {
+    color: var(--color-naranja);
+    flex-shrink: 0;
 }
 
 .personalizado-card p {
@@ -792,6 +834,14 @@ main, .main-content {
 
 .contacto-info p {
     margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.contacto-info svg {
+    flex-shrink: 0;
+    color: var(--color-naranja);
 }
 
 /* ============================================ */
@@ -859,6 +909,15 @@ main, .main-content {
     cursor: pointer;
     transition: transform 0.3s ease;
     padding: 0 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-cerrar svg {
+    display: block;
+    width: 20px;
+    height: 20px;
 }
 
 .modal-cerrar:hover { transform: rotate(90deg); color: var(--color-negro); }
@@ -882,8 +941,9 @@ main, .main-content {
     width: 100%;
     height: 100%;
     max-height: 400px;
-    object-fit: cover;
+    object-fit: contain;
     display: block;
+    cursor: zoom-in;
 }
 
 .modal-producto-info {
@@ -971,6 +1031,98 @@ main, .main-content {
 }
 
 /* ============================================ */
+/* LIGHTBOX DE IMAGEN                           */
+/* ============================================ */
+.lightbox-oculto { display: none; }
+.lightbox-visible { display: block; animation: lightboxFadeIn 0.3s ease; }
+
+@keyframes lightboxFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.lightbox-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    backdrop-filter: blur(8px);
+    z-index: 99998;
+    cursor: zoom-out;
+}
+
+.lightbox-contenido {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-width: 90%;
+    max-height: 90vh;
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lightbox-contenido img {
+    max-width: 100%;
+    max-height: 90vh;
+    object-fit: contain;
+    border-radius: 12px;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+    animation: lightboxZoomIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    cursor: zoom-out;
+}
+
+@keyframes lightboxZoomIn {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.lightbox-cerrar {
+    position: absolute;
+    top: -40px;
+    right: 0;
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lightbox-cerrar:hover {
+    background: var(--color-naranja);
+    transform: rotate(90deg);
+}
+
+.lightbox-cerrar svg {
+    display: block;
+}
+
+/* ============================================ */
+/* HEADER DETRÁS DE MODALES                     */
+/* ============================================ */
+body.lightbox-abierto .header,
+body.modal-abierto .header,
+body.bienvenida-abierta .header {
+    display: none !important;
+}
+
+body.lightbox-abierto .nav,
+body.modal-abierto .nav,
+body.bienvenida-abierta .nav {
+    display: none !important;
+}
+
+/* ============================================ */
 /* 14. PANEL DE ADMINISTRACIÓN                  */
 /* ============================================ */
 .admin-oculto { display: none; }
@@ -1022,6 +1174,14 @@ main, .main-content {
 .admin-icono {
     font-size: 1.8rem;
     color: var(--color-naranja);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.admin-icono svg {
+    color: var(--color-naranja);
+    display: block;
 }
 
 .admin-header h2 {
@@ -1054,6 +1214,15 @@ main, .main-content {
     cursor: pointer;
     transition: transform 0.3s ease;
     padding: 0 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.admin-cerrar svg {
+    display: block;
+    width: 20px;
+    height: 20px;
 }
 
 .admin-cerrar:hover {
@@ -1664,6 +1833,15 @@ main, .main-content {
     cursor: pointer;
     transition: transform 0.3s ease;
     padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.login-cerrar svg {
+    display: block;
+    width: 20px;
+    height: 20px;
 }
 
 .login-cerrar:hover { transform: rotate(90deg); color: var(--color-negro); }
@@ -1677,6 +1855,15 @@ main, .main-content {
     font-size: 2rem;
     display: block;
     margin-bottom: 4px;
+    color: var(--color-naranja);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.login-icon svg {
+    display: block;
+    margin: 0 auto;
     color: var(--color-naranja);
 }
 
@@ -1930,6 +2117,40 @@ main, .main-content {
     section[id] {
         scroll-margin-top: 120px;
     }
+
+    /* Cards de productos */
+    .producto-card {
+        padding: 15px;
+    }
+
+    .producto-img {
+        height: 220px;
+        object-fit: contain;
+        background-color: #FAF8F5;
+        padding: 5px;
+    }
+
+    .producto-hint {
+        font-size: 0.65rem;
+    }
+
+    /* Modal de bienvenida */
+    .bienvenida-contenido {
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .bienvenida-info {
+        padding: 20px 18px;
+    }
+
+    .bienvenida-beneficios {
+        gap: 8px;
+    }
+
+    .bienvenida-beneficio {
+        padding: 8px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -1950,6 +2171,63 @@ main, .main-content {
         max-width: none;
         font-size: 0.8rem;
         padding: 12px 18px;
+    }
+
+    /* Cards de productos */
+    .producto-card {
+        padding: 12px;
+    }
+
+    .producto-img {
+        height: 200px;
+        object-fit: contain;
+        padding: 5px;
+    }
+
+    .producto-nombre {
+        font-size: 1rem;
+    }
+
+    .producto-precio {
+        font-size: 0.95rem;
+    }
+
+    .btn-secundario {
+        padding: 8px 16px;
+        font-size: 0.8rem;
+    }
+
+    .producto-hint {
+        font-size: 0.6rem;
+    }
+
+    /* Modal de bienvenida */
+    .bienvenida-contenido {
+        max-height: 95vh;
+        border-radius: 16px;
+    }
+
+    .bienvenida-decoracion {
+        height: 100px;
+    }
+
+    .bienvenida-titulo {
+        font-size: 1.1rem;
+    }
+
+    .bienvenida-icono svg {
+        width: 32px;
+        height: 32px;
+    }
+
+    .bienvenida-acciones {
+        gap: 8px;
+    }
+
+    .bienvenida-btn-primario,
+    .bienvenida-btn-secundario {
+        padding: 10px 16px;
+        font-size: 0.8rem;
     }
 }
 
@@ -2272,6 +2550,15 @@ section[id] {
     transition: transform 0.3s ease;
     padding: 5px;
     z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bienvenida-cerrar svg {
+    display: block;
+    width: 20px;
+    height: 20px;
 }
 
 .bienvenida-cerrar:hover {
@@ -2511,108 +2798,37 @@ section[id] {
 }
 
 /* ============================================ */
-/* MODAL DE PEDIDO                              */
+/* SVG EN ICONOS                                 */
 /* ============================================ */
-#modal-pedido .login-icon {
-    font-size: 2.5rem;
-}
-
-#modal-pedido .login-subtitle {
-    font-size: 0.9rem;
+.login-icon svg {
+    display: block;
+    margin: 0 auto;
     color: var(--color-naranja);
-    font-weight: 500;
-    margin-top: 4px;
 }
 
-/* ============================================ */
-/* CARDS DE PRODUCTOS - RESPONSIVE MÓVIL        */
-/* ============================================ */
-@media (max-width: 768px) {
-    .producto-card {
-        padding: 15px;
-    }
-
-    .producto-img {
-        height: 220px;
-        object-fit: contain;      /* ← La imagen se ve completa, no se corta */
-        background-color: #FAF8F5; /* ← Fondo neutro para el espacio vacío */
-        padding: 5px;
-    }
+.admin-icono svg {
+    color: var(--color-naranja);
+    display: block;
 }
 
-@media (max-width: 480px) {
-    .producto-card {
-        padding: 12px;
-    }
-
-    .producto-img {
-        height: 200px;
-        object-fit: contain;
-        padding: 5px;
-    }
-
-    .producto-nombre {
-        font-size: 1rem;
-    }
-
-    .producto-precio {
-        font-size: 0.95rem;
-    }
-
-    .btn-secundario {
-        padding: 8px 16px;
-        font-size: 0.8rem;
-    }
+.lightbox-cerrar svg {
+    display: block;
 }
 
-/* ============================================ */
-/* MODAL DE BIENVENIDA - RESPONSIVE MÓVIL       */
-/* ============================================ */
-@media (max-width: 768px) {
-    .bienvenida-contenido {
-        max-height: 90vh;
-        overflow-y: auto;
-    }
-
-    .bienvenida-info {
-        padding: 20px 18px;
-    }
-
-    .bienvenida-beneficios {
-        gap: 8px;
-    }
-
-    .bienvenida-beneficio {
-        padding: 8px;
-    }
+.personalizado-card h3 svg {
+    color: var(--color-naranja);
 }
 
-@media (max-width: 480px) {
-    .bienvenida-contenido {
-        max-height: 95vh;
-        border-radius: 16px;
-    }
+.contacto-info svg {
+    display: inline-block;
+}
 
-    .bienvenida-decoracion {
-        height: 100px;
-    }
+.login-cerrar svg {
+    display: block;
+    margin: 0 auto;
+}
 
-    .bienvenida-titulo {
-        font-size: 1.1rem;
-    }
-
-    .bienvenida-icono svg {
-        width: 32px;
-        height: 32px;
-    }
-
-    .bienvenida-acciones {
-        gap: 8px;
-    }
-
-    .bienvenida-btn-primario,
-    .bienvenida-btn-secundario {
-        padding: 10px 16px;
-        font-size: 0.8rem;
-    }
+.admin-cerrar svg {
+    display: block;
+    margin: 0 auto;
 }
