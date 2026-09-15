@@ -205,7 +205,7 @@ function renderizarOfertas(ofertasIds, datos) {
         html += `
             <div class="producto-card oferta-destacada">
                 <span class="badge-oferta">-${descuento}%</span>
-                <img src="${producto.imagen}" alt="${producto.nombre}" class="producto-img">
+                <img src="${producto.imagen}" alt="${producto.nombre}" class="producto-img" onclick="abrirLightbox('${producto.imagen}', '${producto.nombre}')" style="cursor: zoom-in;">
                 <h3 class="producto-nombre">${producto.nombre}</h3>
                 <p class="producto-precio">
                     <span class="tachado">$${producto.precio.toFixed(2)}</span> $${precioOferta.toFixed(2)}
@@ -243,7 +243,7 @@ function renderizarProductosConModal(productos, contenedorSelector, datos) {
         html += `
             <div class="producto-card ${enOferta ? 'oferta-destacada' : ''}">
                 ${enOferta ? `<span class="badge-oferta">-${descuento}%</span>` : ''}
-                <img src="${producto.imagen}" alt="${producto.nombre}" class="producto-img" loading="lazy">
+                <img src="${producto.imagen}" alt="${producto.nombre}" class="producto-img" loading="lazy" onclick="abrirLightbox('${producto.imagen}', '${producto.nombre}')" style="cursor: zoom-in;">
                 <h3 class="producto-nombre">${producto.nombre}</h3>
                 <p class="producto-precio">
                     ${enOferta 
@@ -1239,3 +1239,36 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+// ============================================
+// LIGHTBOX DE IMAGEN
+// ============================================
+const lightbox = document.getElementById('lightbox');
+const lightboxImg = document.getElementById('lightbox-img');
+const lightboxOverlay = document.getElementById('lightbox-overlay');
+const lightboxCerrar = document.getElementById('lightbox-cerrar');
+
+function abrirLightbox(src, alt) {
+    if (!lightbox) return;
+    lightboxImg.src = src;
+    lightboxImg.alt = alt || 'Imagen ampliada';
+    lightbox.className = 'lightbox-visible';
+    document.body.style.overflow = 'hidden';
+}
+
+function cerrarLightbox() {
+    if (!lightbox) return;
+    lightbox.className = 'lightbox-oculto';
+    document.body.style.overflow = 'auto';
+}
+
+lightboxCerrar?.addEventListener('click', cerrarLightbox);
+lightboxOverlay?.addEventListener('click', cerrarLightbox);
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && lightbox?.className === 'lightbox-visible') {
+        cerrarLightbox();
+    }
+});
+
+window.abrirLightbox = abrirLightbox;
+window.cerrarLightbox = cerrarLightbox;

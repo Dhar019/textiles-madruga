@@ -2523,3 +2523,96 @@ section[id] {
     font-weight: 500;
     margin-top: 4px;
 }
+
+/* ============================================ */
+/* CARDS DE PRODUCTOS - RESPONSIVE MÓVIL        */
+/* ============================================ */
+@media (max-width: 768px) {
+    .producto-card {
+        padding: 15px;
+    }
+
+    .producto-img {
+        height: 220px;
+        object-fit: contain;      /* ← La imagen se ve completa, no se corta */
+        background-color: #FAF8F5; /* ← Fondo neutro para el espacio vacío */
+        padding: 5px;
+    }
+}
+
+@media (max-width: 480px) {
+    .producto-card {
+        padding: 12px;
+    }
+
+    .producto-img {
+        height: 200px;
+        object-fit: contain;
+        padding: 5px;
+    }
+
+    .producto-nombre {
+        font-size: 1rem;
+    }
+
+    .producto-precio {
+        font-size: 0.95rem;
+    }
+
+    .btn-secundario {
+        padding: 8px 16px;
+        font-size: 0.8rem;
+    }
+}
+
+/* ============================================ */
+/* MODAL DE BIENVENIDA - RESPONSIVE MÓVIL       */
+/* ============================================ */
+@media (max-width: 768px) {
+    .bienvenida-contenido {
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .bienvenida-info {
+        padding: 20px 18px;
+    }
+
+    .bienvenida-beneficios {
+        gap: 8px;
+    }
+
+    .bienvenida-beneficio {
+        padding: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .bienvenida-contenido {
+        max-height: 95vh;
+        border-radius: 16px;
+    }
+
+    .bienvenida-decoracion {
+        height: 100px;
+    }
+
+    .bienvenida-titulo {
+        font-size: 1.1rem;
+    }
+
+    .bienvenida-icono svg {
+        width: 32px;
+        height: 32px;
+    }
+
+    .bienvenida-acciones {
+        gap: 8px;
+    }
+
+    .bienvenida-btn-primario,
+    .bienvenida-btn-secundario {
+        padding: 10px 16px;
+        font-size: 0.8rem;
+    }
+}
