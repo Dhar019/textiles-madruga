@@ -1140,6 +1140,29 @@ main, .main-content {
 }
 
 /* ============================================ */
+/* LIGHTBOX EN MÓVIL - PANTALLA COMPLETA        */
+/* ============================================ */
+@media (max-width: 768px) {
+    .lightbox-contenido {
+        padding: 0;
+    }
+
+    .lightbox-contenido img {
+        max-width: 100%;
+        max-height: 100vh;
+        border-radius: 0;
+    }
+
+    .lightbox-cerrar {
+        top: 10px;
+        right: 10px;
+        width: 36px;
+        height: 36px;
+        background: rgba(255, 255, 255, 0.2);
+    }
+}
+
+/* ============================================ */
 /* HEADER DETRÁS DE MODALES                     */
 /* ============================================ */
 body.lightbox-abierto .header,
