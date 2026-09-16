@@ -4,17 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Textiles Madruga | Catálogo de Confecciones</title>
-    
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-    
+
     <!-- Estilos -->
     <link rel="stylesheet" href="estilos.css">
 </head>
 <body>
-    
+
     <header class="header">
         <div class="container">
             <div class="logo">
@@ -66,19 +66,19 @@
             <h2 class="section-title">Nuestras ofertas</h2>
             <div class="grid-categorias">
                 <a href="#ofertas-ropa" class="categoria-card" style="--cat-color: #E87A20;">
-                    <span><img src="assets/img/categorías/categoria-ropa.webp" alt="Textiles Madruga" class="logo-hero"></span>
+                    <span><img src="assets/img/categorías/categoria-ropa.webp" alt="Ropas" class="logo-hero"></span>
                     <h3>Ropas</h3>
                 </a>
                 <a href="#telas" class="categoria-card" style="--cat-color: #F5E6D3;">
-                    <span><img src="assets/img/categorías/categoria-telas.webp" alt="Textiles Madruga" class="logo-hero"></span>
+                    <span><img src="assets/img/categorías/categoria-telas.webp" alt="Telas" class="logo-hero"></span>
                     <h3>Telas</h3>
                 </a>
                 <a href="#otros" class="categoria-card" style="--cat-color: #D4A574;">
-                    <span><img src="assets/img/categorías/categoria-otros.webp" alt="Textiles Madruga" class="logo-hero"></span>
+                    <span><img src="assets/img/categorías/categoria-otros.webp" alt="Otros" class="logo-hero"></span>
                     <h3>Otros</h3>
                 </a>
                 <a href="#personalizados" class="categoria-card" style="--cat-color: #B0B0B0;">
-                    <span><img src="assets/img/categorías/categoria-personalizados.webp" alt="Textiles Madruga" class="logo-hero"></span>
+                    <span><img src="assets/img/categorías/categoria-personalizados.webp" alt="Personalizados" class="logo-hero"></span>
                     <h3>Personalizados</h3>
                 </a>
             </div>
@@ -106,15 +106,15 @@
             <h2 class="section-title">Tiene buen gusto</h2>
             <p class="section-subtitle">Elija su estilo</p>
             <div class="grid-subcategorias">
-                <a href="#ropa-hombre" class="subcategoria-card subcategoria-card-imagen" 
+                <a href="#ropa-hombre" class="subcategoria-card subcategoria-card-imagen"
                 style="background-image: url('assets/img/categorías/ropa-hombre-portada.webp');">
-                    <span><img src="assets/img/categorías/ropa-hombre-portada.webp" alt="Textiles Madruga" class="logo-hero"></span>
+                    <span><img src="assets/img/categorías/ropa-hombre-portada.webp" alt="Hombre" class="logo-hero"></span>
                     <h3>Hombre</h3>
                     <p>Camisas, pantalones, chaquetas</p>
                 </a>
-                <a href="#ropa-mujer" class="subcategoria-card subcategoria-card-imagen" 
+                <a href="#ropa-mujer" class="subcategoria-card subcategoria-card-imagen"
                 style="background-image: url('assets/img/categorías/ropa-mujer-portada.webp');">
-                    <span><img src="assets/img/categorías/ropa-mujer-portada.webp" alt="Textiles Madruga" class="logo-hero"></span>
+                    <span><img src="assets/img/categorías/ropa-mujer-portada.webp" alt="Mujer" class="logo-hero"></span>
                     <h3>Mujer</h3>
                     <p>Vestidos, blusas, faldas</p>
                 </a>
@@ -145,7 +145,7 @@
             <div class="grid-productos"></div>
         </div>
     </section>
-    
+
     <!-- TELAS -->
     <section id="telas" class="categoria seccion-telas">
         <div class="container">
@@ -295,7 +295,7 @@
                     </svg>
                 </button>
             </div>
-            
+
             <div class="admin-tabs">
                 <button class="admin-tab active" data-tab="productos">Productos</button>
                 <button class="admin-tab" data-tab="ofertas">Ofertas</button>
@@ -309,11 +309,11 @@
                     <button class="btn-admin btn-guardar" id="btn-guardar-cambios">Guardar</button>
                     <button class="btn-admin btn-peligro" id="btn-restaurar">Restaurar</button>
                 </div>
-                
+
                 <div class="admin-buscador">
                     <input type="text" id="buscador-productos" placeholder="Buscar productos..." oninput="filtrarProductosAdmin(this.value)">
                 </div>
-                
+
                 <div id="form-producto" class="form-oculto">
                     <div class="form-card">
                         <h3 class="form-title" id="form-title">Nuevo Producto</h3>
@@ -357,15 +357,15 @@
             <div id="tab-ofertas" class="admin-tab-content">
                 <h3 class="tab-title">Gestionar Ofertas</h3>
                 <p class="tab-subtitle">Configura descuentos, promociones y detalles personalizables</p>
-                
+
                 <div class="admin-buscador">
                     <input type="text" id="buscador-ofertas" placeholder="Buscar ofertas..." oninput="filtrarOfertasAdmin(this.value)">
                 </div>
-                
+
                 <div class="admin-acciones">
                     <button class="btn-admin btn-primario" id="btn-guardar-ofertas">Guardar Ofertas</button>
                 </div>
-                
+
                 <div id="lista-ofertas-admin" class="admin-lista-elegante"></div>
             </div>
 
@@ -373,17 +373,17 @@
             <div id="tab-seguridad" class="admin-tab-content">
                 <h3 class="tab-title">Seguridad y Gestión de Usuarios</h3>
                 <p class="tab-subtitle">Administra las cuentas de usuario y sus permisos</p>
-                
+
                 <div class="admin-buscador">
                     <input type="text" id="buscador-usuarios" placeholder="Buscar usuarios..." oninput="filtrarUsuariosAdmin(this.value)">
                 </div>
-                
+
                 <div class="admin-acciones">
                     <button class="btn-admin btn-nuevo" id="btn-nuevo-usuario">+ Nuevo Usuario</button>
                 </div>
-                
+
                 <div id="admin-usuarios-lista" class="admin-lista-elegante"></div>
-                
+
                 <div class="security-card" style="margin-top:20px;">
                     <div class="security-item">
                         <span class="security-label">Estado de sesión</span>

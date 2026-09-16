@@ -205,7 +205,7 @@ function renderizarOfertas(ofertasIds, datos) {
         html += `
             <div class="producto-card oferta-destacada">
                 <span class="badge-oferta">-${descuento}%</span>
-                <img src="${producto.imagen}" alt="${producto.nombre}" class="producto-img" onclick="abrirLightbox('${producto.imagen}', '${producto.nombre}')" style="cursor: zoom-in;">
+                <img src="${producto.imagen}" alt="${producto.nombre}" class="producto-img" onclick="abrirLightbox('${producto.imagen}', '${producto.nombre}')" style="cursor: zoom-in;" onerror="this.src='assets/img/placeholder.webp'; this.onerror=null;">
                 <p class="producto-hint">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;">
                         <circle cx="11" cy="11" r="8"/>
@@ -252,7 +252,7 @@ function renderizarProductosConModal(productos, contenedorSelector, datos) {
         html += `
             <div class="producto-card ${enOferta ? 'oferta-destacada' : ''}">
                 ${enOferta ? `<span class="badge-oferta">-${descuento}%</span>` : ''}
-                <img src="${producto.imagen}" alt="${producto.nombre}" class="producto-img" loading="lazy" onclick="abrirLightbox('${producto.imagen}', '${producto.nombre}')" style="cursor: zoom-in;">
+                <img src="${producto.imagen}" alt="${producto.nombre}" class="producto-img" loading="lazy" onclick="abrirLightbox('${producto.imagen}', '${producto.nombre}')" style="cursor: zoom-in;" onerror="this.src='assets/img/placeholder.webp'; this.onerror=null;">
                 <p class="producto-hint">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;">
                         <circle cx="11" cy="11" r="8"/>
@@ -318,7 +318,7 @@ function abrirModal(producto, datos) {
     modalBody.innerHTML = `
         <div class="modal-producto">
             <div class="modal-producto-imagen">
-                <img src="${producto.imagen}" alt="${producto.nombre}" onclick="abrirLightbox('${producto.imagen}', '${producto.nombre}')" style="cursor: zoom-in;">
+                <img src="${producto.imagen}" alt="${producto.nombre}" onclick="abrirLightbox('${producto.imagen}', '${producto.nombre}')" style="cursor: zoom-in;" onerror="this.src='assets/img/placeholder.webp'; this.onerror=null;">
             </div>
             <div class="modal-producto-info">
                 <span class="categoria">${categoriaTexto}</span>
@@ -516,7 +516,7 @@ function renderizarAdminProductos() {
             html += `
                 <div class="admin-producto-item" data-id="${id}" data-categoria="${categoria}">
                     <div class="info">
-                        <img src="${producto.imagen}" alt="${producto.nombre}">
+                        <img src="${producto.imagen}" alt="${producto.nombre}" onerror="this.src='assets/img/placeholder.webp'; this.onerror=null;">
                         <span class="nombre">${producto.nombre}</span>
                         <span class="precio">$${producto.precio.toFixed(2)}</span>
                         <span class="categoria-tag">${categoriaNombres[categoria]}</span>
@@ -638,7 +638,7 @@ document.getElementById('producto-form')?.addEventListener('submit', async funct
         return;
     }
 
-    if (!imagen) imagen = 'https://placehold.co/280x250/1A1A1A/F5E6D3?text=Sin+Imagen';
+    if (!imagen) imagen = 'assets/img/placeholder.webp';
 
     const session = getSession();
     if (!session) { mostrarNotificacion('No hay sesión activa', 'error'); return; }
