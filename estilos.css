@@ -288,6 +288,16 @@ main, .main-content {
     justify-content: center;
     background: 
         linear-gradient(135deg, rgba(0,0,0,0.85) 100%, rgba(0,0,0,0.5) 110%),
+        url('assets/img/hero/hero-principal.webp');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    color: var(--color-blanco);
+    padding: 60px 0;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
 }
 
 .hero::before {
