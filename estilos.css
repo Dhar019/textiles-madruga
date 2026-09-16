@@ -299,7 +299,7 @@ main, .main-content {
     overflow: hidden;
 }
 
-/*.hero::before {
+.hero::before {
     content: '';
     position: absolute;
     top: 0;
@@ -313,7 +313,7 @@ main, .main-content {
     opacity: 0.5;
     z-index: 0;
     pointer-events: none;
-}*/
+}
 
 .hero-content {
     position: relative;
