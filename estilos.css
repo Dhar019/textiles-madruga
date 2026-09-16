@@ -297,7 +297,6 @@ main, .main-content {
     text-align: center;
     position: relative;
     overflow: hidden;
-    opacity: 0;
 }
 
 .hero::before {
