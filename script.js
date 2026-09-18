@@ -1,13 +1,45 @@
 // ============================================
 // SCRIPT.JS - Textiles Madruga
+// Versión con seguridad profesional por rol
 // ============================================
 
 const API_URL = 'https://textiles-madruga-api.eldani000219.workers.dev/api';
 const SESSION_KEY = 'tm_session';
 
+// ============================================
+// POLÍTICAS DE SEGURIDAD POR ROL
+// ============================================
+const POLITICAS_SEGURIDAD = {
+    // Política para clientes (usuarios normales)
+    cliente: {
+        inactividadMs: 2 * 60 * 60 * 1000,        // 2 horas
+        abandonoMovilMs: 4 * 60 * 60 * 1000,      // 4 horas
+        tokenExpiryMs: 7 * 24 * 60 * 60 * 1000,   // 7 días
+        avisoPrevioMs: 2 * 60 * 1000              // Aviso 2 min antes
+    },
+    // Política para admins y superadmins (estricta)
+    admin: {
+        inactividadMs: 15 * 60 * 1000,            // 15 minutos
+        abandonoMovilMs: 15 * 60 * 1000,          // 15 minutos
+        tokenExpiryMs: 8 * 60 * 60 * 1000,        // 8 horas (jornada laboral)
+        avisoPrevioMs: 1 * 60 * 1000              // Aviso 1 min antes
+    }
+};
+
+function obtenerPoliticaSeguridad() {
+    const session = getSession();
+    if (session && (session.role === 'admin' || session.role === 'superadmin')) {
+        return POLITICAS_SEGURIDAD.admin;
+    }
+    return POLITICAS_SEGURIDAD.cliente;
+}
+
 let datosGlobales = null;
 let adminDatos = null;
 let modoEdicion = null;
+let temporizadorInactividad = null;
+let temporizadorAviso = null;
+let tiempoOculto = null;
 
 // ============================================
 // 1. AUTENTICACIÓN
@@ -17,30 +49,64 @@ function getSession() {
     if (!session) return null;
     try {
         const data = JSON.parse(session);
+
+        // Verificar expiración del token
         if (data.expiry < Date.now()) {
+            console.log('⏰ Token expirado');
             localStorage.removeItem(SESSION_KEY);
             return null;
         }
+
+        // Verificar inactividad según el rol
+        const politica = data.role === 'admin' || data.role === 'superadmin'
+            ? POLITICAS_SEGURIDAD.admin
+            : POLITICAS_SEGURIDAD.cliente;
+
+        if (data.lastActivity && (Date.now() - data.lastActivity) > politica.inactividadMs) {
+            console.log('⏰ Sesión expirada por inactividad');
+            localStorage.removeItem(SESSION_KEY);
+            return null;
+        }
+
         return data;
     } catch { return null; }
 }
 
 function createSession(token, user) {
+    const rol = user.role || 'user';
+    const politica = (rol === 'admin' || rol === 'superadmin')
+        ? POLITICAS_SEGURIDAD.admin
+        : POLITICAS_SEGURIDAD.cliente;
+
     const session = {
         token,
         username: user.username,
-        role: user.role,
+        role: rol,
         userId: user.id,
-        expiry: Date.now() + 7 * 24 * 60 * 60 * 1000
+        expiry: Date.now() + politica.tokenExpiryMs,
+        lastActivity: Date.now()
     };
     localStorage.setItem(SESSION_KEY, JSON.stringify(session));
     return session;
 }
 
+function actualizarActividad() {
+    const session = getSession();
+    if (session) {
+        session.lastActivity = Date.now();
+        localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    }
+}
+
 function logout() {
+    detenerTemporizadorInactividad();
+    detenerTemporizadorAviso();
     localStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem('tm_pestana_activa');
+
     const adminPanel = document.getElementById('admin-panel');
     if (adminPanel) adminPanel.className = 'admin-oculto';
+
     actualizarBotonAcceder();
     actualizarBotonCerrarSesion();
     mostrarNotificacion('Sesión cerrada correctamente', 'info');
@@ -112,7 +178,119 @@ function protegerAdmin() {
 }
 
 // ============================================
-// 2. NOTIFICACIONES
+// 2. SEGURIDAD: CIERRE AUTOMÁTICO DE SESIÓN POR ROL
+// ============================================
+function reiniciarTemporizadorInactividad() {
+    if (!isLoggedIn()) return;
+
+    // Actualizar última actividad
+    actualizarActividad();
+
+    // Obtener política según rol
+    const politica = obtenerPoliticaSeguridad();
+
+    // Cancelar temporizadores anteriores
+    detenerTemporizadorInactividad();
+    detenerTemporizadorAviso();
+
+    // Temporizador de AVISO previo (2 min antes de cerrar sesión)
+    const tiempoAviso = politica.inactividadMs - politica.avisoPrevioMs;
+    if (tiempoAviso > 0) {
+        temporizadorAviso = setTimeout(() => {
+            const segundosRestantes = Math.floor(politica.avisoPrevioMs / 1000);
+            const minutos = Math.floor(segundosRestantes / 60);
+            const segundos = segundosRestantes % 60;
+            mostrarNotificacion(
+                `⏰ Tu sesión expirará en ${minutos}m ${segundos}s por inactividad`,
+                'warning'
+            );
+            console.log('⚠️ Aviso de expiración de sesión mostrado');
+        }, tiempoAviso);
+    }
+
+    // Temporizador de CIERRE de sesión
+    temporizadorInactividad = setTimeout(() => {
+        console.log('⏰ Sesión cerrada por inactividad');
+        mostrarNotificacion('Sesión cerrada por inactividad', 'info');
+        logout();
+    }, politica.inactividadMs);
+}
+
+function detenerTemporizadorInactividad() {
+    if (temporizadorInactividad) {
+        clearTimeout(temporizadorInactividad);
+        temporizadorInactividad = null;
+    }
+}
+
+function detenerTemporizadorAviso() {
+    if (temporizadorAviso) {
+        clearTimeout(temporizadorAviso);
+        temporizadorAviso = null;
+    }
+}
+
+// Eventos que reinician el temporizador (actividad del usuario)
+['mousemove', 'mousedown', 'keypress', 'scroll', 'touchstart', 'click'].forEach(evento => {
+    document.addEventListener(evento, reiniciarTemporizadorInactividad, { passive: true });
+});
+
+// Cierre al cerrar pestaña/navegador
+window.addEventListener('beforeunload', () => {
+    if (isLoggedIn()) {
+        sessionStorage.setItem('tm_pestana_activa', 'false');
+    }
+});
+
+window.addEventListener('load', () => {
+    const pestanaActiva = sessionStorage.getItem('tm_pestana_activa');
+    const sesionActiva = isLoggedIn();
+
+    // Si la pestaña se cerró y se vuelve a abrir, cerrar sesión
+    if (sesionActiva && pestanaActiva === 'false') {
+        console.log('🔒 Sesión cerrada al cerrar la pestaña');
+        logout();
+        return;
+    }
+
+    sessionStorage.setItem('tm_pestana_activa', 'true');
+
+    // Iniciar temporizador si hay sesión
+    if (sesionActiva) {
+        reiniciarTemporizadorInactividad();
+    }
+});
+
+// Cierre al abandonar la web en móvil (según rol)
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        tiempoOculto = Date.now();
+        console.log('👀 Pestaña oculta');
+    } else {
+        if (tiempoOculto && isLoggedIn()) {
+            const politica = obtenerPoliticaSeguridad();
+            const tiempoTranscurrido = Date.now() - tiempoOculto;
+
+            // Si estuvo oculta más del tiempo permitido, cerrar sesión
+            if (tiempoTranscurrido > politica.abandonoMovilMs) {
+                console.log('⏰ Sesión cerrada por abandono prolongado');
+                mostrarNotificacion('Sesión cerrada por inactividad', 'info');
+                logout();
+                return;
+            }
+        }
+        tiempoOculto = null;
+    }
+});
+
+window.addEventListener('pagehide', () => {
+    if (isLoggedIn()) {
+        sessionStorage.setItem('tm_pestana_activa', 'false');
+    }
+});
+
+// ============================================
+// 3. NOTIFICACIONES
 // ============================================
 function mostrarNotificacion(mensaje, tipo = 'info') {
     const existente = document.querySelector('.notificacion');
@@ -127,11 +305,11 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
     setTimeout(() => {
         notificacion.classList.remove('visible');
         setTimeout(() => notificacion.remove(), 300);
-    }, 4000);
+    }, 5000);   // 5 segundos para que el usuario lea el aviso
 }
 
 // ============================================
-// 3. CARGA DE PRODUCTOS
+// 4. CARGA DE PRODUCTOS
 // ============================================
 async function cargarProductos() {
     try {
@@ -180,7 +358,7 @@ function obtenerProductoPorId(id, datos) {
 }
 
 // ============================================
-// 4. RENDERIZADO DE PRODUCTOS
+// 5. RENDERIZADO DE PRODUCTOS
 // ============================================
 function renderizarOfertas(ofertasIds, datos) {
     const contenedor = document.querySelector('#ofertas-ropa .grid-productos');
@@ -283,7 +461,7 @@ function renderizarProductosConModal(productos, contenedorSelector, datos) {
 }
 
 // ============================================
-// 5. MODAL DE DETALLE
+// 6. MODAL DE DETALLE
 // ============================================
 const modal = document.getElementById('modal-detalle');
 const modalBody = document.getElementById('modal-body');
@@ -350,7 +528,7 @@ modalOverlay?.addEventListener('click', cerrarModal);
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrarModal(); });
 
 // ============================================
-// 6. LIGHTBOX DE IMAGEN
+// 7. LIGHTBOX DE IMAGEN
 // ============================================
 const lightbox = document.getElementById('lightbox');
 const lightboxImg = document.getElementById('lightbox-img');
@@ -391,7 +569,7 @@ window.abrirLightbox = abrirLightbox;
 window.cerrarLightbox = cerrarLightbox;
 
 // ============================================
-// 7. SOLICITAR PEDIDO (SIN REGISTRO)
+// 8. SOLICITAR PEDIDO (SIN REGISTRO)
 // ============================================
 function solicitarPedido(producto) {
     const modalPedido = document.getElementById('modal-pedido');
@@ -434,7 +612,7 @@ function solicitarPedido(producto) {
 }
 
 // ============================================
-// 8. PANEL DE ADMINISTRACIÓN
+// 9. PANEL DE ADMINISTRACIÓN
 // ============================================
 const adminPanel = document.getElementById('admin-panel');
 const adminCerrar = document.getElementById('admin-cerrar');
@@ -469,6 +647,8 @@ function abrirAdmin() {
     adminPanel.className = 'admin-visible';
     document.body.style.overflow = 'hidden';
     cargarAdminProductos();
+    // Reiniciar temporizador de inactividad (ahora con política de admin)
+    reiniciarTemporizadorInactividad();
 }
 
 function cerrarAdmin() {
@@ -1206,6 +1386,9 @@ async function iniciar() {
 
 document.addEventListener('DOMContentLoaded', iniciar);
 
+// ============================================
+// EXPOSICIÓN GLOBAL
+// ============================================
 window.toggleOfertaAdmin = toggleOfertaAdmin;
 window.editarProductoAdmin = editarProductoAdmin;
 window.eliminarProductoAdmin = eliminarProductoAdmin;
@@ -1229,6 +1412,9 @@ window.mostrarModalBienvenida = mostrarModalBienvenida;
 window.cerrarModalBienvenida = cerrarModalBienvenida;
 window.eliminarUsuario = eliminarUsuario;
 
+// ============================================
+// MENÚ HAMBURGUESA
+// ============================================
 document.addEventListener('DOMContentLoaded', function() {
     const hamburguesa = document.getElementById('menu-hamburguesa');
     const nav = document.getElementById('nav-principal');
