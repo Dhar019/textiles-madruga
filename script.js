@@ -10,19 +10,17 @@ const SESSION_KEY = 'tm_session';
 // POLÍTICAS DE SEGURIDAD POR ROL
 // ============================================
 const POLITICAS_SEGURIDAD = {
-    // Política para clientes (usuarios normales)
     cliente: {
-        inactividadMs: 2 * 60 * 60 * 1000,        // 2 horas
-        abandonoMovilMs: 4 * 60 * 60 * 1000,      // 4 horas
-        tokenExpiryMs: 7 * 24 * 60 * 60 * 1000,   // 7 días
-        avisoPrevioMs: 2 * 60 * 1000              // Aviso 2 min antes
+        inactividadMs: 2 * 60 * 60 * 1000,
+        abandonoMovilMs: 4 * 60 * 60 * 1000,
+        tokenExpiryMs: 7 * 24 * 60 * 60 * 1000,
+        avisoPrevioMs: 2 * 60 * 1000
     },
-    // Política para admins y superadmins (estricta)
     admin: {
-        inactividadMs: 15 * 60 * 1000,            // 15 minutos
-        abandonoMovilMs: 15 * 60 * 1000,          // 15 minutos
-        tokenExpiryMs: 8 * 60 * 60 * 1000,        // 8 horas (jornada laboral)
-        avisoPrevioMs: 1 * 60 * 1000              // Aviso 1 min antes
+        inactividadMs: 15 * 60 * 1000,
+        abandonoMovilMs: 15 * 60 * 1000,
+        tokenExpiryMs: 8 * 60 * 60 * 1000,
+        avisoPrevioMs: 1 * 60 * 1000
     }
 };
 
@@ -49,25 +47,19 @@ function getSession() {
     if (!session) return null;
     try {
         const data = JSON.parse(session);
-
-        // Verificar expiración del token
         if (data.expiry < Date.now()) {
             console.log('⏰ Token expirado');
             localStorage.removeItem(SESSION_KEY);
             return null;
         }
-
-        // Verificar inactividad según el rol
         const politica = data.role === 'admin' || data.role === 'superadmin'
             ? POLITICAS_SEGURIDAD.admin
             : POLITICAS_SEGURIDAD.cliente;
-
         if (data.lastActivity && (Date.now() - data.lastActivity) > politica.inactividadMs) {
             console.log('⏰ Sesión expirada por inactividad');
             localStorage.removeItem(SESSION_KEY);
             return null;
         }
-
         return data;
     } catch { return null; }
 }
@@ -106,6 +98,8 @@ function logout() {
 
     const adminPanel = document.getElementById('admin-panel');
     if (adminPanel) adminPanel.className = 'admin-oculto';
+
+    document.body.classList.remove('admin-abierto');
 
     actualizarBotonAcceder();
     actualizarBotonCerrarSesion();
@@ -183,17 +177,12 @@ function protegerAdmin() {
 function reiniciarTemporizadorInactividad() {
     if (!isLoggedIn()) return;
 
-    // Actualizar última actividad
     actualizarActividad();
-
-    // Obtener política según rol
     const politica = obtenerPoliticaSeguridad();
 
-    // Cancelar temporizadores anteriores
     detenerTemporizadorInactividad();
     detenerTemporizadorAviso();
 
-    // Temporizador de AVISO previo (2 min antes de cerrar sesión)
     const tiempoAviso = politica.inactividadMs - politica.avisoPrevioMs;
     if (tiempoAviso > 0) {
         temporizadorAviso = setTimeout(() => {
@@ -208,7 +197,6 @@ function reiniciarTemporizadorInactividad() {
         }, tiempoAviso);
     }
 
-    // Temporizador de CIERRE de sesión
     temporizadorInactividad = setTimeout(() => {
         console.log('⏰ Sesión cerrada por inactividad');
         mostrarNotificacion('Sesión cerrada por inactividad', 'info');
@@ -230,12 +218,10 @@ function detenerTemporizadorAviso() {
     }
 }
 
-// Eventos que reinician el temporizador (actividad del usuario)
 ['mousemove', 'mousedown', 'keypress', 'scroll', 'touchstart', 'click'].forEach(evento => {
     document.addEventListener(evento, reiniciarTemporizadorInactividad, { passive: true });
 });
 
-// Cierre al cerrar pestaña/navegador
 window.addEventListener('beforeunload', () => {
     if (isLoggedIn()) {
         sessionStorage.setItem('tm_pestana_activa', 'false');
@@ -246,7 +232,6 @@ window.addEventListener('load', () => {
     const pestanaActiva = sessionStorage.getItem('tm_pestana_activa');
     const sesionActiva = isLoggedIn();
 
-    // Si la pestaña se cerró y se vuelve a abrir, cerrar sesión
     if (sesionActiva && pestanaActiva === 'false') {
         console.log('🔒 Sesión cerrada al cerrar la pestaña');
         logout();
@@ -255,13 +240,11 @@ window.addEventListener('load', () => {
 
     sessionStorage.setItem('tm_pestana_activa', 'true');
 
-    // Iniciar temporizador si hay sesión
     if (sesionActiva) {
         reiniciarTemporizadorInactividad();
     }
 });
 
-// Cierre al abandonar la web en móvil (según rol)
 document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
         tiempoOculto = Date.now();
@@ -271,7 +254,6 @@ document.addEventListener('visibilitychange', () => {
             const politica = obtenerPoliticaSeguridad();
             const tiempoTranscurrido = Date.now() - tiempoOculto;
 
-            // Si estuvo oculta más del tiempo permitido, cerrar sesión
             if (tiempoTranscurrido > politica.abandonoMovilMs) {
                 console.log('⏰ Sesión cerrada por abandono prolongado');
                 mostrarNotificacion('Sesión cerrada por inactividad', 'info');
@@ -305,7 +287,7 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
     setTimeout(() => {
         notificacion.classList.remove('visible');
         setTimeout(() => notificacion.remove(), 300);
-    }, 5000);   // 5 segundos para que el usuario lea el aviso
+    }, 5000);
 }
 
 // ============================================
@@ -350,7 +332,9 @@ function obtenerProductoPorId(id, datos) {
     for (const categoria of ['hombre', 'mujer', 'telas', 'objetos']) {
         const productos = datos.productos[categoria];
         if (productos) {
-            const encontrado = productos.find(p => p._id === id || p.id === id);
+            const encontrado = productos.find(p =>
+                String(p._id) === String(id) || String(p.id) === String(id)
+            );
             if (encontrado) return encontrado;
         }
     }
@@ -479,7 +463,7 @@ function abrirModal(producto, datos) {
     const categoriaMap = { 'hombre': 'Hombre', 'mujer': 'Mujer', 'telas': 'Telas', 'objetos': 'Otros' };
     let categoriaTexto = 'Producto';
     for (const [key, value] of Object.entries(datos.productos)) {
-        if (value.some(p => p._id === producto._id || p.id === producto.id)) {
+        if (value.some(p => String(p._id) === String(producto._id) || String(p.id) === String(producto.id))) {
             categoriaTexto = categoriaMap[key] || key;
             break;
         }
@@ -646,14 +630,15 @@ function abrirAdmin() {
     if (!protegerAdmin()) return;
     adminPanel.className = 'admin-visible';
     document.body.style.overflow = 'hidden';
+    document.body.classList.add('admin-abierto');
     cargarAdminProductos();
-    // Reiniciar temporizador de inactividad (ahora con política de admin)
     reiniciarTemporizadorInactividad();
 }
 
 function cerrarAdmin() {
     adminPanel.className = 'admin-oculto';
     document.body.style.overflow = 'auto';
+    document.body.classList.remove('admin-abierto');
     if (formProducto) formProducto.className = 'form-oculto';
 }
 
@@ -737,18 +722,20 @@ async function toggleOfertaAdmin(id) {
 
         if (!respuesta.ok) throw new Error('Error al actualizar oferta');
 
-        producto.enOferta = nuevaOferta;
-        if (nuevaOferta) {
-            adminDatos.ofertas = adminDatos.ofertas || [];
-            if (!adminDatos.ofertas.includes(id)) adminDatos.ofertas.push(id);
-        } else {
-            adminDatos.ofertas = adminDatos.ofertas.filter(o => o !== id);
-        }
-
         mostrarNotificacion(nuevaOferta ? 'Añadido a ofertas' : 'Quitado de ofertas', 'success');
-        renderizarAdminProductos();
-        cargarOfertasAdmin();
-        renderizarOfertas(adminDatos.ofertas, adminDatos);
+
+        const datosActualizados = await cargarProductos();
+        if (datosActualizados) {
+            datosGlobales = datosActualizados;
+            adminDatos = JSON.parse(JSON.stringify(datosActualizados));
+            renderizarAdminProductos();
+            cargarOfertasAdmin();
+            renderizarOfertas(datosActualizados.ofertas, datosActualizados);
+            renderizarProductosConModal(datosActualizados.productos.hombre, '#ropa-hombre .grid-productos', datosActualizados);
+            renderizarProductosConModal(datosActualizados.productos.mujer, '#ropa-mujer .grid-productos', datosActualizados);
+            renderizarProductosConModal(datosActualizados.productos.telas, '#telas .grid-productos', datosActualizados);
+            renderizarProductosConModal(datosActualizados.productos.objetos, '#otros .grid-productos', datosActualizados);
+        }
     } catch (error) {
         mostrarNotificacion('Error al actualizar oferta', 'error');
     }
@@ -766,19 +753,20 @@ async function eliminarProductoAdmin(id) {
 
         if (!respuesta.ok) throw new Error('Error al eliminar');
 
-        for (const categoria of ['hombre', 'mujer', 'telas', 'objetos']) {
-            const productos = adminDatos.productos[categoria];
-            if (productos) {
-                const index = productos.findIndex(p => (p._id || p.id) === id);
-                if (index !== -1) { productos.splice(index, 1); break; }
-            }
-        }
-        adminDatos.ofertas = adminDatos.ofertas.filter(o => o !== id);
-
         mostrarNotificacion('Producto eliminado', 'success');
-        renderizarAdminProductos();
-        cargarOfertasAdmin();
-        renderizarOfertas(adminDatos.ofertas, adminDatos);
+
+        const datosActualizados = await cargarProductos();
+        if (datosActualizados) {
+            datosGlobales = datosActualizados;
+            adminDatos = JSON.parse(JSON.stringify(datosActualizados));
+            renderizarAdminProductos();
+            cargarOfertasAdmin();
+            renderizarOfertas(datosActualizados.ofertas, datosActualizados);
+            renderizarProductosConModal(datosActualizados.productos.hombre, '#ropa-hombre .grid-productos', datosActualizados);
+            renderizarProductosConModal(datosActualizados.productos.mujer, '#ropa-mujer .grid-productos', datosActualizados);
+            renderizarProductosConModal(datosActualizados.productos.telas, '#telas .grid-productos', datosActualizados);
+            renderizarProductosConModal(datosActualizados.productos.objetos, '#otros .grid-productos', datosActualizados);
+        }
     } catch (error) {
         mostrarNotificacion('Error al eliminar producto', 'error');
     }
@@ -793,8 +781,20 @@ function editarProductoAdmin(id) {
     document.getElementById('prod-precio').value = producto.precio;
     document.getElementById('prod-imagen').value = producto.imagen || '';
 
+    // Si la imagen es una URL local, mostrarla en el preview
+    const preview = document.getElementById('drop-zone-preview');
+    const content = document.getElementById('drop-zone-content');
+    if (producto.imagen && preview && content) {
+        preview.src = producto.imagen;
+        preview.style.display = 'block';
+        content.style.display = 'none';
+    } else if (preview && content) {
+        preview.style.display = 'none';
+        content.style.display = 'flex';
+    }
+
     for (const categoria of ['hombre', 'mujer', 'telas', 'objetos']) {
-        if (adminDatos.productos[categoria]?.some(p => (p._id || p.id) === id)) {
+        if (adminDatos.productos[categoria]?.some(p => String(p._id) === String(id) || String(p.id) === String(id))) {
             document.getElementById('prod-categoria').value = categoria;
             break;
         }
@@ -849,31 +849,35 @@ document.getElementById('producto-form')?.addEventListener('submit', async funct
 
         if (!respuesta.ok) throw new Error('Error al guardar');
 
-        const data = await respuesta.json();
-        const producto = data.product || data;
-
-        if (modoEdicion) {
-            const oldProducto = obtenerProductoPorId(modoEdicion, adminDatos);
-            if (oldProducto) {
-                oldProducto.nombre = producto.nombre;
-                oldProducto.precio = producto.precio;
-                oldProducto.imagen = producto.imagen;
-                oldProducto.categoria = producto.categoria;
-            }
-        } else {
-            if (!adminDatos.productos[categoria]) adminDatos.productos[categoria] = [];
-            adminDatos.productos[categoria].push(producto);
-        }
-
         modoEdicion = null;
         formProducto.className = 'form-oculto';
         this.reset();
+
+        // Resetear drop zone
+        const preview = document.getElementById('drop-zone-preview');
+        const content = document.getElementById('drop-zone-content');
+        if (preview && content) {
+            preview.style.display = 'none';
+            preview.src = '';
+            content.style.display = 'flex';
+        }
+
         document.querySelector('#producto-form button[type="submit"]').textContent = 'Crear';
         document.getElementById('form-title').textContent = 'Nuevo Producto';
 
         mostrarNotificacion('Producto guardado', 'success');
-        renderizarAdminProductos();
-        renderizarOfertas(adminDatos.ofertas, adminDatos);
+
+        const datosActualizados = await cargarProductos();
+        if (datosActualizados) {
+            datosGlobales = datosActualizados;
+            adminDatos = JSON.parse(JSON.stringify(datosActualizados));
+            renderizarAdminProductos();
+            renderizarOfertas(datosActualizados.ofertas, datosActualizados);
+            renderizarProductosConModal(datosActualizados.productos.hombre, '#ropa-hombre .grid-productos', datosActualizados);
+            renderizarProductosConModal(datosActualizados.productos.mujer, '#ropa-mujer .grid-productos', datosActualizados);
+            renderizarProductosConModal(datosActualizados.productos.telas, '#telas .grid-productos', datosActualizados);
+            renderizarProductosConModal(datosActualizados.productos.objetos, '#otros .grid-productos', datosActualizados);
+        }
     } catch (error) {
         mostrarNotificacion('Error al guardar producto', 'error');
     }
@@ -883,11 +887,28 @@ btnCancelarForm?.addEventListener('click', function() {
     formProducto.className = 'form-oculto';
     modoEdicion = null;
     document.getElementById('producto-form').reset();
+
+    const preview = document.getElementById('drop-zone-preview');
+    const content = document.getElementById('drop-zone-content');
+    if (preview && content) {
+        preview.style.display = 'none';
+        preview.src = '';
+        content.style.display = 'flex';
+    }
 });
 
 btnNuevoProducto?.addEventListener('click', function() {
     modoEdicion = null;
     document.getElementById('producto-form').reset();
+
+    const preview = document.getElementById('drop-zone-preview');
+    const content = document.getElementById('drop-zone-content');
+    if (preview && content) {
+        preview.style.display = 'none';
+        preview.src = '';
+        content.style.display = 'flex';
+    }
+
     formProducto.className = 'form-visible';
 });
 
@@ -1361,6 +1382,69 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+// ============================================
+// DROP ZONE PARA IMÁGENES
+// ============================================
+function inicializarDropZone() {
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('prod-imagen-file');
+    const preview = document.getElementById('drop-zone-preview');
+    const hiddenInput = document.getElementById('prod-imagen');
+    const content = document.getElementById('drop-zone-content');
+
+    if (!dropZone || !fileInput) return;
+
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('dragover');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            manejarArchivoImagen(files[0], preview, hiddenInput, content);
+        }
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            manejarArchivoImagen(e.target.files[0], preview, hiddenInput, content);
+        }
+    });
+}
+
+function manejarArchivoImagen(file, preview, hiddenInput, content) {
+    if (!file.type.startsWith('image/')) {
+        mostrarNotificacion('Solo se permiten imágenes', 'error');
+        return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+        mostrarNotificacion('La imagen no puede superar los 5 MB', 'error');
+        return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const dataUrl = e.target.result;
+        preview.src = dataUrl;
+        preview.style.display = 'block';
+        content.style.display = 'none';
+        hiddenInput.value = dataUrl;
+        console.log('✅ Imagen cargada:', file.name, '(', (file.size / 1024).toFixed(2), 'KB )');
+    };
+    reader.readAsDataURL(file);
+}
+
+// ============================================
+// INICIO
+// ============================================
 async function iniciar() {
     console.log('🚀 Cargando productos...');
 
@@ -1385,6 +1469,7 @@ async function iniciar() {
 }
 
 document.addEventListener('DOMContentLoaded', iniciar);
+document.addEventListener('DOMContentLoaded', inicializarDropZone);
 
 // ============================================
 // EXPOSICIÓN GLOBAL

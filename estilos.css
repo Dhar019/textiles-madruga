@@ -1168,17 +1168,19 @@ main, .main-content {
 }
 
 /* ============================================ */
-/* HEADER DETRÁS DE MODALES                     */
+/* HEADER DETRÁS DE MODALES (ACTUALIZADO)      */
 /* ============================================ */
 body.lightbox-abierto .header,
 body.modal-abierto .header,
-body.bienvenida-abierta .header {
+body.bienvenida-abierta .header,
+body.admin-abierto .header {
     display: none !important;
 }
 
 body.lightbox-abierto .nav,
 body.modal-abierto .nav,
-body.bienvenida-abierta .nav {
+body.bienvenida-abierta .nav,
+body.admin-abierto .nav {
     display: none !important;
 }
 
@@ -2452,7 +2454,6 @@ section[id] {
 /* MODAL DE BIENVENIDA - ESTILO MODERNO         */
 /* ============================================ */
 
-/* ✅ VISIBILIDAD DEL MODAL */
 .bienvenida-oculto {
     display: none !important;
 }
@@ -2469,7 +2470,6 @@ section[id] {
     display: flex !important;
 }
 
-/* Overlay */
 .bienvenida-overlay {
     position: fixed;
     top: 0;
@@ -2487,7 +2487,6 @@ section[id] {
     to { opacity: 1; }
 }
 
-/* Contenido del modal */
 .bienvenida-contenido {
     position: fixed;
     top: 50%;
@@ -2510,9 +2509,6 @@ section[id] {
     to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 
-/* ============================================ */
-/* DECORACIÓN DIAGONAL (IZQUIERDA)              */
-/* ============================================ */
 .bienvenida-decoracion {
     position: relative;
     width: 40%;
@@ -2586,9 +2582,6 @@ section[id] {
     text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 }
 
-/* ============================================ */
-/* INFORMACIÓN (DERECHA)                        */
-/* ============================================ */
 .bienvenida-info {
     flex: 1;
     padding: 40px 45px;
@@ -2664,9 +2657,6 @@ section[id] {
     font-weight: 300;
 }
 
-/* ============================================ */
-/* BENEFICIOS                                   */
-/* ============================================ */
 .bienvenida-beneficios {
     flex: 1;
     display: grid;
@@ -2725,9 +2715,6 @@ section[id] {
     margin: 0;
 }
 
-/* ============================================ */
-/* ACCIONES                                     */
-/* ============================================ */
 .bienvenida-acciones {
     display: flex;
     flex-direction: column;
@@ -2783,9 +2770,6 @@ section[id] {
     line-height: 1.4;
 }
 
-/* ============================================ */
-/* RESPONSIVE DEL MODAL DE BIENVENIDA           */
-/* ============================================ */
 @media (max-width: 768px) {
     .bienvenida-contenido {
         flex-direction: column;
@@ -2891,4 +2875,63 @@ section[id] {
 .admin-cerrar svg {
     display: block;
     margin: 0 auto;
+}
+
+/* ============================================ */
+/* DROP ZONE PARA IMÁGENES                     */
+/* ============================================ */
+.drop-zone {
+    border: 2px dashed #EDE8E1;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #FAF8F5;
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.drop-zone:hover {
+    border-color: var(--color-naranja);
+    background: #FFF5EB;
+}
+
+.drop-zone.dragover {
+    border-color: var(--color-naranja);
+    background: #FFF0E0;
+    transform: scale(1.02);
+}
+
+.drop-zone-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: var(--color-gris);
+}
+
+.drop-zone-content svg {
+    color: var(--color-naranja);
+}
+
+.drop-zone-content p {
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+.drop-zone-content span {
+    color: var(--color-naranja);
+    font-weight: 600;
+    text-decoration: underline;
+}
+
+.drop-zone-preview {
+    max-width: 100%;
+    max-height: 150px;
+    border-radius: 8px;
+    object-fit: contain;
 }
