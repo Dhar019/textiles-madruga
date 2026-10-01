@@ -90,7 +90,24 @@ function actualizarActividad() {
     }
 }
 
-function logout() {
+// ✅ LOGOUT CON AVISO AL WORKER (elimina la sesión del KV)
+async function logout() {
+    // 1. Avisar al Worker para que elimine la sesión del KV
+    try {
+        const session = getSession();
+        if (session && session.token) {
+            await fetch(`${API_URL}/auth/logout`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${session.token}`
+                }
+            });
+        }
+    } catch (error) {
+        console.warn('⚠️ No se pudo cerrar la sesión en el servidor:', error);
+    }
+
+    // 2. Limpiar todo lo local
     detenerTemporizadorInactividad();
     detenerTemporizadorAviso();
     localStorage.removeItem(SESSION_KEY);
