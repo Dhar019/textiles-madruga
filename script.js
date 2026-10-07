@@ -1,6 +1,6 @@
 // ============================================
 // SCRIPT.JS - Textiles Madruga
-// Versión con seguridad profesional por rol
+// Versión con sesión bloqueada + verificación periódica
 // ============================================
 
 const API_URL = 'https://textiles-madruga-api.eldani000219.workers.dev/api';
@@ -38,6 +38,7 @@ let modoEdicion = null;
 let temporizadorInactividad = null;
 let temporizadorAviso = null;
 let tiempoOculto = null;
+let verificadorSesion = null;
 
 // ============================================
 // 1. AUTENTICACIÓN
@@ -48,7 +49,6 @@ function getSession() {
     try {
         const data = JSON.parse(session);
         if (data.expiry < Date.now()) {
-            console.log('⏰ Token expirado');
             localStorage.removeItem(SESSION_KEY);
             return null;
         }
@@ -56,7 +56,6 @@ function getSession() {
             ? POLITICAS_SEGURIDAD.admin
             : POLITICAS_SEGURIDAD.cliente;
         if (data.lastActivity && (Date.now() - data.lastActivity) > politica.inactividadMs) {
-            console.log('⏰ Sesión expirada por inactividad');
             localStorage.removeItem(SESSION_KEY);
             return null;
         }
@@ -90,26 +89,23 @@ function actualizarActividad() {
     }
 }
 
-// ✅ LOGOUT CON AVISO AL WORKER (elimina la sesión del KV)
 async function logout() {
-    // 1. Avisar al Worker para que elimine la sesión del KV
     try {
         const session = getSession();
         if (session && session.token) {
             await fetch(`${API_URL}/auth/logout`, {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${session.token}`
-                }
+                headers: { 'Authorization': `Bearer ${session.token}` }
             });
         }
     } catch (error) {
         console.warn('⚠️ No se pudo cerrar la sesión en el servidor:', error);
     }
 
-    // 2. Limpiar todo lo local
     detenerTemporizadorInactividad();
     detenerTemporizadorAviso();
+    detenerVerificadorSesion();
+
     localStorage.removeItem(SESSION_KEY);
     sessionStorage.removeItem('tm_pestana_activa');
 
@@ -131,6 +127,16 @@ async function login(username, password) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
         });
+
+        // Si es 409, ya hay sesión activa
+        if (respuesta.status === 409) {
+            const data = await respuesta.json();
+            return {
+                success: false,
+                message: data.error || 'Ya hay una sesión activa en otro dispositivo'
+            };
+        }
+
         const data = await respuesta.json();
         if (!respuesta.ok) {
             return { success: false, message: data.error || 'Error al iniciar sesión' };
@@ -189,7 +195,40 @@ function protegerAdmin() {
 }
 
 // ============================================
-// 2. SEGURIDAD: CIERRE AUTOMÁTICO DE SESIÓN POR ROL
+// 2. VERIFICACIÓN PERIÓDICA DE SESIÓN
+// ============================================
+function iniciarVerificadorSesion() {
+    detenerVerificadorSesion();
+    verificadorSesion = setInterval(async () => {
+        const session = getSession();
+        if (!session || !session.token) return;
+
+        try {
+            const respuesta = await fetch(`${API_URL}/users`, {
+                headers: { 'Authorization': `Bearer ${session.token}` }
+            });
+
+            // Si el Worker rechaza el token, la sesión fue reemplazada
+            if (respuesta.status === 401 || respuesta.status === 403) {
+                console.log('🔒 Sesión reemplazada en otro dispositivo');
+                mostrarNotificacion('Tu sesión fue cerrada desde otro dispositivo', 'warning');
+                logout();
+            }
+        } catch (error) {
+            console.warn('⚠️ Verificación de sesión falló:', error);
+        }
+    }, 30000); // Cada 30 segundos
+}
+
+function detenerVerificadorSesion() {
+    if (verificadorSesion) {
+        clearInterval(verificadorSesion);
+        verificadorSesion = null;
+    }
+}
+
+// ============================================
+// 3. SEGURIDAD: CIERRE AUTOMÁTICO POR INACTIVIDAD
 // ============================================
 function reiniciarTemporizadorInactividad() {
     if (!isLoggedIn()) return;
@@ -210,12 +249,10 @@ function reiniciarTemporizadorInactividad() {
                 `⏰ Tu sesión expirará en ${minutos}m ${segundos}s por inactividad`,
                 'warning'
             );
-            console.log('⚠️ Aviso de expiración de sesión mostrado');
         }, tiempoAviso);
     }
 
     temporizadorInactividad = setTimeout(() => {
-        console.log('⏰ Sesión cerrada por inactividad');
         mostrarNotificacion('Sesión cerrada por inactividad', 'info');
         logout();
     }, politica.inactividadMs);
@@ -239,18 +276,11 @@ function detenerTemporizadorAviso() {
     document.addEventListener(evento, reiniciarTemporizadorInactividad, { passive: true });
 });
 
-window.addEventListener('beforeunload', () => {
-    if (isLoggedIn()) {
-        sessionStorage.setItem('tm_pestana_activa', 'false');
-    }
-});
-
 window.addEventListener('load', () => {
     const pestanaActiva = sessionStorage.getItem('tm_pestana_activa');
     const sesionActiva = isLoggedIn();
 
     if (sesionActiva && pestanaActiva === 'false') {
-        console.log('🔒 Sesión cerrada al cerrar la pestaña');
         logout();
         return;
     }
@@ -259,20 +289,19 @@ window.addEventListener('load', () => {
 
     if (sesionActiva) {
         reiniciarTemporizadorInactividad();
+        iniciarVerificadorSesion();
     }
 });
 
 document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
         tiempoOculto = Date.now();
-        console.log('👀 Pestaña oculta');
     } else {
         if (tiempoOculto && isLoggedIn()) {
             const politica = obtenerPoliticaSeguridad();
             const tiempoTranscurrido = Date.now() - tiempoOculto;
 
             if (tiempoTranscurrido > politica.abandonoMovilMs) {
-                console.log('⏰ Sesión cerrada por abandono prolongado');
                 mostrarNotificacion('Sesión cerrada por inactividad', 'info');
                 logout();
                 return;
@@ -289,7 +318,7 @@ window.addEventListener('pagehide', () => {
 });
 
 // ============================================
-// 3. NOTIFICACIONES
+// 4. NOTIFICACIONES
 // ============================================
 function mostrarNotificacion(mensaje, tipo = 'info') {
     const existente = document.querySelector('.notificacion');
@@ -308,7 +337,7 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
 }
 
 // ============================================
-// 4. CARGA DE PRODUCTOS
+// 5. CARGA DE PRODUCTOS
 // ============================================
 async function cargarProductos() {
     try {
@@ -359,7 +388,7 @@ function obtenerProductoPorId(id, datos) {
 }
 
 // ============================================
-// 5. RENDERIZADO DE PRODUCTOS
+// 6. RENDERIZADO DE PRODUCTOS
 // ============================================
 function renderizarOfertas(ofertasIds, datos) {
     const contenedor = document.querySelector('#ofertas-ropa .grid-productos');
@@ -462,7 +491,7 @@ function renderizarProductosConModal(productos, contenedorSelector, datos) {
 }
 
 // ============================================
-// 6. MODAL DE DETALLE
+// 7. MODAL DE DETALLE
 // ============================================
 const modal = document.getElementById('modal-detalle');
 const modalBody = document.getElementById('modal-body');
@@ -529,7 +558,7 @@ modalOverlay?.addEventListener('click', cerrarModal);
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrarModal(); });
 
 // ============================================
-// 7. LIGHTBOX DE IMAGEN
+// 8. LIGHTBOX DE IMAGEN
 // ============================================
 const lightbox = document.getElementById('lightbox');
 const lightboxImg = document.getElementById('lightbox-img');
@@ -570,7 +599,7 @@ window.abrirLightbox = abrirLightbox;
 window.cerrarLightbox = cerrarLightbox;
 
 // ============================================
-// 8. SOLICITAR PEDIDO (SIN REGISTRO)
+// 9. SOLICITAR PEDIDO (SIN REGISTRO)
 // ============================================
 function solicitarPedido(producto) {
     const modalPedido = document.getElementById('modal-pedido');
@@ -613,7 +642,7 @@ function solicitarPedido(producto) {
 }
 
 // ============================================
-// 9. PANEL DE ADMINISTRACIÓN
+// 10. PANEL DE ADMINISTRACIÓN
 // ============================================
 const adminPanel = document.getElementById('admin-panel');
 const adminCerrar = document.getElementById('admin-cerrar');
@@ -650,6 +679,7 @@ function abrirAdmin() {
     document.body.classList.add('admin-abierto');
     cargarAdminProductos();
     reiniciarTemporizadorInactividad();
+    iniciarVerificadorSesion();
 }
 
 function cerrarAdmin() {
@@ -798,7 +828,6 @@ function editarProductoAdmin(id) {
     document.getElementById('prod-precio').value = producto.precio;
     document.getElementById('prod-imagen').value = producto.imagen || '';
 
-    // Si la imagen es una URL local, mostrarla en el preview
     const preview = document.getElementById('drop-zone-preview');
     const content = document.getElementById('drop-zone-content');
     if (producto.imagen && preview && content) {
@@ -870,7 +899,6 @@ document.getElementById('producto-form')?.addEventListener('submit', async funct
         formProducto.className = 'form-oculto';
         this.reset();
 
-        // Resetear drop zone
         const preview = document.getElementById('drop-zone-preview');
         const content = document.getElementById('drop-zone-content');
         if (preview && content) {
@@ -1454,7 +1482,6 @@ function manejarArchivoImagen(file, preview, hiddenInput, content) {
         preview.style.display = 'block';
         content.style.display = 'none';
         hiddenInput.value = dataUrl;
-        console.log('✅ Imagen cargada:', file.name, '(', (file.size / 1024).toFixed(2), 'KB )');
     };
     reader.readAsDataURL(file);
 }
@@ -1482,6 +1509,9 @@ async function iniciar() {
 
     if (!isLoggedIn()) {
         setTimeout(mostrarModalBienvenida, 1500);
+    } else {
+        // Si ya hay sesión activa, arrancar el verificador
+        iniciarVerificadorSesion();
     }
 }
 
