@@ -133,10 +133,16 @@ async function logout() {
 
 async function login(username, password) {
     try {
-        const respuesta = await fetch(`${API_URL}/auth/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password, turnstileToken })
+        // ✅ Usar GET con query string en lugar de POST (compatibilidad ETECSA)
+        const params = new URLSearchParams({ 
+            username, 
+            password, 
+            turnstileToken: turnstileToken || '' 
+        });
+        
+        const respuesta = await fetch(`${API_URL}/auth/login?${params}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
         });
 
         if (respuesta.status === 409) {
