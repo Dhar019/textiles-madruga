@@ -159,4 +159,10 @@ npx
 iniciar-web.bat
 iniciar-web.log
 *.bat
-*.cmd
+*.cmd.env 
+cloudinary-mapping.json 
+migrar-cloudinary.cjs 
+actualizar-mongodb.cjs 
+"usuarios.json" 
+"catalogo_temp.json" 
+".wrangler/" 

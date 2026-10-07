@@ -1,100 +1,88 @@
-{
-  "ofertas": [4, 9, 12],
-  "productos": {
-    "hombre": [
-      {
-        "id": 4,
-        "nombre": "Camisa Azul",
-        "precio": 25,
-        "imagen": "assets/img/ropa/hombre/camisas/camisa-azul.jpg"
-      },
-      {
-        "id": 5,
-        "nombre": "Camisa Blanca",
-        "precio": 35,
-        "imagen": "assets/img/ropa/hombre/camisas/camisa-blanca.jpg"
-      },
-      {
-        "id": 6,
-        "nombre": "Camisa Mamey",
-        "precio": 60,
-        "imagen": "assets/img/ropa/hombre/camisas/camisa-mamey.jpg"
-      },
-      {
-        "id": 7,
-        "nombre": "Camisa Blanca Manga Corta",
-        "precio": 60,
-        "imagen": "assets/img/ropa/hombre/camisas/camisa-mangas-cortas-blanca.jpg"
-      },
-      {
-        "id": 8,
-        "nombre": "Camisa Verde Manga Corta",
-        "precio": 60,
-        "imagen": "assets/img/ropa/hombre/camisas/camisa-mangas-cortas-verde.jpg"
-      }
-    ],
-    "mujer": [
-      {
-        "id": 9,
-        "nombre": "Vestido Negro con Flores Blancas",
-        "precio": 45,
-        "imagen": "assets/img/ropa/mujer/vestidos/vestido-negro-flores-blancas.jpg"
-      },
-      {
-        "id": 10,
-        "nombre": "Vestido Verano Floreado",
-        "precio": 38,
-        "imagen": "assets/img/ropa/mujer/ropa-mujer-vestido-verano-floreado.jpg"
-      },
-      {
-        "id": 11,
-        "nombre": "Blusa Lino",
-        "precio": 28,
-        "imagen": "assets/img/ropa/mujer/ropa-mujer-blusa-lino.jpg"
-      }
-    ],
-    "telas": [
-      {
-        "id": 12,
-        "nombre": "Lino Natural",
-        "precio": 12,
-        "unidad": "/m",
-        "imagen": "https://placehold.co/280x250/F5E6D3/1A1A1A?text=Lino"
-      },
-      {
-        "id": 13,
-        "nombre": "Algodón Premium",
-        "precio": 8,
-        "unidad": "/m",
-        "imagen": "https://placehold.co/280x250/F5E6D3/1A1A1A?text=Algod%C3%B3n"
-      },
-      {
-        "id": 14,
-        "nombre": "Seda Natural",
-        "precio": 25,
-        "unidad": "/m",
-        "imagen": "https://placehold.co/280x250/F5E6D3/1A1A1A?text=Seda"
-      }
-    ],
-    "objetos": [
-      {
-        "id": 15,
-        "nombre": "Pozuelo Cerámica",
-        "precio": 15,
-        "imagen": "https://placehold.co/280x250/D4A574/1A1A1A?text=Pozuelo"
-      },
-      {
-        "id": 16,
-        "nombre": "Mochila Artesanal",
-        "precio": 40,
-        "imagen": "https://placehold.co/280x250/D4A574/1A1A1A?text=Mochila"
-      },
-      {
-        "id": 17,
-        "nombre": "Taza Personalizada",
-        "precio": 10,
-        "imagen": "https://placehold.co/280x250/D4A574/1A1A1A?text=Taza"
-      }
-    ]
+[
+  {
+    "_id": "6aa81646a7ccd014f8fe8b8e",
+    "id": 4,
+    "nombre": "Camisa Azul",
+    "precio": 25,
+    "categoria": "hombre",
+    "imagen": "https://res.cloudinary.com/jhxou3vq/image/upload/v1790368739/textiles-madruga/cuby92bqecgy66zuurvt.webp",
+    "unidad": "",
+    "enOferta": true,
+    "descuento": 15
+  },
+  {
+    "_id": "6aa81646a7ccd014f8fe8b8f",
+    "id": 5,
+    "nombre": "Camisa Blanca",
+    "precio": 35,
+    "categoria": "hombre",
+    "imagen": "https://res.cloudinary.com/jhxou3vq/image/upload/v1790368741/textiles-madruga/q9cfd1uyeyoy9hubu1j0.webp",
+    "unidad": "",
+    "enOferta": false,
+    "descuento": 0
+  },
+  {
+    "_id": "6aa81646a7ccd014f8fe8b90",
+    "id": 6,
+    "nombre": "Camisa Mamey",
+    "precio": 60,
+    "categoria": "hombre",
+    "imagen": "https://res.cloudinary.com/jhxou3vq/image/upload/v1790369033/textiles-madruga/ipevl0yeajrgktjdbnpt.webp",
+    "unidad": "",
+    "enOferta": false,
+    "descuento": 0
+  },
+  {
+    "_id": "6aa81646a7ccd014f8fe8b91",
+    "id": 7,
+    "nombre": "Camisa Blanca Manga Corta",
+    "precio": 60,
+    "categoria": "hombre",
+    "imagen": "https://res.cloudinary.com/jhxou3vq/image/upload/v1790368755/textiles-madruga/gih8m6xjvmz2mcbsgl5e.webp",
+    "unidad": "",
+    "enOferta": false,
+    "descuento": 0
+  },
+  {
+    "_id": "6aa81646a7ccd014f8fe8b92",
+    "id": 8,
+    "nombre": "Camisa Verde Manga Corta",
+    "precio": 60,
+    "categoria": "hombre",
+    "imagen": "https://res.cloudinary.com/jhxou3vq/image/upload/v1790368756/textiles-madruga/dkvkhkok5gd1fnw9yb9h.webp",
+    "unidad": "",
+    "enOferta": false,
+    "descuento": 0
+  },
+  {
+    "_id": "6aa81646a7ccd014f8fe8b93",
+    "id": 9,
+    "nombre": "Vestido Negro con Flores Blancas",
+    "precio": 45,
+    "categoria": "mujer",
+    "imagen": "https://res.cloudinary.com/jhxou3vq/image/upload/v1790368877/textiles-madruga/kvs55brk4zyahwbsnuz4.webp",
+    "unidad": "",
+    "enOferta": true,
+    "descuento": 15
+  },
+  {
+    "_id": "6aa81646a7ccd014f8fe8b94",
+    "id": 10,
+    "nombre": "Vestido de Verano Naranja",
+    "precio": 32,
+    "categoria": "mujer",
+    "imagen": "https://res.cloudinary.com/jhxou3vq/image/upload/v1790368843/textiles-madruga/y50ghepara8sxka8g1ym.webp",
+    "unidad": "",
+    "enOferta": false,
+    "descuento": 0
+  },
+  {
+    "_id": "6ab6cb9a7ce0e8a454bb0d1f",
+    "nombre": "Vestido de Verano Azul",
+    "precio": 31,
+    "imagen": "https://res.cloudinary.com/jhxou3vq/image/upload/v1790368841/textiles-madruga/tpxbyqw1wdj7uxdshd1r.webp",
+    "categoria": "mujer",
+    "enOferta": false,
+    "descuento": 0
   }
-}
+]

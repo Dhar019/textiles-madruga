@@ -12,12 +12,18 @@
         "JWT_EXPIRE": "7d",
         "NODE_ENV": "production"
     },
+    "kv_namespaces": [
+        {
+        "binding": "PRODUCTOS_KV",
+        "id": "e4227e455ffe46a6ba849a14bebf6f66"
+        }
+    ],
     "observability": {
         "logs": {
-            "enabled": true
+        "enabled": true
         },
         "traces": {
-            "enabled": true
+        "enabled": true
         }
     }
 }

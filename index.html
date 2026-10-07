@@ -12,6 +12,9 @@
 
     <!-- Estilos -->
     <link rel="stylesheet" href="estilos.css">
+
+    <!-- ✅ Turnstile -->
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 <body>
 
@@ -447,6 +450,12 @@
                             <circle cx="12" cy="12" r="3"/>
                         </svg>
                     </button>
+                </div>
+                <!-- ✅ Turnstile widget -->
+                <div class="cf-turnstile" 
+                     data-sitekey="0x4AAAAAAFQbg2Ktk40L17gg" 
+                     data-callback="onTurnstileSuccess"
+                     data-size="invisible">
                 </div>
                 <button type="submit" class="btn-admin btn-primario btn-login">Acceder</button>
             </form>

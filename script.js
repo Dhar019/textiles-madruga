@@ -1,10 +1,20 @@
 // ============================================
 // SCRIPT.JS - Textiles Madruga
-// Versión con sesión bloqueada + verificación periódica
+// Versión 3.0 - Turnstile + JWT + RateLimit + Drop Zone
 // ============================================
 
 const API_URL = 'https://textiles-madruga-api.eldani000219.workers.dev/api';
 const SESSION_KEY = 'tm_session';
+
+// ============================================
+// TURNSTILE
+// ============================================
+let turnstileToken = null;
+
+window.onTurnstileSuccess = function(token) {
+    turnstileToken = token;
+    console.log('✅ Turnstile token recibido');
+};
 
 // ============================================
 // POLÍTICAS DE SEGURIDAD POR ROL
@@ -74,6 +84,7 @@ function createSession(token, user) {
         username: user.username,
         role: rol,
         userId: user.id,
+        email: user.email || '',
         expiry: Date.now() + politica.tokenExpiryMs,
         lastActivity: Date.now()
     };
@@ -125,16 +136,17 @@ async function login(username, password) {
         const respuesta = await fetch(`${API_URL}/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
+            body: JSON.stringify({ username, password, turnstileToken })
         });
 
-        // Si es 409, ya hay sesión activa
         if (respuesta.status === 409) {
             const data = await respuesta.json();
-            return {
-                success: false,
-                message: data.error || 'Ya hay una sesión activa en otro dispositivo'
-            };
+            return { success: false, message: data.error || 'Ya hay una sesión activa en otro dispositivo' };
+        }
+
+        if (respuesta.status === 429) {
+            const data = await respuesta.json();
+            return { success: false, message: data.error || 'Demasiados intentos fallidos' };
         }
 
         const data = await respuesta.json();
@@ -148,7 +160,7 @@ async function login(username, password) {
     }
 }
 
-async function registerUser(username, password) {
+async function registerUser(username, password, email = '', name = '') {
     try {
         if (username.length > 40) return { success: false, message: 'El nombre no puede tener más de 40 caracteres.' };
         if (username.length < 3) return { success: false, message: 'El nombre debe tener al menos 3 caracteres.' };
@@ -157,7 +169,7 @@ async function registerUser(username, password) {
         const respuesta = await fetch(`${API_URL}/auth/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password, role: 'user' })
+            body: JSON.stringify({ username, password, role: 'user', email, name })
         });
         const data = await respuesta.json();
         if (!respuesta.ok) {
@@ -208,7 +220,6 @@ function iniciarVerificadorSesion() {
                 headers: { 'Authorization': `Bearer ${session.token}` }
             });
 
-            // Si el Worker rechaza el token, la sesión fue reemplazada
             if (respuesta.status === 401 || respuesta.status === 403) {
                 console.log('🔒 Sesión reemplazada en otro dispositivo');
                 mostrarNotificacion('Tu sesión fue cerrada desde otro dispositivo', 'warning');
@@ -217,7 +228,7 @@ function iniciarVerificadorSesion() {
         } catch (error) {
             console.warn('⚠️ Verificación de sesión falló:', error);
         }
-    }, 30000); // Cada 30 segundos
+    }, 30000);
 }
 
 function detenerVerificadorSesion() {
@@ -1158,6 +1169,7 @@ document.getElementById('btn-nuevo-usuario')?.addEventListener('click', function
         campos: [
             { id: 'username', label: 'Usuario', type: 'text', placeholder: 'Nombre de usuario', required: true },
             { id: 'password', label: 'Contraseña', type: 'password', placeholder: 'Mínimo 6 caracteres', required: true },
+            { id: 'email', label: 'Email', type: 'email', placeholder: 'usuario@ejemplo.com' },
             { id: 'role', label: 'Rol', type: 'select', opciones: [
                 { value: 'user', label: 'Usuario' },
                 { value: 'admin', label: 'Administrador' }
@@ -1184,7 +1196,9 @@ document.getElementById('btn-nuevo-usuario')?.addEventListener('click', function
                     body: JSON.stringify({
                         username: datos.username,
                         password: datos.password,
-                        role: datos.role
+                        role: datos.role,
+                        email: datos.email || '',
+                        name: datos.username
                     })
                 });
 
@@ -1301,10 +1315,11 @@ document.getElementById('modal-bienvenida-crear')?.addEventListener('click', fun
         subtitulo: 'Es rápido, gratis y seguro',
         campos: [
             { id: 'username', label: 'Usuario', type: 'text', placeholder: 'Tu nombre de usuario', required: true },
-            { id: 'password', label: 'Contraseña', type: 'password', placeholder: 'Mínimo 6 caracteres', required: true }
+            { id: 'password', label: 'Contraseña', type: 'password', placeholder: 'Mínimo 6 caracteres', required: true },
+            { id: 'email', label: 'Email', type: 'email', placeholder: 'tucorreo@ejemplo.com', required: true }
         ],
         onSubmit: async (datos) => {
-            const result = await registerUser(datos.username, datos.password);
+            const result = await registerUser(datos.username, datos.password, datos.email, datos.username);
             if (result.success) {
                 actualizarBotonAcceder();
                 mostrarNotificacion('¡Bienvenido a Textiles Madruga!', 'success');
@@ -1397,10 +1412,11 @@ document.getElementById('login-registro-link')?.addEventListener('click', functi
         subtitulo: 'Es rápido, gratis y seguro',
         campos: [
             { id: 'username', label: 'Usuario', type: 'text', placeholder: 'Tu nombre de usuario', required: true },
-            { id: 'password', label: 'Contraseña', type: 'password', placeholder: 'Mínimo 6 caracteres', required: true }
+            { id: 'password', label: 'Contraseña', type: 'password', placeholder: 'Mínimo 6 caracteres', required: true },
+            { id: 'email', label: 'Email', type: 'email', placeholder: 'tucorreo@ejemplo.com', required: true }
         ],
         onSubmit: async (datos) => {
-            const result = await registerUser(datos.username, datos.password);
+            const result = await registerUser(datos.username, datos.password, datos.email, datos.username);
             if (result.success) {
                 actualizarBotonAcceder();
                 mostrarNotificacion('Usuario creado. Sesión iniciada.', 'success');
@@ -1510,7 +1526,6 @@ async function iniciar() {
     if (!isLoggedIn()) {
         setTimeout(mostrarModalBienvenida, 1500);
     } else {
-        // Si ya hay sesión activa, arrancar el verificador
         iniciarVerificadorSesion();
     }
 }
