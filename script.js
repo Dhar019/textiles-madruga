@@ -1,6 +1,6 @@
 // ============================================
 // SCRIPT.JS - Textiles Madruga
-// Versión 3.1 - Carga robusta + modal siempre visible
+// Versión 3.2 - Login por POST (fix Turnstile largo)
 // ============================================
 
 const API_URL = 'https://textiles-madruga-api.eldani000219.workers.dev/api';
@@ -131,17 +131,17 @@ async function logout() {
     setTimeout(() => location.reload(), 500);
 }
 
+// ✅ LOGIN POR POST (fix: Turnstile token es demasiado largo para URL)
 async function login(username, password) {
     try {
-        const params = new URLSearchParams({ 
-            username, 
-            password, 
-            turnstileToken: turnstileToken || '' 
-        });
-        
-        const respuesta = await fetch(`${API_URL}/auth/login?${params}`, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
+        const respuesta = await fetch(`${API_URL}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                username,
+                password,
+                turnstileToken: turnstileToken || ''
+            })
         });
 
         if (respuesta.status === 409) {
@@ -161,6 +161,7 @@ async function login(username, password) {
         const session = createSession(data.token, data.user);
         return { success: true, session };
     } catch (error) {
+        console.error('Error en login:', error);
         return { success: false, message: 'Error de conexión con el servidor' };
     }
 }
@@ -1543,7 +1544,6 @@ async function iniciar() {
 
     actualizarBotonAcceder();
 
-    // ✅ SIEMPRE mostrar el modal de bienvenida (aunque no haya productos)
     if (!isLoggedIn()) {
         setTimeout(mostrarModalBienvenida, 1500);
     } else {
