@@ -1,13 +1,11 @@
 // ============================================
 // WORKER - TEXTILES MADRUGA API
-// Versión 3.0 - Seguridad Completa
-// JWT + SHA-256 + RateLimit + Turnstile + Auditoría + HSTS
+// Versión 3.6 - Con Turnstile, sin jose
+// Base64 + SHA-256 + RateLimit + Turnstile + Auditoría
 // ============================================
 
-import { SignJWT, jwtVerify } from 'jose';
-
 // ============================================
-// CORS + HSTS + HEADERS DE SEGURIDAD
+// CORS
 // ============================================
 function getCorsHeaders(request) {
     const origin = request.headers.get('Origin') || '*';
@@ -15,11 +13,7 @@ function getCorsHeaders(request) {
         'Access-Control-Allow-Origin': origin,
         'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS, PATCH',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept, Origin, X-Requested-With',
-        'Access-Control-Max-Age': '86400',
-        'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
-        'X-Content-Type-Options': 'nosniff',
-        'X-Frame-Options': 'DENY',
-        'Referrer-Policy': 'strict-origin-when-cross-origin'
+        'Access-Control-Max-Age': '86400'
     };
 }
 
@@ -57,7 +51,6 @@ async function guardarUsuarios(env, usuarios) {
 
 // ============================================
 // HASH DE CONTRASEÑAS (SHA-256 con salt)
-// Compatible con Cloudflare Workers
 // ============================================
 async function hashearPassword(password) {
     const encoder = new TextEncoder();
@@ -84,7 +77,7 @@ async function verificarPassword(password, hash) {
 }
 
 // ============================================
-// SESIÓN BLOQUEADA: CREAR Y ELIMINAR SESSION ID
+// SESIÓN BLOQUEADA
 // ============================================
 async function crearSesionUnica(env, userId) {
     const sessionId = crypto.randomUUID();
@@ -105,25 +98,14 @@ async function obtenerSesionActiva(env, userId) {
 }
 
 // ============================================
-// JWT: FIRMAR Y VERIFICAR
+// VERIFICACIÓN DE TOKEN (SIN JOSE, SOLO BASE64)
 // ============================================
-async function firmarToken(payload, env) {
-    const secret = new TextEncoder().encode(env.JWT_SECRET);
-    const jwt = await new SignJWT(payload)
-        .setProtectedHeader({ alg: 'HS256' })
-        .setIssuedAt()
-        .setExpirationTime('8h')
-        .sign(secret);
-    return jwt;
-}
-
 async function verificarToken(request, env) {
     const authHeader = request.headers.get('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
     try {
         const token = authHeader.replace('Bearer ', '');
-        const secret = new TextEncoder().encode(env.JWT_SECRET);
-        const { payload } = await jwtVerify(token, secret);
+        const payload = JSON.parse(atob(token));
 
         if (!payload.sessionId) return null;
         const kvSessionId = await env.PRODUCTOS_KV.get(`SESSIONS:${payload.id}`);
@@ -133,7 +115,7 @@ async function verificarToken(request, env) {
 
         return payload;
     } catch (e) {
-        console.error('JWT verify failed:', e.message);
+        console.error('Token verify failed:', e.message);
         return null;
     }
 }
@@ -186,7 +168,7 @@ async function resetearRateLimit(env, ip) {
 }
 
 // ============================================
-// TURNSTILE (Captcha invisible)
+// TURNSTILE
 // ============================================
 async function verificarTurnstile(token, ip, env) {
     if (!token) return false;
@@ -250,29 +232,25 @@ export default {
                 headers: {
                     'Access-Control-Allow-Origin': request.headers.get('Origin') || '*',
                     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS, PATCH',
-                    'Access-Control-Allow-Headers': request.headers.get('Access-Control-Request-Headers') || 'Content-Type, Authorization',
+                    'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept, Origin, X-Requested-With',
                     'Access-Control-Max-Age': '86400'
                 }
             });
         }
 
         try {
-            // ============================================
             // HEALTH
-            // ============================================
             if (path === '/api/health' && method === 'GET') {
                 return addCors(new Response(JSON.stringify({
                     status: 'ok',
-                    message: 'API de Textiles Madruga funcionando (KV + JWT + RateLimit)',
+                    message: 'API de Textiles Madruga funcionando (KV)',
                     db: 'kv',
-                    security: ['JWT', 'SHA-256', 'RateLimit', 'Turnstile', 'Audit', 'HSTS'],
+                    security: ['Base64', 'SHA-256', 'RateLimit', 'Turnstile', 'Audit'],
                     timestamp: new Date().toISOString()
                 }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
-            // ============================================
             // PRODUCTOS (LISTAR)
-            // ============================================
             if (path === '/api/productos' && method === 'GET') {
                 const catalogo = await leerCatalogo(env);
                 const productos = Object.values(catalogo);
@@ -281,9 +259,7 @@ export default {
                 }), request);
             }
 
-            // ============================================
             // CREAR PRODUCTO
-            // ============================================
             if (path === '/api/products' && method === 'POST') {
                 const user = await verificarToken(request, env);
                 if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
@@ -303,9 +279,7 @@ export default {
                 }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
-            // ============================================
             // ACTUALIZAR PRODUCTO
-            // ============================================
             if (path.startsWith('/api/products/') && method === 'PUT') {
                 const user = await verificarToken(request, env);
                 if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
@@ -328,9 +302,7 @@ export default {
                 }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
-            // ============================================
             // ELIMINAR PRODUCTO
-            // ============================================
             if (path.startsWith('/api/products/') && method === 'DELETE') {
                 const user = await verificarToken(request, env);
                 if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
@@ -346,9 +318,7 @@ export default {
                     { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
-            // ============================================
             // TOGGLE OFERTA
-            // ============================================
             if (path.startsWith('/api/offers/toggle/') && method === 'PATCH') {
                 const user = await verificarToken(request, env);
                 if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
@@ -370,11 +340,8 @@ export default {
                     { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
-            // ============================================
-            // LOGIN (Rate Limit + Turnstile + JWT + Sesión Bloqueada)
-            // ============================================
-            if (path === '/api/auth/login' && method === 'POST') {
-                // 1. Verificar rate limit
+            // LOGIN (CON TURNSTILE, SIN JOSE)
+            if (path === '/api/auth/login' && (method === 'POST' || method === 'GET')) {
                 const rateLimit = await verificarRateLimit(env, ip);
                 if (rateLimit.bloqueado) {
                     return addCors(new Response(JSON.stringify({
@@ -382,9 +349,19 @@ export default {
                     }), { status: 429, headers: { 'Content-Type': 'application/json' } }), request);
                 }
 
-                const { username, password, turnstileToken } = await request.json();
+                let username, password, turnstileToken;
+                
+                if (method === 'POST') {
+                    const body = await request.json();
+                    username = body.username;
+                    password = body.password;
+                    turnstileToken = body.turnstileToken;
+                } else {
+                    username = url.searchParams.get('username');
+                    password = url.searchParams.get('password');
+                    turnstileToken = url.searchParams.get('turnstileToken');
+                }
 
-                // 2. Verificar Turnstile (si está configurado)
                 if (env.TURNSTILE_SECRET_KEY && turnstileToken) {
                     const turnstileOk = await verificarTurnstile(turnstileToken, ip, env);
                     if (!turnstileOk) {
@@ -393,11 +370,9 @@ export default {
                     }
                 }
 
-                // 3. Buscar usuario
                 const usuarios = await leerUsuarios(env);
                 const user = usuarios.find(u => u.username === username);
 
-                // Verificar contraseña (con hash o texto plano)
                 let passwordValida = false;
                 if (user) {
                     passwordValida = await verificarPassword(password, user.password);
@@ -411,7 +386,6 @@ export default {
                     }), { status: 401, headers: { 'Content-Type': 'application/json' } }), request);
                 }
 
-                // 4. Sesión bloqueada
                 const sesionExistente = await obtenerSesionActiva(env, user.id);
                 if (sesionExistente) {
                     return addCors(new Response(JSON.stringify({
@@ -419,20 +393,16 @@ export default {
                     }), { status: 409, headers: { 'Content-Type': 'application/json' } }), request);
                 }
 
-                // 5. Resetear rate limit (login exitoso)
                 await resetearRateLimit(env, ip);
-
-                // 6. Crear sesión única
                 const sessionId = await crearSesionUnica(env, user.id);
 
-                // 7. Firmar JWT
-                const token = await firmarToken({
+                const token = btoa(JSON.stringify({
                     id: user.id,
                     username: user.username,
                     role: user.role,
                     email: user.email,
-                    sessionId
-                }, env);
+                    sessionId: sessionId
+                }));
 
                 await registrarAuditoria(env, user, 'LOGIN', { ip });
 
@@ -448,9 +418,7 @@ export default {
                 }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
-            // ============================================
             // FORZAR CIERRE DE SESIÓN
-            // ============================================
             if (path === '/api/auth/force-logout' && method === 'POST') {
                 const { username, password } = await request.json();
                 const usuarios = await leerUsuarios(env);
@@ -475,9 +443,7 @@ export default {
                 }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
-            // ============================================
             // LOGOUT
-            // ============================================
             if (path === '/api/auth/logout' && method === 'POST') {
                 const user = await verificarToken(request, env);
                 if (user && user.id) {
@@ -488,9 +454,7 @@ export default {
                     { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
-            // ============================================
-            // REGISTRO (con password hasheado)
-            // ============================================
+            // REGISTRO
             if (path === '/api/auth/register' && method === 'POST') {
                 const user = await verificarToken(request, env);
                 if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
@@ -525,9 +489,7 @@ export default {
                 }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
-            // ============================================
-            // LISTAR USUARIOS (solo superadmin)
-            // ============================================
+            // LISTAR USUARIOS
             if (path === '/api/users' && method === 'GET') {
                 const user = await verificarToken(request, env);
                 if (!user || user.role !== 'superadmin') {
@@ -540,9 +502,7 @@ export default {
                     { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
-            // ============================================
             // CAMBIAR ROL
-            // ============================================
             if (path.startsWith('/api/users/') && path.endsWith('/role') && method === 'PATCH') {
                 const user = await verificarToken(request, env);
                 if (!user || user.role !== 'superadmin') {
@@ -562,9 +522,7 @@ export default {
                     { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
-            // ============================================
             // ELIMINAR USUARIO
-            // ============================================
             if (path.startsWith('/api/users/') && method === 'DELETE') {
                 const user = await verificarToken(request, env);
                 if (!user || user.role !== 'superadmin') {
@@ -581,9 +539,7 @@ export default {
                     { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
-            // ============================================
             // 404
-            // ============================================
             return addCors(new Response(JSON.stringify({ error: 'Ruta no encontrada', path }),
                 { status: 404, headers: { 'Content-Type': 'application/json' } }), request);
 
