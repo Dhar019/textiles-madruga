@@ -1,6 +1,6 @@
 // ============================================
 // SCRIPT.JS - Textiles Madruga
-// Versión 3.0 - Turnstile + JWT + RateLimit + Drop Zone
+// Versión 3.1 - Carga robusta + modal siempre visible
 // ============================================
 
 const API_URL = 'https://textiles-madruga-api.eldani000219.workers.dev/api';
@@ -133,7 +133,6 @@ async function logout() {
 
 async function login(username, password) {
     try {
-        // ✅ Usar GET con query string en lugar de POST (compatibilidad ETECSA)
         const params = new URLSearchParams({ 
             username, 
             password, 
@@ -354,12 +353,18 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
 }
 
 // ============================================
-// 5. CARGA DE PRODUCTOS
+// 5. CARGA DE PRODUCTOS (robusta)
 // ============================================
 async function cargarProductos() {
     try {
-        const respuesta = await fetch(`${API_URL}/productos`);
-        if (!respuesta.ok) throw new Error('Error al cargar productos');
+        const respuesta = await fetch(`${API_URL}/productos`, {
+            method: 'GET',
+            mode: 'cors',
+            cache: 'no-cache'
+        });
+        
+        if (!respuesta.ok) throw new Error(`Error HTTP: ${respuesta.status}`);
+        
         const data = await respuesta.json();
         let productos = Array.isArray(data) ? data : data.productos;
         if (!Array.isArray(productos)) throw new Error('La API no devolvió un array');
@@ -377,7 +382,7 @@ async function cargarProductos() {
         localStorage.setItem('productos_data', JSON.stringify(datos));
         return datos;
     } catch (error) {
-        console.warn('⚠️ Error al cargar desde servidor:', error);
+        console.warn('⚠️ Error al cargar desde servidor:', error.message);
         return cargarProductosLocal();
     }
 }
@@ -1509,26 +1514,36 @@ function manejarArchivoImagen(file, preview, hiddenInput, content) {
 }
 
 // ============================================
-// INICIO
+// INICIO (robusto: modal siempre se muestra)
 // ============================================
 async function iniciar() {
     console.log('🚀 Cargando productos...');
 
-    const datos = await cargarProductos();
-    if (!datos) { console.error('❌ No se pudieron cargar los datos'); return; }
+    let datos = null;
+    try {
+        datos = await cargarProductos();
+    } catch (e) {
+        console.warn('⚠️ Error en cargarProductos:', e);
+    }
 
-    datosGlobales = datos;
-    adminDatos = JSON.parse(JSON.stringify(datos));
+    if (datos) {
+        datosGlobales = datos;
+        adminDatos = JSON.parse(JSON.stringify(datos));
 
-    renderizarOfertas(datos.ofertas, datos);
-    renderizarProductosConModal(datos.productos.hombre, '#ropa-hombre .grid-productos', datos);
-    renderizarProductosConModal(datos.productos.mujer, '#ropa-mujer .grid-productos', datos);
-    renderizarProductosConModal(datos.productos.telas, '#telas .grid-productos', datos);
-    renderizarProductosConModal(datos.productos.objetos, '#otros .grid-productos', datos);
+        renderizarOfertas(datos.ofertas, datos);
+        renderizarProductosConModal(datos.productos.hombre, '#ropa-hombre .grid-productos', datos);
+        renderizarProductosConModal(datos.productos.mujer, '#ropa-mujer .grid-productos', datos);
+        renderizarProductosConModal(datos.productos.telas, '#telas .grid-productos', datos);
+        renderizarProductosConModal(datos.productos.objetos, '#otros .grid-productos', datos);
+
+        console.log('✅ Productos cargados correctamente');
+    } else {
+        console.warn('⚠️ No hay productos. La web funcionará sin catálogo.');
+    }
 
     actualizarBotonAcceder();
-    console.log('✅ Productos cargados correctamente');
 
+    // ✅ SIEMPRE mostrar el modal de bienvenida (aunque no haya productos)
     if (!isLoggedIn()) {
         setTimeout(mostrarModalBienvenida, 1500);
     } else {
