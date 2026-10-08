@@ -1,6 +1,6 @@
 // ============================================
 // SCRIPT.JS - Textiles Madruga
-// Versión 3.2 - Login por POST (fix Turnstile largo)
+// Versión 3.5 - Fase 1: Buscador, ficha ofertas, descripción, ID
 // ============================================
 
 const API_URL = 'https://textiles-madruga-api.eldani000219.workers.dev/api';
@@ -131,17 +131,12 @@ async function logout() {
     setTimeout(() => location.reload(), 500);
 }
 
-// ✅ LOGIN POR POST (fix: Turnstile token es demasiado largo para URL)
 async function login(username, password) {
     try {
         const respuesta = await fetch(`${API_URL}/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                username,
-                password,
-                turnstileToken: turnstileToken || ''
-            })
+            body: JSON.stringify({ username, password, turnstileToken: turnstileToken || '' })
         });
 
         if (respuesta.status === 409) {
@@ -354,7 +349,7 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
 }
 
 // ============================================
-// 5. CARGA DE PRODUCTOS (robusta)
+// 5. CARGA DE PRODUCTOS
 // ============================================
 async function cargarProductos() {
     try {
@@ -433,22 +428,17 @@ function renderizarOfertas(ofertasIds, datos) {
     productosOferta.forEach(producto => {
         const descuento = producto.descuento || 15;
         const precioOferta = producto.precio * (1 - descuento / 100);
+        const descripcionCorta = producto.descripcion || 'Producto en oferta especial';
+
         html += `
             <div class="producto-card oferta-destacada">
                 <span class="badge-oferta">-${descuento}%</span>
                 <img src="${producto.imagen}" alt="${producto.nombre}" class="producto-img" onclick="abrirLightbox('${producto.imagen}', '${producto.nombre}')" style="cursor: zoom-in;" onerror="this.src='assets/img/placeholder.webp'; this.onerror=null;">
-                <p class="producto-hint">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;">
-                        <circle cx="11" cy="11" r="8"/>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                        <line x1="11" y1="8" x2="11" y2="14"/>
-                        <line x1="8" y1="11" x2="14" y2="11"/>
-                    </svg>
-                    Toca la imagen para verla completa
-                </p>
                 <h3 class="producto-nombre">${producto.nombre}</h3>
+                <p class="producto-descripcion-corta">${descripcionCorta.substring(0, 60)}${descripcionCorta.length > 60 ? '...' : ''}</p>
                 <p class="producto-precio">
-                    <span class="tachado">$${producto.precio.toFixed(2)}</span> $${precioOferta.toFixed(2)}
+                    <span class="tachado">$${producto.precio.toFixed(2)}</span>
+                    <span class="precio-oferta-grande">$${precioOferta.toFixed(2)}</span>
                 </p>
                 <button class="btn-secundario btn-detalle" data-id="${producto._id || producto.id}">Ver detalle</button>
             </div>
@@ -558,7 +548,7 @@ function abrirModal(producto, datos) {
                     ${enOferta ? `<span class="precio-oferta">$${producto.precio.toFixed(2)}</span>` : ''}
                     <span class="precio">${enOferta ? `$${precioOferta}` : `$${producto.precio.toFixed(2)}`}${unidad}</span>
                 </div>
-                <p class="descripcion">${descripcion}</p>
+                <p class="descripcion">${producto.descripcion || descripcion}</p>
                 <p style="font-size: 0.9rem; color: var(--color-gris);">Disponible para pedido por encargo</p>
                 <button class="btn-comprar" onclick="solicitarPedido('${producto.nombre}')">Solicitar pedido</button>
             </div>
@@ -850,6 +840,8 @@ function editarProductoAdmin(id) {
     document.getElementById('prod-nombre').value = producto.nombre;
     document.getElementById('prod-precio').value = producto.precio;
     document.getElementById('prod-imagen').value = producto.imagen || '';
+    document.getElementById('prod-descripcion').value = producto.descripcion || '';
+    document.getElementById('prod-id').value = producto._id || producto.id || '';
 
     const preview = document.getElementById('drop-zone-preview');
     const content = document.getElementById('drop-zone-content');
@@ -881,6 +873,8 @@ document.getElementById('producto-form')?.addEventListener('submit', async funct
     const precio = parseFloat(document.getElementById('prod-precio').value);
     let imagen = document.getElementById('prod-imagen').value.trim();
     const categoria = document.getElementById('prod-categoria').value;
+    const descripcion = document.getElementById('prod-descripcion').value.trim();
+    const idEditable = document.getElementById('prod-id').value.trim();
 
     if (!nombre || !precio) {
         mostrarNotificacion('Completa nombre y precio', 'error');
@@ -893,7 +887,9 @@ document.getElementById('producto-form')?.addEventListener('submit', async funct
     if (!session) { mostrarNotificacion('No hay sesión activa', 'error'); return; }
 
     try {
-        const productoData = { nombre, precio, imagen, categoria };
+        const productoData = { nombre, precio, imagen, categoria, descripcion };
+        if (idEditable) productoData.id = idEditable;
+
         let respuesta;
 
         if (modoEdicion) {
@@ -968,6 +964,7 @@ btnCancelarForm?.addEventListener('click', function() {
 btnNuevoProducto?.addEventListener('click', function() {
     modoEdicion = null;
     document.getElementById('producto-form').reset();
+    document.getElementById('prod-id').value = '';
 
     const preview = document.getElementById('drop-zone-preview');
     const content = document.getElementById('drop-zone-content');
@@ -1515,7 +1512,7 @@ function manejarArchivoImagen(file, preview, hiddenInput, content) {
 }
 
 // ============================================
-// INICIO (robusto: modal siempre se muestra)
+// INICIO
 // ============================================
 async function iniciar() {
     console.log('🚀 Cargando productos...');
