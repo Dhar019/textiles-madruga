@@ -13,7 +13,7 @@
     <!-- Estilos -->
     <link rel="stylesheet" href="estilos.css">
 
-    <!-- ✅ Turnstile -->
+    <!-- Turnstile -->
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 <body>
@@ -312,7 +312,9 @@
                 </div>
 
                 <div class="admin-buscador">
-                    <input type="text" id="buscador-productos" placeholder="Buscar productos..." oninput="filtrarProductosAdmin(this.value)">
+                    <input type="text" id="buscador-productos" placeholder="Buscar productos..." onkeydown="if(event.key==='Enter') filtrarProductosAdmin(this.value)">
+                    <button class="btn-admin btn-primario" onclick="filtrarProductosAdmin(document.getElementById('buscador-productos').value)">Buscar</button>
+                    <button class="btn-admin btn-secundario" onclick="document.getElementById('buscador-productos').value=''; filtrarProductosAdmin('')">Limpiar</button>
                 </div>
 
                 <div id="form-producto" class="form-oculto">
@@ -354,6 +356,15 @@
                                         <option value="objetos">Otros</option>
                                     </select>
                                 </div>
+                                <div class="form-group form-group-full">
+                                    <label>Descripción</label>
+                                    <textarea id="prod-descripcion" placeholder="Descripción del producto..." rows="3"></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label>ID del Producto</label>
+                                    <input type="text" id="prod-id" placeholder="Se genera automáticamente" readonly>
+                                    <span style="font-size:0.65rem;color:var(--color-gris);">Solo editable en el panel admin</span>
+                                </div>
                             </div>
                             <div class="form-actions">
                                 <button type="submit" class="btn-admin btn-primario" id="btn-submit-producto">Crear</button>
@@ -372,7 +383,9 @@
                 <p class="tab-subtitle">Configura descuentos, promociones y detalles personalizables</p>
 
                 <div class="admin-buscador">
-                    <input type="text" id="buscador-ofertas" placeholder="Buscar ofertas..." oninput="filtrarOfertasAdmin(this.value)">
+                    <input type="text" id="buscador-ofertas" placeholder="Buscar ofertas..." onkeydown="if(event.key==='Enter') filtrarOfertasAdmin(this.value)">
+                    <button class="btn-admin btn-primario" onclick="filtrarOfertasAdmin(document.getElementById('buscador-ofertas').value)">Buscar</button>
+                    <button class="btn-admin btn-secundario" onclick="document.getElementById('buscador-ofertas').value=''; filtrarOfertasAdmin('')">Limpiar</button>
                 </div>
 
                 <div class="admin-acciones">
@@ -388,7 +401,9 @@
                 <p class="tab-subtitle">Administra las cuentas de usuario y sus permisos</p>
 
                 <div class="admin-buscador">
-                    <input type="text" id="buscador-usuarios" placeholder="Buscar usuarios..." oninput="filtrarUsuariosAdmin(this.value)">
+                    <input type="text" id="buscador-usuarios" placeholder="Buscar usuarios..." onkeydown="if(event.key==='Enter') filtrarUsuariosAdmin(this.value)">
+                    <button class="btn-admin btn-primario" onclick="filtrarUsuariosAdmin(document.getElementById('buscador-usuarios').value)">Buscar</button>
+                    <button class="btn-admin btn-secundario" onclick="document.getElementById('buscador-usuarios').value=''; filtrarUsuariosAdmin('')">Limpiar</button>
                 </div>
 
                 <div class="admin-acciones">
@@ -451,7 +466,6 @@
                         </svg>
                     </button>
                 </div>
-                <!-- ✅ Turnstile widget (flexible en lugar de invisible) -->
                 <div class="cf-turnstile" 
                      data-sitekey="0x4AAAAAAFQbg2Ktk40L17gg" 
                      data-callback="onTurnstileSuccess"

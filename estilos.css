@@ -449,6 +449,24 @@ main, .main-content {
 }
 
 /* ============================================ */
+/* FICHA DE OFERTAS (FASE 1)                    */
+/* ============================================ */
+.producto-descripcion-corta {
+    font-size: 0.85rem;
+    color: var(--color-gris);
+    text-align: center;
+    margin: 8px 0;
+    font-style: italic;
+    line-height: 1.3;
+}
+
+.precio-oferta-grande {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--color-naranja);
+}
+
+/* ============================================ */
 /* 5. CATÁLOGO                                */
 /* ============================================ */
 .section-title {
@@ -1398,6 +1416,32 @@ body.admin-abierto .nav {
     background: white;
 }
 
+/* ============================================ */
+/* TEXTAREA Y FORM GROUP FULL (FASE 1)          */
+/* ============================================ */
+.form-group-full {
+    grid-column: 1 / -1;
+}
+
+.form-group textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #EDE8E1;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-family: var(--font-sans);
+    background: #FAF8F5;
+    resize: vertical;
+    min-height: 80px;
+    transition: border-color 0.3s ease;
+}
+
+.form-group textarea:focus {
+    border-color: var(--color-naranja);
+    outline: none;
+    background: white;
+}
+
 .form-actions {
     display: flex;
     gap: 12px;
@@ -2082,359 +2126,19 @@ body.admin-abierto .nav {
 }
 
 /* ============================================ */
-/* RESPONSIVE - GLOBAL                         */
-/* ============================================ */
-@media (max-width: 768px) {
-    .header {
-        position: sticky !important;
-        top: 0 !important;
-        z-index: 9999 !important;
-    }
-
-    .header .container {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 5px;
-        flex-wrap: nowrap;
-    }
-
-    .logo {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 2px;
-        flex-shrink: 1;
-        min-width: 0;
-    }
-
-    .logo-header {
-        height: 30px;
-        margin-bottom: 2px;
-    }
-
-    .logo-textiles,
-    .logo-madruga {
-        font-size: 0.8rem;
-        line-height: 1;
-    }
-    .logo-madruga {
-        margin-top: -2px;
-    }
-
-    .logo-hero { max-width: 140px; }
-
-    .hero::before {
-        right: 5vh;
-        width: 120%;
-        opacity: 0.4;
-    }
-
-    .hero-slogan { font-size: 1.2rem; }
-    .letra-madruga { font-size: 3.5rem; }
-    .section-title { font-size: 2.2rem; }
-    .grid-productos { grid-template-columns: 1fr 1fr; }
-    .grid-categorias { grid-template-columns: 1fr 1fr; }
-    .grid-subcategorias { grid-template-columns: 1fr; }
-    .grid-personalizados { grid-template-columns: 1fr; }
-    .categoria-card span { font-size: 2.5rem; }
-    .badge-oferta { top: 10px; right: 10px; font-size: 0.75rem; padding: 4px 12px; }
-
-    .admin-contenido { padding: 20px; width: 95%; }
-    .admin-producto-item { flex-direction: column; align-items: flex-start; gap: 10px; }
-    .admin-producto-item .acciones { flex-wrap: wrap; }
-    .admin-acciones { flex-direction: column; }
-    .btn-admin { width: 100%; text-align: center; }
-    .admin-tabs { flex-wrap: wrap; }
-    .admin-tab { flex: 1 1 45%; }
-
-    .header-actions {
-        gap: 4px;
-    }
-
-    .btn-acceder,
-    .btn-cerrar-sesion {
-        font-size: 0.6rem !important;
-        padding: 4px 8px !important;
-        white-space: nowrap;
-    }
-
-    .menu-hamburguesa {
-        display: flex !important;
-        margin-left: 2px;
-        padding: 6px 4px;
-    }
-
-    .menu-hamburguesa .barra {
-        width: 24px;
-        height: 2.5px;
-    }
-
-    .nav {
-        width: 80% !important;
-        max-width: 300px !important;
-        right: 0 !important;
-    }
-
-    section[id] {
-        scroll-margin-top: 120px;
-    }
-
-    /* Cards de productos */
-    .producto-card {
-        padding: 15px;
-    }
-
-    .producto-img {
-        height: 220px;
-        object-fit: contain;
-        background-color: #FAF8F5;
-        padding: 5px;
-    }
-
-    .producto-hint {
-        font-size: 0.65rem;
-    }
-
-    /* Modal de bienvenida */
-    .bienvenida-contenido {
-        max-height: 90vh;
-        overflow-y: auto;
-    }
-
-    .bienvenida-info {
-        padding: 20px 18px;
-    }
-
-    .bienvenida-beneficios {
-        gap: 8px;
-    }
-
-    .bienvenida-beneficio {
-        padding: 8px;
-    }
-}
-
-@media (max-width: 480px) {
-    .grid-productos { grid-template-columns: 1fr; }
-    .grid-categorias { grid-template-columns: 1fr; }
-    .logo-hero { max-width: 120px; }
-    .hero-slogan { font-size: 1rem; }
-    .letra-madruga { font-size: 2.8rem; }
-    .admin-tab { flex: 1 1 100%; }
-    .login-contenido { max-width: 92%; padding: 20px 16px; }
-    .login-header h2 { font-size: 1.2rem; }
-    .login-group input { padding: 9px 40px 9px 12px; font-size: 0.85rem; height: 42px; }
-    .btn-login { padding: 10px; font-size: 0.85rem; height: 44px; }
-    .notificacion {
-        top: 10px;
-        right: 10px;
-        left: 10px;
-        max-width: none;
-        font-size: 0.8rem;
-        padding: 12px 18px;
-    }
-
-    /* Cards de productos */
-    .producto-card {
-        padding: 12px;
-    }
-
-    .producto-img {
-        height: 200px;
-        object-fit: contain;
-        padding: 5px;
-    }
-
-    .producto-nombre {
-        font-size: 1rem;
-    }
-
-    .producto-precio {
-        font-size: 0.95rem;
-    }
-
-    .btn-secundario {
-        padding: 8px 16px;
-        font-size: 0.8rem;
-    }
-
-    .producto-hint {
-        font-size: 0.6rem;
-    }
-
-    /* Modal de bienvenida */
-    .bienvenida-contenido {
-        max-height: 95vh;
-        border-radius: 16px;
-    }
-
-    .bienvenida-decoracion {
-        height: 100px;
-    }
-
-    .bienvenida-titulo {
-        font-size: 1.1rem;
-    }
-
-    .bienvenida-icono svg {
-        width: 32px;
-        height: 32px;
-    }
-
-    .bienvenida-acciones {
-        gap: 8px;
-    }
-
-    .bienvenida-btn-primario,
-    .bienvenida-btn-secundario {
-        padding: 10px 16px;
-        font-size: 0.8rem;
-    }
-}
-
-/* ============================================ */
-/* IMÁGENES DENTRO DE BOTONES (RESPONSIVE)     */
-/* ============================================ */
-.btn-acceder img,
-.btn-cerrar-sesion img,
-.btn-primary img,
-.btn-secundario img,
-.btn-admin img,
-.boton-categoria img {
-    max-width: 100%;
-    height: auto;
-    display: inline-block;
-    vertical-align: middle;
-}
-
-@media (max-width: 768px) {
-    .btn-acceder img,
-    .btn-cerrar-sesion img,
-    .btn-primary img,
-    .btn-secundario img {
-        width: 40px;
-        height: 40px;
-        object-fit: contain;
-        max-width: none;
-        min-width: 0;
-        display: inline-block;
-        vertical-align: middle;
-    }
-
-    /* ============================================ */
-    /* CATEGORÍAS DESTACADAS (Ropas, Telas...)     */
-    /* ============================================ */
-    .grid-categorias {
-        grid-template-columns: 1fr 1fr;
-        gap: 20px;
-    }
-
-    .categoria-card {
-        padding: 20px 15px;
-        min-height: 160px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .categoria-card span {
-        font-size: 3.5rem;
-        display: block;
-        margin-bottom: 8px;
-    }
-
-    .categoria-card img {
-        width: 100%;
-        max-width: 120px;
-        height: 120px;
-        object-fit: cover;
-        border-radius: 0;
-        display: block;
-    }
-
-    .categoria-card h3 {
-        font-size: 1rem;
-        margin-top: 8px;
-    }
-
-    /* ============================================ */
-    /* SUB-CATEGORÍAS (Hombre, Mujer)              */
-    /* ============================================ */
-    .grid-subcategorias {
-        grid-template-columns: 1fr 1fr;
-        gap: 20px;
-    }
-
-    .subcategoria-card {
-        padding: 25px 15px;
-        min-height: 220px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .subcategoria-card-imagen span {
-        font-size: 4.5rem;
-        display: block;
-        margin-bottom: 10px;
-    }
-
-    .subcategoria-card-imagen img {
-        width: 100%;
-        max-width: 150px;
-        height: 150px;
-        object-fit: cover;
-        border-radius: 10%;
-        display: block;
-    }
-
-    .subcategoria-card-imagen h3 {
-        font-size: 1.2rem;
-        margin-top: 8px;
-    }
-
-    .subcategoria-card-imagen p {
-        font-size: 0.8rem;
-    }
-}
-
-/* ============================================ */
-/* AJUSTE DE SCROLL PARA SECCIONES             */
-/* ============================================ */
-section[id] {
-    scroll-margin-top: var(--header-height);
-}
-
-#inicio,
-#ofertas-ropa,
-#ropa,
-#telas,
-#otros,
-#personalizados,
-#contacto,
-#ropa-hombre,
-#ropa-mujer {
-    scroll-margin-top: var(--header-height);
-}
-
-@media (max-width: 768px) {
-    :root {
-        --header-height: 120px;
-    }
-}
-
-/* ============================================ */
-/* BUSCADORES DEL PANEL DE ADMIN                */
+/* BUSCADORES DEL PANEL DE ADMIN (FASE 1)       */
 /* ============================================ */
 .admin-buscador {
+    display: flex;
+    gap: 10px;
     margin-bottom: 15px;
+    align-items: center;
+    flex-wrap: wrap;
 }
 
 .admin-buscador input {
-    width: 100%;
+    flex: 1;
+    min-width: 200px;
     padding: 10px 16px;
     border: 2px solid #EDE8E1;
     border-radius: 12px;
@@ -2450,10 +2154,25 @@ section[id] {
     box-shadow: 0 0 0 3px rgba(232, 122, 32, 0.1);
 }
 
+.admin-buscador button {
+    padding: 10px 20px;
+    white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+    .admin-buscador {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .admin-buscador button {
+        width: 100%;
+    }
+}
+
 /* ============================================ */
 /* MODAL DE BIENVENIDA - ESTILO MODERNO         */
 /* ============================================ */
-
 .bienvenida-oculto {
     display: none !important;
 }
@@ -2934,4 +2653,343 @@ section[id] {
     max-height: 150px;
     border-radius: 8px;
     object-fit: contain;
+}
+
+/* ============================================ */
+/* RESPONSIVE - GLOBAL                         */
+/* ============================================ */
+@media (max-width: 768px) {
+    .header {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 9999 !important;
+    }
+
+    .header .container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 5px;
+        flex-wrap: nowrap;
+    }
+
+    .logo {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+        flex-shrink: 1;
+        min-width: 0;
+    }
+
+    .logo-header {
+        height: 30px;
+        margin-bottom: 2px;
+    }
+
+    .logo-textiles,
+    .logo-madruga {
+        font-size: 0.8rem;
+        line-height: 1;
+    }
+    .logo-madruga {
+        margin-top: -2px;
+    }
+
+    .logo-hero { max-width: 140px; }
+
+    .hero::before {
+        right: 5vh;
+        width: 120%;
+        opacity: 0.4;
+    }
+
+    .hero-slogan { font-size: 1.2rem; }
+    .letra-madruga { font-size: 3.5rem; }
+    .section-title { font-size: 2.2rem; }
+    .grid-productos { grid-template-columns: 1fr 1fr; }
+    .grid-categorias { grid-template-columns: 1fr 1fr; }
+    .grid-subcategorias { grid-template-columns: 1fr; }
+    .grid-personalizados { grid-template-columns: 1fr; }
+    .categoria-card span { font-size: 2.5rem; }
+    .badge-oferta { top: 10px; right: 10px; font-size: 0.75rem; padding: 4px 12px; }
+
+    .admin-contenido { padding: 20px; width: 95%; }
+    .admin-producto-item { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .admin-producto-item .acciones { flex-wrap: wrap; }
+    .admin-acciones { flex-direction: column; }
+    .btn-admin { width: 100%; text-align: center; }
+    .admin-tabs { flex-wrap: wrap; }
+    .admin-tab { flex: 1 1 45%; }
+
+    .header-actions {
+        gap: 4px;
+    }
+
+    .btn-acceder,
+    .btn-cerrar-sesion {
+        font-size: 0.6rem !important;
+        padding: 4px 8px !important;
+        white-space: nowrap;
+    }
+
+    .menu-hamburguesa {
+        display: flex !important;
+        margin-left: 2px;
+        padding: 6px 4px;
+    }
+
+    .menu-hamburguesa .barra {
+        width: 24px;
+        height: 2.5px;
+    }
+
+    .nav {
+        width: 80% !important;
+        max-width: 300px !important;
+        right: 0 !important;
+    }
+
+    section[id] {
+        scroll-margin-top: 120px;
+    }
+
+    /* Cards de productos */
+    .producto-card {
+        padding: 15px;
+    }
+
+    .producto-img {
+        height: 220px;
+        object-fit: contain;
+        background-color: #FAF8F5;
+        padding: 5px;
+    }
+
+    .producto-hint {
+        font-size: 0.65rem;
+    }
+
+    /* Modal de bienvenida */
+    .bienvenida-contenido {
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .bienvenida-info {
+        padding: 20px 18px;
+    }
+
+    .bienvenida-beneficios {
+        gap: 8px;
+    }
+
+    .bienvenida-beneficio {
+        padding: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .grid-productos { grid-template-columns: 1fr; }
+    .grid-categorias { grid-template-columns: 1fr; }
+    .logo-hero { max-width: 120px; }
+    .hero-slogan { font-size: 1rem; }
+    .letra-madruga { font-size: 2.8rem; }
+    .admin-tab { flex: 1 1 100%; }
+    .login-contenido { max-width: 92%; padding: 20px 16px; }
+    .login-header h2 { font-size: 1.2rem; }
+    .login-group input { padding: 9px 40px 9px 12px; font-size: 0.85rem; height: 42px; }
+    .btn-login { padding: 10px; font-size: 0.85rem; height: 44px; }
+    .notificacion {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        max-width: none;
+        font-size: 0.8rem;
+        padding: 12px 18px;
+    }
+
+    /* Cards de productos */
+    .producto-card {
+        padding: 12px;
+    }
+
+    .producto-img {
+        height: 200px;
+        object-fit: contain;
+        padding: 5px;
+    }
+
+    .producto-nombre {
+        font-size: 1rem;
+    }
+
+    .producto-precio {
+        font-size: 0.95rem;
+    }
+
+    .btn-secundario {
+        padding: 8px 16px;
+        font-size: 0.8rem;
+    }
+
+    .producto-hint {
+        font-size: 0.6rem;
+    }
+
+    /* Modal de bienvenida */
+    .bienvenida-contenido {
+        max-height: 95vh;
+        border-radius: 16px;
+    }
+
+    .bienvenida-decoracion {
+        height: 100px;
+    }
+
+    .bienvenida-titulo {
+        font-size: 1.1rem;
+    }
+
+    .bienvenida-icono svg {
+        width: 32px;
+        height: 32px;
+    }
+
+    .bienvenida-acciones {
+        gap: 8px;
+    }
+
+    .bienvenida-btn-primario,
+    .bienvenida-btn-secundario {
+        padding: 10px 16px;
+        font-size: 0.8rem;
+    }
+}
+
+/* ============================================ */
+/* IMÁGENES DENTRO DE BOTONES (RESPONSIVE)     */
+/* ============================================ */
+.btn-acceder img,
+.btn-cerrar-sesion img,
+.btn-primary img,
+.btn-secundario img,
+.btn-admin img,
+.boton-categoria img {
+    max-width: 100%;
+    height: auto;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+@media (max-width: 768px) {
+    .btn-acceder img,
+    .btn-cerrar-sesion img,
+    .btn-primary img,
+    .btn-secundario img {
+        width: 40px;
+        height: 40px;
+        object-fit: contain;
+        max-width: none;
+        min-width: 0;
+        display: inline-block;
+        vertical-align: middle;
+    }
+
+    .grid-categorias {
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    .categoria-card {
+        padding: 20px 15px;
+        min-height: 160px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .categoria-card span {
+        font-size: 3.5rem;
+        display: block;
+        margin-bottom: 8px;
+    }
+
+    .categoria-card img {
+        width: 100%;
+        max-width: 120px;
+        height: 120px;
+        object-fit: cover;
+        border-radius: 0;
+        display: block;
+    }
+
+    .categoria-card h3 {
+        font-size: 1rem;
+        margin-top: 8px;
+    }
+
+    .grid-subcategorias {
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    .subcategoria-card {
+        padding: 25px 15px;
+        min-height: 220px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .subcategoria-card-imagen span {
+        font-size: 4.5rem;
+        display: block;
+        margin-bottom: 10px;
+    }
+
+    .subcategoria-card-imagen img {
+        width: 100%;
+        max-width: 150px;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 10%;
+        display: block;
+    }
+
+    .subcategoria-card-imagen h3 {
+        font-size: 1.2rem;
+        margin-top: 8px;
+    }
+
+    .subcategoria-card-imagen p {
+        font-size: 0.8rem;
+    }
+}
+
+/* ============================================ */
+/* AJUSTE DE SCROLL PARA SECCIONES             */
+/* ============================================ */
+section[id] {
+    scroll-margin-top: var(--header-height);
+}
+
+#inicio,
+#ofertas-ropa,
+#ropa,
+#telas,
+#otros,
+#personalizados,
+#contacto,
+#ropa-hombre,
+#ropa-mujer {
+    scroll-margin-top: var(--header-height);
+}
+
+@media (max-width: 768px) {
+    :root {
+        --header-height: 120px;
+    }
 }
