@@ -1,6 +1,6 @@
 // ============================================
 // SCRIPT.JS - Textiles Madruga
-// Versión 4.0 - Modal de confirmación propio
+// Versión 4.0 - Ofertas avanzadas con tipos
 // ============================================
 
 const API_URL = 'https://textiles-madruga-api.eldani000219.workers.dev/api';
@@ -11,7 +11,6 @@ const SESSION_KEY = 'tm_session';
 // ============================================
 function confirmar(opciones) {
     return new Promise((resolve) => {
-        // Acepta tanto un string como un objeto
         if (typeof opciones === 'string') {
             opciones = { mensaje: opciones };
         }
@@ -32,13 +31,11 @@ function confirmar(opciones) {
         const tituloEl = document.getElementById('confirmar-titulo');
         const mensajeEl = document.getElementById('confirmar-mensaje');
 
-        // Configurar textos
         tituloEl.textContent = titulo;
         mensajeEl.textContent = mensaje;
         btnAceptar.textContent = textoAceptar;
         btnCancelar.textContent = textoCancelar;
 
-        // Configurar icono según el tipo
         icono.className = 'confirmar-icono';
         if (tipo === 'peligro') {
             icono.classList.add('peligro');
@@ -50,11 +47,9 @@ function confirmar(opciones) {
             btnAceptar.className = 'confirmar-btn confirmar-btn-aceptar';
         }
 
-        // Mostrar el modal
         modal.className = 'confirmar-visible';
         document.body.style.overflow = 'hidden';
 
-        // Funciones de cierre
         const cerrar = (resultado) => {
             modal.className = 'confirmar-oculto';
             document.body.style.overflow = 'auto';
@@ -68,7 +63,6 @@ function confirmar(opciones) {
         btnCancelar.onclick = () => cerrar(false);
         overlay.onclick = () => cerrar(false);
 
-        // Cerrar con Escape
         const escapeHandler = (e) => {
             if (e.key === 'Escape') {
                 document.removeEventListener('keydown', escapeHandler);
@@ -499,19 +493,56 @@ function renderizarOfertas(ofertasIds, datos) {
 
     let html = '';
     productosOferta.forEach(producto => {
-        const descuento = producto.descuento || 15;
-        const precioOferta = producto.precio * (1 - descuento / 100);
-        const descripcionCorta = producto.descripcion || 'Producto en oferta especial';
+        const tipoOferta = producto.tipoOferta || 'descuento';
+        const descuento = producto.descuento || 0;
+        const promocion = producto.promocion || '';
+        const precioOferta = descuento > 0 
+            ? producto.precio * (1 - descuento / 100) 
+            : producto.precio;
+
+        let badge = '';
+        let descripcionOferta = '';
+
+        switch (tipoOferta) {
+            case 'descuento':
+                badge = `-${descuento}%`;
+                descripcionOferta = `${descuento}% de descuento`;
+                break;
+            case '2x1':
+                badge = '2x1';
+                descripcionOferta = 'Lleva 2, paga 1';
+                break;
+            case '3x2':
+                badge = '3x2';
+                descripcionOferta = 'Lleva 3, paga 2';
+                break;
+            case 'descuento_2x1':
+                badge = `-${descuento}% + 2x1`;
+                descripcionOferta = `${descuento}% OFF + Lleva 2, paga 1`;
+                break;
+            case 'descuento_3x2':
+                badge = `-${descuento}% + 3x2`;
+                descripcionOferta = `${descuento}% OFF + Lleva 3, paga 2`;
+                break;
+            case 'personalizado':
+                badge = promocion || 'OFERTA';
+                descripcionOferta = promocion;
+                break;
+        }
+
+        const mostrarPrecioOferta = descuento > 0;
 
         html += `
             <div class="producto-card oferta-destacada">
-                <span class="badge-oferta">-${descuento}%</span>
+                <span class="badge-oferta">${badge}</span>
                 <img src="${producto.imagen}" alt="${producto.nombre}" class="producto-img" onclick="abrirLightbox('${producto.imagen}', '${producto.nombre}')" style="cursor: zoom-in;" onerror="this.src='assets/img/placeholder.webp'; this.onerror=null;">
                 <h3 class="producto-nombre">${producto.nombre}</h3>
-                <p class="producto-descripcion-corta">${descripcionCorta.substring(0, 60)}${descripcionCorta.length > 60 ? '...' : ''}</p>
+                <p class="producto-descripcion-corta">${descripcionOferta}</p>
                 <p class="producto-precio">
-                    <span class="tachado">$${producto.precio.toFixed(2)}</span>
-                    <span class="precio-oferta-grande">$${precioOferta.toFixed(2)}</span>
+                    ${mostrarPrecioOferta 
+                        ? `<span class="tachado">$${producto.precio.toFixed(2)}</span>
+                           <span class="precio-oferta-grande">$${precioOferta.toFixed(2)}</span>`
+                        : `$${producto.precio.toFixed(2)}`}
                 </p>
                 <button class="btn-secundario btn-detalle" data-id="${producto.id || producto._id}">Ver detalle</button>
             </div>
@@ -540,12 +571,27 @@ function renderizarProductosConModal(productos, contenedorSelector, datos) {
     productos.forEach(producto => {
         const unidad = producto.unidad || '';
         const enOferta = producto.enOferta || false;
-        const descuento = enOferta ? (producto.descuento || 15) : 0;
-        const precioOferta = enOferta ? producto.precio * (1 - descuento / 100) : null;
+        const tipoOferta = producto.tipoOferta || 'descuento';
+        const descuento = enOferta ? (producto.descuento || 0) : 0;
+        const promocion = producto.promocion || '';
+        const precioOferta = descuento > 0 ? producto.precio * (1 - descuento / 100) : null;
+
+        // Badge según tipo
+        let badge = '';
+        if (enOferta) {
+            switch (tipoOferta) {
+                case 'descuento': badge = `-${descuento}%`; break;
+                case '2x1': badge = '2x1'; break;
+                case '3x2': badge = '3x2'; break;
+                case 'descuento_2x1': badge = `-${descuento}% + 2x1`; break;
+                case 'descuento_3x2': badge = `-${descuento}% + 3x2`; break;
+                case 'personalizado': badge = promocion || 'OFERTA'; break;
+            }
+        }
 
         html += `
             <div class="producto-card ${enOferta ? 'oferta-destacada' : ''}">
-                ${enOferta ? `<span class="badge-oferta">-${descuento}%</span>` : ''}
+                ${enOferta ? `<span class="badge-oferta">${badge}</span>` : ''}
                 <img src="${producto.imagen}" alt="${producto.nombre}" class="producto-img" loading="lazy" onclick="abrirLightbox('${producto.imagen}', '${producto.nombre}')" style="cursor: zoom-in;" onerror="this.src='assets/img/placeholder.webp'; this.onerror=null;">
                 <p class="producto-hint">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;">
@@ -558,7 +604,7 @@ function renderizarProductosConModal(productos, contenedorSelector, datos) {
                 </p>
                 <h3 class="producto-nombre">${producto.nombre}</h3>
                 <p class="producto-precio">
-                    ${enOferta 
+                    ${enOferta && descuento > 0
                         ? `<span class="tachado">$${producto.precio.toFixed(2)}</span> $${precioOferta.toFixed(2)}${unidad}` 
                         : `$${producto.precio.toFixed(2)}${unidad}`}
                 </p>
@@ -589,8 +635,12 @@ function abrirModal(producto, datos) {
 
     const unidad = producto.unidad || '';
     const enOferta = producto.enOferta || false;
-    const descuento = enOferta ? (producto.descuento || 15) : 0;
-    const precioOferta = enOferta ? (producto.precio * (1 - descuento / 100)).toFixed(2) : null;
+    const tipoOfertaActual = producto.tipoOferta || 'descuento';
+    const descuentoActual = producto.descuento || 0;
+    const promocionActual = producto.promocion || '';
+    const precioOferta = descuentoActual > 0 
+        ? (producto.precio * (1 - descuentoActual / 100)).toFixed(2) 
+        : null;
 
     const categoriaMap = { 'hombre': 'Hombre', 'mujer': 'Mujer', 'telas': 'Telas', 'objetos': 'Otros' };
     let categoriaTexto = 'Producto';
@@ -609,6 +659,31 @@ function abrirModal(producto, datos) {
     ];
     const descripcion = producto.descripcion || descripciones[0];
 
+    // Etiqueta de oferta
+    let etiquetaOferta = '';
+    if (enOferta) {
+        switch (tipoOfertaActual) {
+            case 'descuento':
+                etiquetaOferta = `${descuentoActual}% de descuento`;
+                break;
+            case '2x1':
+                etiquetaOferta = 'Lleva 2, paga 1';
+                break;
+            case '3x2':
+                etiquetaOferta = 'Lleva 3, paga 2';
+                break;
+            case 'descuento_2x1':
+                etiquetaOferta = `${descuentoActual}% OFF + Lleva 2, paga 1`;
+                break;
+            case 'descuento_3x2':
+                etiquetaOferta = `${descuentoActual}% OFF + Lleva 3, paga 2`;
+                break;
+            case 'personalizado':
+                etiquetaOferta = promocionActual;
+                break;
+        }
+    }
+
     modalBody.innerHTML = `
         <div class="modal-producto">
             <div class="modal-producto-imagen">
@@ -618,9 +693,14 @@ function abrirModal(producto, datos) {
                 <span class="categoria">${categoriaTexto}</span>
                 <h2>${producto.nombre}</h2>
                 <div>
-                    ${enOferta ? `<span class="precio-oferta">$${producto.precio.toFixed(2)}</span>` : ''}
-                    <span class="precio">${enOferta ? `$${precioOferta}` : `$${producto.precio.toFixed(2)}`}${unidad}</span>
+                    ${enOferta && descuentoActual > 0 ? `<span class="precio-oferta">$${producto.precio.toFixed(2)}</span>` : ''}
+                    <span class="precio">${enOferta && descuentoActual > 0 ? `$${precioOferta}` : `$${producto.precio.toFixed(2)}`}${unidad}</span>
                 </div>
+                ${enOferta && etiquetaOferta ? `
+                    <div style="background:#FFF5EB;padding:10px 16px;border-radius:8px;border-left:3px solid var(--color-naranja);margin:8px 0;">
+                        <strong style="color:var(--color-naranja);font-size:0.85rem;">🏷️ ${etiquetaOferta}</strong>
+                    </div>
+                ` : ''}
                 <p class="descripcion">${descripcion}</p>
                 <p style="font-size: 0.9rem; color: var(--color-gris);">Disponible para pedido por encargo</p>
                 <button class="btn-comprar" onclick="solicitarPedido('${producto.nombre}')">Solicitar pedido</button>
@@ -856,7 +936,12 @@ async function toggleOfertaAdmin(id) {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${session.token}`
             },
-            body: JSON.stringify({ enOferta: nuevaOferta })
+            body: JSON.stringify({ 
+                enOferta: nuevaOferta,
+                tipoOferta: producto.tipoOferta || 'descuento',
+                descuento: producto.descuento || 15,
+                promocion: producto.promocion || ''
+            })
         });
 
         if (!respuesta.ok) throw new Error('Error al actualizar oferta');
@@ -1097,6 +1182,9 @@ btnNuevoProducto?.addEventListener('click', function() {
 adminCerrar?.addEventListener('click', cerrarAdmin);
 adminOverlay?.addEventListener('click', cerrarAdmin);
 
+// ============================================
+// 11. GESTIÓN DE OFERTAS CON TIPOS AVANZADOS
+// ============================================
 async function cargarOfertasAdmin() {
     const container = document.getElementById('lista-ofertas-admin');
     if (!container) return;
@@ -1117,8 +1205,12 @@ async function cargarOfertasAdmin() {
 
         let html = '';
         ofertas.forEach(producto => {
-            const descuento = producto.descuento || 15;
-            const precioOferta = producto.precio * (1 - descuento / 100);
+            const descuento = producto.descuento || 0;
+            const tipoOferta = producto.tipoOferta || 'descuento';
+            const promocion = producto.promocion || '';
+            const precioOferta = descuento > 0 
+                ? producto.precio * (1 - descuento / 100) 
+                : producto.precio;
             const imagen = producto.imagen || 'assets/img/placeholder.webp';
             const descripcion = producto.descripcion || 'Sin descripción';
             const id = producto.id || producto._id || 'sin-id';
@@ -1135,16 +1227,53 @@ async function cargarOfertasAdmin() {
                             <span class="oferta-card-id">ID: ${id}</span>
                         </div>
                     </div>
+                    
                     <div class="oferta-card-precios">
                         <span class="oferta-card-precio-original">$${producto.precio.toFixed(2)}</span>
-                        <span class="oferta-card-precio-oferta">$${precioOferta.toFixed(2)}</span>
+                        ${descuento > 0 ? `
+                            <span class="oferta-card-precio-oferta">$${precioOferta.toFixed(2)}</span>
+                        ` : ''}
                     </div>
+                    
                     <div class="oferta-card-edicion">
                         <div class="campo">
-                            <label>Descuento (%)</label>
-                            <input type="number" value="${descuento}" min="0" max="100" onchange="actualizarDescuento('${id}', this.value)">
+                            <label>Tipo de oferta</label>
+                            <select id="tipo-${id}" class="oferta-select">
+                                <option value="descuento" ${tipoOferta === 'descuento' ? 'selected' : ''}>Descuento</option>
+                                <option value="2x1" ${tipoOferta === '2x1' ? 'selected' : ''}>Lleva 2, paga 1</option>
+                                <option value="3x2" ${tipoOferta === '3x2' ? 'selected' : ''}>Lleva 3, paga 2</option>
+                                <option value="descuento_2x1" ${tipoOferta === 'descuento_2x1' ? 'selected' : ''}>Descuento + 2x1</option>
+                                <option value="descuento_3x2" ${tipoOferta === 'descuento_3x2' ? 'selected' : ''}>Descuento + 3x2</option>
+                                <option value="personalizado" ${tipoOferta === 'personalizado' ? 'selected' : ''}>Personalizado</option>
+                            </select>
                         </div>
-                        <button class="btn-admin btn-peligro" onclick="quitarOferta('${id}')">Quitar oferta</button>
+                        
+                        <div class="campo">
+                            <label>Descuento (%)</label>
+                            <input type="number" 
+                                   id="descuento-${id}" 
+                                   value="${descuento}" 
+                                   min="0" 
+                                   max="100"
+                                   onkeydown="if(event.key==='Enter'){event.preventDefault();guardarOferta('${id}');}">
+                        </div>
+                        
+                        <div class="campo">
+                            <label>Promoción (texto)</label>
+                            <input type="text" 
+                                   id="promocion-${id}" 
+                                   value="${promocion}" 
+                                   placeholder="Ej: 2x1, Envío gratis"
+                                   onkeydown="if(event.key==='Enter'){event.preventDefault();guardarOferta('${id}');}">
+                        </div>
+                        
+                        <button class="btn-admin btn-primario btn-guardar-oferta" onclick="guardarOferta('${id}')">
+                            💾 Guardar
+                        </button>
+                        
+                        <button class="btn-admin btn-peligro" onclick="quitarOferta('${id}')">
+                            🗑 Quitar
+                        </button>
                     </div>
                 </div>
             `;
@@ -1152,7 +1281,64 @@ async function cargarOfertasAdmin() {
 
         container.innerHTML = html;
     } catch (error) {
+        console.error('Error al cargar ofertas:', error);
         container.innerHTML = '<p style="text-align:center;padding:40px;color:var(--color-gris);">Error al cargar ofertas.</p>';
+    }
+}
+
+// ============================================
+// GUARDAR OFERTA INDIVIDUAL (con botón o Enter)
+// ============================================
+async function guardarOferta(id) {
+    const tipoOferta = document.getElementById(`tipo-${id}`).value;
+    const descuento = parseInt(document.getElementById(`descuento-${id}`).value) || 0;
+    const promocion = document.getElementById(`promocion-${id}`).value.trim();
+    
+    if (tipoOferta === 'descuento' && (descuento <= 0 || descuento > 100)) {
+        mostrarNotificacion('El descuento debe estar entre 1 y 100', 'error');
+        return;
+    }
+    
+    if (tipoOferta === 'personalizado' && !promocion) {
+        mostrarNotificacion('Escribe un texto para la promoción personalizada', 'error');
+        return;
+    }
+    
+    try {
+        const session = getSession();
+        const respuesta = await fetch(`${API_URL}/offers/toggle/${id}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.token}`
+            },
+            body: JSON.stringify({ 
+                enOferta: true,
+                tipoOferta, 
+                descuento, 
+                promocion
+            })
+        });
+        
+        if (!respuesta.ok) throw new Error('Error al guardar oferta');
+        
+        mostrarNotificacion('Oferta guardada', 'success');
+        
+        const datosActualizados = await cargarProductos();
+        if (datosActualizados) {
+            datosGlobales = datosActualizados;
+            adminDatos = JSON.parse(JSON.stringify(datosActualizados));
+            renderizarAdminProductos();
+            cargarOfertasAdmin();
+            renderizarOfertas(datosActualizados.ofertas, datosActualizados);
+            renderizarProductosConModal(datosActualizados.productos.hombre, '#ropa-hombre .grid-productos', datosActualizados);
+            renderizarProductosConModal(datosActualizados.productos.mujer, '#ropa-mujer .grid-productos', datosActualizados);
+            renderizarProductosConModal(datosActualizados.productos.telas, '#telas .grid-productos', datosActualizados);
+            renderizarProductosConModal(datosActualizados.productos.objetos, '#otros .grid-productos', datosActualizados);
+        }
+    } catch (error) {
+        console.error('Error al guardar oferta:', error);
+        mostrarNotificacion('Error al guardar oferta', 'error');
     }
 }
 
@@ -1172,7 +1358,6 @@ async function actualizarDescuento(productoId, descuento) {
 
         mostrarNotificacion('Descuento actualizado', 'success');
 
-        // ✅ FORZAR RECARGA desde el servidor
         const datosActualizados = await cargarProductos();
         if (datosActualizados) {
             datosGlobales = datosActualizados;
@@ -1219,6 +1404,9 @@ async function quitarOferta(productoId) {
     }
 }
 
+// ============================================
+// 12. GESTIÓN DE USUARIOS
+// ============================================
 async function renderizarUsuariosAdmin() {
     const container = document.getElementById('admin-usuarios-lista');
     if (!container) return;
@@ -1388,6 +1576,9 @@ document.getElementById('btn-nuevo-usuario')?.addEventListener('click', function
     });
 });
 
+// ============================================
+// 13. FILTROS DE BÚSQUEDA
+// ============================================
 function filtrarProductosAdmin(termino) {
     const items = document.querySelectorAll('#admin-productos-lista .admin-producto-item');
     termino = termino.toLowerCase();
@@ -1415,6 +1606,9 @@ function filtrarUsuariosAdmin(termino) {
     });
 }
 
+// ============================================
+// 14. MODAL GENÉRICO
+// ============================================
 function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit }) {
     const modal = document.getElementById('modal-generico');
     const overlay = document.getElementById('modal-generico-overlay');
@@ -1463,6 +1657,9 @@ function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit }) {
     };
 }
 
+// ============================================
+// 15. MODAL DE BIENVENIDA
+// ============================================
 function mostrarModalBienvenida() {
     const modal = document.getElementById('modal-bienvenida');
     if (!modal) return;
@@ -1510,6 +1707,9 @@ document.getElementById('modal-bienvenida-continuar')?.addEventListener('click',
 document.getElementById('modal-bienvenida-cerrar')?.addEventListener('click', cerrarModalBienvenida);
 document.getElementById('modal-bienvenida-overlay')?.addEventListener('click', cerrarModalBienvenida);
 
+// ============================================
+// 16. LOGIN/LOGOUT
+// ============================================
 const btnAcceder = document.getElementById('btn-acceder');
 const btnCerrarSesion = document.getElementById('btn-cerrar-sesion');
 
@@ -1611,6 +1811,9 @@ document.getElementById('login-registro-link')?.addEventListener('click', functi
 loginCerrar?.addEventListener('click', cerrarLogin);
 loginOverlay?.addEventListener('click', cerrarLogin);
 
+// ============================================
+// 17. OJITO PARA CONTRASEÑA
+// ============================================
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.toggle-password').forEach(button => {
         button.addEventListener('click', function() {
@@ -1624,7 +1827,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ============================================
-// DROP ZONE PARA IMÁGENES
+// 18. DROP ZONE PARA IMÁGENES
 // ============================================
 function inicializarDropZone() {
     const dropZone = document.getElementById('drop-zone');
@@ -1683,12 +1886,11 @@ function manejarArchivoImagen(file, preview, hiddenInput, content) {
 }
 
 // ============================================
-// INICIO
+// 19. INICIO
 // ============================================
 async function iniciar() {
     console.log('🚀 Cargando productos...');
 
-    // ✅ Forzar recarga desde el servidor
     localStorage.removeItem('productos_data');
 
     let datos = null;
@@ -1726,9 +1928,10 @@ document.addEventListener('DOMContentLoaded', iniciar);
 document.addEventListener('DOMContentLoaded', inicializarDropZone);
 
 // ============================================
-// EXPOSICIÓN GLOBAL
+// 20. EXPOSICIÓN GLOBAL
 // ============================================
 window.confirmar = confirmar;
+window.guardarOferta = guardarOferta;
 window.toggleOfertaAdmin = toggleOfertaAdmin;
 window.editarProductoAdmin = editarProductoAdmin;
 window.eliminarProductoAdmin = eliminarProductoAdmin;
@@ -1753,7 +1956,7 @@ window.cerrarModalBienvenida = cerrarModalBienvenida;
 window.eliminarUsuario = eliminarUsuario;
 
 // ============================================
-// MENÚ HAMBURGUESA
+// 21. MENÚ HAMBURGUESA
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
     const hamburguesa = document.getElementById('menu-hamburguesa');

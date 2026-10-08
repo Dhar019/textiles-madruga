@@ -433,6 +433,8 @@ main, .main-content {
     font-weight: 700;
     z-index: 10;
     box-shadow: 0 2px 10px rgba(232, 122, 32, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .tachado {
@@ -449,7 +451,7 @@ main, .main-content {
 }
 
 /* ============================================ */
-/* FICHA DE OFERTAS (FASE 1)                    */
+/* FICHA DE OFERTAS                              */
 /* ============================================ */
 .producto-descripcion-corta {
     font-size: 0.85rem;
@@ -1142,19 +1144,12 @@ main, .main-content {
     height: 20px;
 }
 
-/* ============================================ */
-/* LIGHTBOX EN MÓVIL - GRANDE Y ESTÉTICO        */
-/* ============================================ */
 @media (max-width: 768px) {
-    .lightbox-contenido {
-        padding: 10px;
-    }
+    .lightbox-contenido { padding: 10px; }
 
     .lightbox-contenido img {
         max-width: 100%;
         max-height: calc(100vh - 20px);
-        width: auto;
-        height: auto;
         border-radius: 6px;
         box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
     }
@@ -1168,17 +1163,11 @@ main, .main-content {
         border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
-    .lightbox-cerrar svg {
-        width: 18px;
-        height: 18px;
-    }
+    .lightbox-cerrar svg { width: 18px; height: 18px; }
 }
 
 @media (max-width: 480px) {
-    .lightbox-contenido {
-        padding: 5px;
-    }
-
+    .lightbox-contenido { padding: 5px; }
     .lightbox-contenido img {
         max-height: calc(100vh - 10px);
         border-radius: 4px;
@@ -1328,7 +1317,6 @@ body.admin-abierto .nav {
     background: #EDE8E1;
     border-radius: 12px;
     padding: 4px;
-    /* Sombra sutil para efecto de flotación */
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
     z-index: 10;
     position: relative;
@@ -1453,9 +1441,7 @@ body.admin-abierto .nav {
     background: white;
 }
 
-/* ============================================ */
-/* TEXTAREA Y FORM GROUP FULL                   */
-/* ============================================ */
+/* TEXTAREA Y FORM GROUP FULL */
 .form-group-full {
     grid-column: 1 / -1;
 }
@@ -1525,12 +1511,6 @@ body.admin-abierto .nav {
     border-radius: 8px;
 }
 
-.admin-producto-item .info .nombre {
-    font-weight: 600;
-    font-size: 0.95rem;
-    color: var(--color-negro);
-}
-
 .admin-producto-item .info .precio {
     color: var(--color-naranja);
     font-weight: 600;
@@ -1588,6 +1568,35 @@ body.admin-abierto .nav {
 .admin-producto-item .acciones .btn-eliminar:hover {
     background: #C0392B;
     color: white;
+}
+
+/* INFO ADICIONAL EN ADMIN PRODUCTOS */
+.admin-producto-item .info-texto {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 180px;
+}
+
+.admin-producto-item .info-texto .nombre {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--color-negro);
+}
+
+.admin-producto-item .info-texto .descripcion {
+    font-size: 0.75rem;
+    color: var(--color-gris);
+    font-style: italic;
+    line-height: 1.2;
+}
+
+.admin-producto-item .info-texto .id-producto {
+    font-size: 0.7rem;
+    color: var(--color-naranja);
+    font-family: monospace;
+    font-weight: 600;
+    letter-spacing: 0.5px;
 }
 
 .admin-acciones {
@@ -1660,57 +1669,109 @@ body.admin-abierto .nav {
 }
 
 /* ============================================ */
-/* GESTIÓN DE OFERTAS                          */
+/* FICHA DE OFERTAS EN EL PANEL ADMIN           */
 /* ============================================ */
 .oferta-editar-item {
     background: white;
-    border-radius: 12px;
-    padding: 16px 20px;
-    margin-bottom: 12px;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
     border-left: 3px solid var(--color-naranja);
-    box-shadow: 0 1px 6px rgba(0,0,0,0.03);
-    transition: all 0.2s ease;
-}
-
-.oferta-editar-item:hover {
-    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
-}
-
-.oferta-editar-item .header {
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-    flex-wrap: wrap;
-    gap: 8px;
+    flex-direction: column;
+    gap: 16px;
 }
 
-.oferta-editar-item .header .nombre {
-    font-weight: 600;
-    font-size: 1rem;
-    color: var(--color-negro);
+.oferta-card-producto {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
 }
 
-.oferta-editar-item .header .precio {
-    color: var(--color-naranja);
-    font-weight: 600;
-    font-size: 0.9rem;
+.oferta-card-img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 12px;
+    background: var(--color-crema);
+    flex-shrink: 0;
 }
 
-.oferta-editar-item .campos {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 10px;
-    margin-top: 8px;
-}
-
-.oferta-editar-item .campos .campo {
+.oferta-card-info {
     display: flex;
     flex-direction: column;
     gap: 4px;
+    flex: 1;
 }
 
-.oferta-editar-item .campos .campo label {
+.oferta-card-nombre {
+    font-family: var(--font-serif);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--color-negro);
+}
+
+.oferta-card-descripcion {
+    font-size: 0.85rem;
+    color: var(--color-gris);
+    font-style: italic;
+    line-height: 1.3;
+}
+
+.oferta-card-categoria {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--color-naranja);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.oferta-card-id {
+    font-size: 0.7rem;
+    color: var(--color-gris);
+    font-family: monospace;
+}
+
+.oferta-card-precios {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: #FFF5EB;
+    border-radius: 12px;
+}
+
+.oferta-card-precio-original {
+    text-decoration: line-through;
+    color: var(--color-gris);
+    font-size: 0.95rem;
+}
+
+.oferta-card-precio-oferta {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--color-naranja);
+}
+
+.oferta-card-edicion {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    padding-top: 12px;
+    border-top: 1px solid #F0EBE5;
+}
+
+.oferta-card-edicion .campo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1 1 150px;
+    min-width: 140px;
+}
+
+.oferta-card-edicion .campo label {
     font-size: 0.7rem;
     font-weight: 600;
     color: var(--color-gris);
@@ -1718,21 +1779,63 @@ body.admin-abierto .nav {
     letter-spacing: 0.3px;
 }
 
-.oferta-editar-item .campos .campo input,
-.oferta-editar-item .campos .campo select {
-    padding: 6px 10px;
-    border: 1.5px solid #EDE8E1;
+.oferta-card-edicion .campo input {
+    padding: 8px 12px;
+    border: 2px solid #EDE8E1;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-family: var(--font-sans);
+    background: #FAF8F5;
+}
+
+.oferta-card-edicion .campo input:focus {
+    border-color: var(--color-naranja);
+    outline: none;
+    background: white;
+}
+
+.oferta-card-edicion .btn-admin {
+    padding: 10px 18px;
+    font-size: 0.85rem;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+/* SELECTOR DE TIPO DE OFERTA */
+.oferta-select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 2px solid #EDE8E1;
     border-radius: 8px;
     font-size: 0.85rem;
     font-family: var(--font-sans);
     background: #FAF8F5;
+    cursor: pointer;
     transition: border-color 0.3s ease;
+    color: var(--color-negro);
 }
 
-.oferta-editar-item .campos .campo input:focus,
-.oferta-editar-item .campos .campo select:focus {
+.oferta-select:focus {
     border-color: var(--color-naranja);
     outline: none;
+    background: white;
+}
+
+.btn-guardar-oferta {
+    background: #27ae60 !important;
+    color: white !important;
+    font-weight: 600;
+    padding: 10px 20px !important;
+    white-space: nowrap;
+}
+
+.btn-guardar-oferta:hover {
+    background: #1e8449 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
 }
 
 /* ============================================ */
@@ -1835,9 +1938,7 @@ body.admin-abierto .nav {
     color: white;
 }
 
-/* ============================================ */
-/* Seguridad                                   */
-/* ============================================ */
+/* Seguridad */
 .security-card {
     background: white;
     border-radius: 20px;
@@ -2632,161 +2733,75 @@ body.admin-abierto .nav {
 }
 
 /* ============================================ */
-/* INFO ADICIONAL EN ADMIN PRODUCTOS            */
+/* RESPONSIVE - GLOBAL                         */
 /* ============================================ */
-.admin-producto-item .info-texto {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 180px;
-}
-
-.admin-producto-item .info-texto .nombre {
-    font-weight: 600;
-    font-size: 0.95rem;
-    color: var(--color-negro);
-}
-
-.admin-producto-item .info-texto .descripcion {
-    font-size: 0.75rem;
-    color: var(--color-gris);
-    font-style: italic;
-    line-height: 1.2;
-}
-
-.admin-producto-item .info-texto .id-producto {
-    font-size: 0.7rem;
-    color: var(--color-naranja);
-    font-family: monospace;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-}
-
-/* ============================================ */
-/* FICHA DE OFERTAS EN EL PANEL ADMIN           */
-/* ============================================ */
-.oferta-editar-item {
-    background: white;
-    border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 16px;
-    border-left: 3px solid var(--color-naranja);
-    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.oferta-card-producto {
-    display: flex;
-    gap: 16px;
-    align-items: flex-start;
-}
-
-.oferta-card-img {
-    width: 80px;
-    height: 80px;
-    object-fit: cover;
-    border-radius: 12px;
-    background: var(--color-crema);
-    flex-shrink: 0;
-}
-
-.oferta-card-info {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    flex: 1;
-}
-
-.oferta-card-nombre {
-    font-family: var(--font-serif);
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--color-negro);
-}
-
-.oferta-card-descripcion {
-    font-size: 0.85rem;
-    color: var(--color-gris);
-    font-style: italic;
-    line-height: 1.3;
-}
-
-.oferta-card-categoria {
-    font-size: 0.7rem;
-    font-weight: 600;
-    color: var(--color-naranja);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.oferta-card-id {
-    font-size: 0.7rem;
-    color: var(--color-gris);
-    font-family: monospace;
-}
-
-.oferta-card-precios {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px;
-    background: #FFF5EB;
-    border-radius: 12px;
-}
-
-.oferta-card-precio-original {
-    text-decoration: line-through;
-    color: var(--color-gris);
-    font-size: 0.95rem;
-}
-
-.oferta-card-precio-oferta {
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: var(--color-naranja);
-}
-
-.oferta-card-edicion {
-    display: flex;
-    gap: 12px;
-    align-items: flex-end;
-    flex-wrap: wrap;
-}
-
-.oferta-card-edicion .campo {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    flex: 1;
-    min-width: 120px;
-}
-
-.oferta-card-edicion .campo label {
-    font-size: 0.7rem;
-    font-weight: 600;
-    color: var(--color-gris);
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-}
-
-.oferta-card-edicion .campo input {
-    padding: 8px 12px;
-    border: 2px solid #EDE8E1;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    font-family: var(--font-sans);
-    background: #FAF8F5;
-}
-
-.oferta-card-edicion .campo input:focus {
-    border-color: var(--color-naranja);
-    outline: none;
-    background: white;
-}
-
 @media (max-width: 768px) {
+    .header {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 9999 !important;
+    }
+
+    .header .container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 5px;
+        flex-wrap: nowrap;
+    }
+
+    .logo {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+        flex-shrink: 1;
+        min-width: 0;
+    }
+
+    .logo-header {
+        height: 30px;
+        margin-bottom: 2px;
+    }
+
+    .logo-textiles,
+    .logo-madruga {
+        font-size: 0.8rem;
+        line-height: 1;
+    }
+    .logo-madruga {
+        margin-top: -2px;
+    }
+
+    .logo-hero { max-width: 140px; }
+
+    .hero::before {
+        right: 5vh;
+        width: 120%;
+        opacity: 0.4;
+    }
+
+    .hero-slogan { font-size: 1.2rem; }
+    .letra-madruga { font-size: 3.5rem; }
+    .section-title { font-size: 2.2rem; }
+    .grid-productos { grid-template-columns: 1fr 1fr; }
+    .grid-categorias { grid-template-columns: 1fr 1fr; }
+    .grid-subcategorias { grid-template-columns: 1fr; }
+    .grid-personalizados { grid-template-columns: 1fr; }
+    .categoria-card span { font-size: 2.5rem; }
+    .badge-oferta { top: 10px; right: 10px; font-size: 0.75rem; padding: 4px 12px; }
+
+    .admin-contenido { width: 95%; }
+    .admin-header { padding: 20px 20px 12px 20px; }
+    .admin-tabs { margin: 12px 20px 15px 20px; }
+    .admin-tab-content { padding: 0 20px 20px 20px; }
+    .admin-producto-item { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .admin-producto-item .acciones { flex-wrap: wrap; }
+    .admin-acciones { flex-direction: column; }
+    .btn-admin { width: 100%; text-align: center; }
+    .admin-tabs { flex-wrap: wrap; }
+    .admin-tab { flex: 1 1 45%; }
+
     .oferta-card-producto {
         flex-direction: column;
         align-items: center;
@@ -2799,6 +2814,286 @@ body.admin-abierto .nav {
     
     .admin-producto-item .info-texto {
         min-width: auto;
+    }
+
+    .oferta-card-edicion {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .oferta-card-edicion .campo {
+        flex: 1 1 auto;
+    }
+    
+    .oferta-card-edicion .btn-admin {
+        width: 100%;
+    }
+
+    .header-actions {
+        gap: 4px;
+    }
+
+    .btn-acceder,
+    .btn-cerrar-sesion {
+        font-size: 0.6rem !important;
+        padding: 4px 8px !important;
+        white-space: nowrap;
+    }
+
+    .menu-hamburguesa {
+        display: flex !important;
+        margin-left: 2px;
+        padding: 6px 4px;
+    }
+
+    .menu-hamburguesa .barra {
+        width: 24px;
+        height: 2.5px;
+    }
+
+    .nav {
+        width: 80% !important;
+        max-width: 300px !important;
+        right: 0 !important;
+    }
+
+    section[id] {
+        scroll-margin-top: 120px;
+    }
+
+    .producto-card {
+        padding: 15px;
+    }
+
+    .producto-img {
+        height: 220px;
+        object-fit: contain;
+        background-color: #FAF8F5;
+        padding: 5px;
+    }
+
+    .producto-hint {
+        font-size: 0.65rem;
+    }
+
+    .bienvenida-contenido {
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .bienvenida-info {
+        padding: 20px 18px;
+    }
+
+    .bienvenida-beneficios {
+        gap: 8px;
+    }
+
+    .bienvenida-beneficio {
+        padding: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .grid-productos { grid-template-columns: 1fr; }
+    .grid-categorias { grid-template-columns: 1fr; }
+    .logo-hero { max-width: 120px; }
+    .hero-slogan { font-size: 1rem; }
+    .letra-madruga { font-size: 2.8rem; }
+    .admin-tab { flex: 1 1 100%; }
+    .login-contenido { max-width: 92%; padding: 20px 16px; }
+    .login-header h2 { font-size: 1.2rem; }
+    .login-group input { padding: 9px 40px 9px 12px; font-size: 0.85rem; height: 42px; }
+    .btn-login { padding: 10px; font-size: 0.85rem; height: 44px; }
+    .notificacion {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        max-width: none;
+        font-size: 0.8rem;
+        padding: 12px 18px;
+    }
+
+    .producto-card {
+        padding: 12px;
+    }
+
+    .producto-img {
+        height: 200px;
+        object-fit: contain;
+        padding: 5px;
+    }
+
+    .producto-nombre {
+        font-size: 1rem;
+    }
+
+    .producto-precio {
+        font-size: 0.95rem;
+    }
+
+    .btn-secundario {
+        padding: 8px 16px;
+        font-size: 0.8rem;
+    }
+
+    .producto-hint {
+        font-size: 0.6rem;
+    }
+
+    .bienvenida-contenido {
+        max-height: 95vh;
+        border-radius: 16px;
+    }
+
+    .bienvenida-decoracion {
+        height: 100px;
+    }
+
+    .bienvenida-titulo {
+        font-size: 1.1rem;
+    }
+
+    .bienvenida-icono svg {
+        width: 32px;
+        height: 32px;
+    }
+
+    .bienvenida-acciones {
+        gap: 8px;
+    }
+
+    .bienvenida-btn-primario,
+    .bienvenida-btn-secundario {
+        padding: 10px 16px;
+        font-size: 0.8rem;
+    }
+}
+
+/* ============================================ */
+/* IMÁGENES DENTRO DE BOTONES (RESPONSIVE)     */
+/* ============================================ */
+.btn-acceder img,
+.btn-cerrar-sesion img,
+.btn-primary img,
+.btn-secundario img,
+.btn-admin img,
+.boton-categoria img {
+    max-width: 100%;
+    height: auto;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+@media (max-width: 768px) {
+    .btn-acceder img,
+    .btn-cerrar-sesion img,
+    .btn-primary img,
+    .btn-secundario img {
+        width: 40px;
+        height: 40px;
+        object-fit: contain;
+        max-width: none;
+        min-width: 0;
+        display: inline-block;
+        vertical-align: middle;
+    }
+
+    .grid-categorias {
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    .categoria-card {
+        padding: 20px 15px;
+        min-height: 160px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .categoria-card span {
+        font-size: 3.5rem;
+        display: block;
+        margin-bottom: 8px;
+    }
+
+    .categoria-card img {
+        width: 100%;
+        max-width: 120px;
+        height: 120px;
+        object-fit: cover;
+        border-radius: 0;
+        display: block;
+    }
+
+    .categoria-card h3 {
+        font-size: 1rem;
+        margin-top: 8px;
+    }
+
+    .grid-subcategorias {
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    .subcategoria-card {
+        padding: 25px 15px;
+        min-height: 220px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .subcategoria-card-imagen span {
+        font-size: 4.5rem;
+        display: block;
+        margin-bottom: 10px;
+    }
+
+    .subcategoria-card-imagen img {
+        width: 100%;
+        max-width: 150px;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 10%;
+        display: block;
+    }
+
+    .subcategoria-card-imagen h3 {
+        font-size: 1.2rem;
+        margin-top: 8px;
+    }
+
+    .subcategoria-card-imagen p {
+        font-size: 0.8rem;
+    }
+}
+
+/* ============================================ */
+/* AJUSTE DE SCROLL PARA SECCIONES             */
+/* ============================================ */
+section[id] {
+    scroll-margin-top: var(--header-height);
+}
+
+#inicio,
+#ofertas-ropa,
+#ropa,
+#telas,
+#otros,
+#personalizados,
+#contacto,
+#ropa-hombre,
+#ropa-mujer {
+    scroll-margin-top: var(--header-height);
+}
+
+@media (max-width: 768px) {
+    :root {
+        --header-height: 120px;
     }
 }
 
@@ -2979,347 +3274,5 @@ body.admin-abierto .nav {
     .confirmar-btn {
         padding: 10px 16px;
         font-size: 0.85rem;
-    }
-}
-
-/* ============================================ */
-/* RESPONSIVE - GLOBAL                         */
-/* ============================================ */
-@media (max-width: 768px) {
-    .header {
-        position: sticky !important;
-        top: 0 !important;
-        z-index: 9999 !important;
-    }
-
-    .header .container {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 5px;
-        flex-wrap: nowrap;
-    }
-
-    .logo {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 2px;
-        flex-shrink: 1;
-        min-width: 0;
-    }
-
-    .logo-header {
-        height: 30px;
-        margin-bottom: 2px;
-    }
-
-    .logo-textiles,
-    .logo-madruga {
-        font-size: 0.8rem;
-        line-height: 1;
-    }
-    .logo-madruga {
-        margin-top: -2px;
-    }
-
-    .logo-hero { max-width: 140px; }
-
-    .hero::before {
-        right: 5vh;
-        width: 120%;
-        opacity: 0.4;
-    }
-
-    .hero-slogan { font-size: 1.2rem; }
-    .letra-madruga { font-size: 3.5rem; }
-    .section-title { font-size: 2.2rem; }
-    .grid-productos { grid-template-columns: 1fr 1fr; }
-    .grid-categorias { grid-template-columns: 1fr 1fr; }
-    .grid-subcategorias { grid-template-columns: 1fr; }
-    .grid-personalizados { grid-template-columns: 1fr; }
-    .categoria-card span { font-size: 2.5rem; }
-    .badge-oferta { top: 10px; right: 10px; font-size: 0.75rem; padding: 4px 12px; }
-
-    .admin-contenido { width: 95%; }
-    .admin-header { padding: 20px 20px 12px 20px; }
-    .admin-tabs { margin: 12px 20px 15px 20px; }
-    .admin-tab-content { padding: 0 20px 20px 20px; }
-    .admin-producto-item { flex-direction: column; align-items: flex-start; gap: 10px; }
-    .admin-producto-item .acciones { flex-wrap: wrap; }
-    .admin-acciones { flex-direction: column; }
-    .btn-admin { width: 100%; text-align: center; }
-    .admin-tabs { flex-wrap: wrap; }
-    .admin-tab { flex: 1 1 45%; }
-
-    .header-actions {
-        gap: 4px;
-    }
-
-    .btn-acceder,
-    .btn-cerrar-sesion {
-        font-size: 0.6rem !important;
-        padding: 4px 8px !important;
-        white-space: nowrap;
-    }
-
-    .menu-hamburguesa {
-        display: flex !important;
-        margin-left: 2px;
-        padding: 6px 4px;
-    }
-
-    .menu-hamburguesa .barra {
-        width: 24px;
-        height: 2.5px;
-    }
-
-    .nav {
-        width: 80% !important;
-        max-width: 300px !important;
-        right: 0 !important;
-    }
-
-    section[id] {
-        scroll-margin-top: 120px;
-    }
-
-    /* Cards de productos */
-    .producto-card {
-        padding: 15px;
-    }
-
-    .producto-img {
-        height: 220px;
-        object-fit: contain;
-        background-color: #FAF8F5;
-        padding: 5px;
-    }
-
-    .producto-hint {
-        font-size: 0.65rem;
-    }
-
-    /* Modal de bienvenida */
-    .bienvenida-contenido {
-        max-height: 90vh;
-        overflow-y: auto;
-    }
-
-    .bienvenida-info {
-        padding: 20px 18px;
-    }
-
-    .bienvenida-beneficios {
-        gap: 8px;
-    }
-
-    .bienvenida-beneficio {
-        padding: 8px;
-    }
-}
-
-@media (max-width: 480px) {
-    .grid-productos { grid-template-columns: 1fr; }
-    .grid-categorias { grid-template-columns: 1fr; }
-    .logo-hero { max-width: 120px; }
-    .hero-slogan { font-size: 1rem; }
-    .letra-madruga { font-size: 2.8rem; }
-    .admin-tab { flex: 1 1 100%; }
-    .login-contenido { max-width: 92%; padding: 20px 16px; }
-    .login-header h2 { font-size: 1.2rem; }
-    .login-group input { padding: 9px 40px 9px 12px; font-size: 0.85rem; height: 42px; }
-    .btn-login { padding: 10px; font-size: 0.85rem; height: 44px; }
-    .notificacion {
-        top: 10px;
-        right: 10px;
-        left: 10px;
-        max-width: none;
-        font-size: 0.8rem;
-        padding: 12px 18px;
-    }
-
-    /* Cards de productos */
-    .producto-card {
-        padding: 12px;
-    }
-
-    .producto-img {
-        height: 200px;
-        object-fit: contain;
-        padding: 5px;
-    }
-
-    .producto-nombre {
-        font-size: 1rem;
-    }
-
-    .producto-precio {
-        font-size: 0.95rem;
-    }
-
-    .btn-secundario {
-        padding: 8px 16px;
-        font-size: 0.8rem;
-    }
-
-    .producto-hint {
-        font-size: 0.6rem;
-    }
-
-    /* Modal de bienvenida */
-    .bienvenida-contenido {
-        max-height: 95vh;
-        border-radius: 16px;
-    }
-
-    .bienvenida-decoracion {
-        height: 100px;
-    }
-
-    .bienvenida-titulo {
-        font-size: 1.1rem;
-    }
-
-    .bienvenida-icono svg {
-        width: 32px;
-        height: 32px;
-    }
-
-    .bienvenida-acciones {
-        gap: 8px;
-    }
-
-    .bienvenida-btn-primario,
-    .bienvenida-btn-secundario {
-        padding: 10px 16px;
-        font-size: 0.8rem;
-    }
-}
-
-/* ============================================ */
-/* IMÁGENES DENTRO DE BOTONES (RESPONSIVE)     */
-/* ============================================ */
-.btn-acceder img,
-.btn-cerrar-sesion img,
-.btn-primary img,
-.btn-secundario img,
-.btn-admin img,
-.boton-categoria img {
-    max-width: 100%;
-    height: auto;
-    display: inline-block;
-    vertical-align: middle;
-}
-
-@media (max-width: 768px) {
-    .btn-acceder img,
-    .btn-cerrar-sesion img,
-    .btn-primary img,
-    .btn-secundario img {
-        width: 40px;
-        height: 40px;
-        object-fit: contain;
-        max-width: none;
-        min-width: 0;
-        display: inline-block;
-        vertical-align: middle;
-    }
-
-    .grid-categorias {
-        grid-template-columns: 1fr 1fr;
-        gap: 20px;
-    }
-
-    .categoria-card {
-        padding: 20px 15px;
-        min-height: 160px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .categoria-card span {
-        font-size: 3.5rem;
-        display: block;
-        margin-bottom: 8px;
-    }
-
-    .categoria-card img {
-        width: 100%;
-        max-width: 120px;
-        height: 120px;
-        object-fit: cover;
-        border-radius: 0;
-        display: block;
-    }
-
-    .categoria-card h3 {
-        font-size: 1rem;
-        margin-top: 8px;
-    }
-
-    .grid-subcategorias {
-        grid-template-columns: 1fr 1fr;
-        gap: 20px;
-    }
-
-    .subcategoria-card {
-        padding: 25px 15px;
-        min-height: 220px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .subcategoria-card-imagen span {
-        font-size: 4.5rem;
-        display: block;
-        margin-bottom: 10px;
-    }
-
-    .subcategoria-card-imagen img {
-        width: 100%;
-        max-width: 150px;
-        height: 150px;
-        object-fit: cover;
-        border-radius: 10%;
-        display: block;
-    }
-
-    .subcategoria-card-imagen h3 {
-        font-size: 1.2rem;
-        margin-top: 8px;
-    }
-
-    .subcategoria-card-imagen p {
-        font-size: 0.8rem;
-    }
-}
-
-/* ============================================ */
-/* AJUSTE DE SCROLL PARA SECCIONES             */
-/* ============================================ */
-section[id] {
-    scroll-margin-top: var(--header-height);
-}
-
-#inicio,
-#ofertas-ropa,
-#ropa,
-#telas,
-#otros,
-#personalizados,
-#contacto,
-#ropa-hombre,
-#ropa-mujer {
-    scroll-margin-top: var(--header-height);
-}
-
-@media (max-width: 768px) {
-    :root {
-        --header-height: 120px;
     }
 }

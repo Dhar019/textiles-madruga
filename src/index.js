@@ -1,8 +1,6 @@
 // ============================================
 // WORKER - TEXTILES MADRUGA API
-// Versión 3.9 - Fix DELETE robusto + IDs alfanuméricos
-// Formato: HOM-0001, MUJ-0001, TEL-0001, OBJ-0001
-// Base64 + SHA-256 + RateLimit + Turnstile + Auditoría
+// Versión 4.0 - Ofertas avanzadas (tipos + descuento)
 // ============================================
 
 // ============================================
@@ -52,7 +50,6 @@ async function guardarUsuarios(env, usuarios) {
 
 // ============================================
 // GENERAR ID ALFANUMÉRICO CON PREFIJO (4 DÍGITOS)
-// Formato: HOM-0001, MUJ-0001, TEL-0001, OBJ-0001
 // ============================================
 function generarIdUnico(catalogo, categoria) {
     const prefijos = {
@@ -63,7 +60,6 @@ function generarIdUnico(catalogo, categoria) {
     };
     
     const prefijo = prefijos[categoria] || 'PRD';
-    
     let maxNumero = 0;
     
     Object.values(catalogo).forEach(p => {
@@ -132,7 +128,7 @@ async function obtenerSesionActiva(env, userId) {
 }
 
 // ============================================
-// VERIFICACIÓN DE TOKEN (SIN JOSE, SOLO BASE64)
+// VERIFICACIÓN DE TOKEN
 // ============================================
 async function verificarToken(request, env) {
     const authHeader = request.headers.get('Authorization');
@@ -279,9 +275,8 @@ export default {
                     status: 'ok',
                     message: 'API de Textiles Madruga funcionando (KV)',
                     db: 'kv',
-                    version: '3.9',
-                    security: ['Base64', 'SHA-256', 'RateLimit', 'Turnstile', 'Audit'],
-                    idFormat: 'PREFIJO-NNNN (HOM-0001, MUJ-0001, TEL-0001, OBJ-0001)',
+                    version: '4.0',
+                    features: ['IDs alfanuméricos', 'Ofertas avanzadas', 'DELETE robusto'],
                     timestamp: new Date().toISOString()
                 }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
@@ -295,7 +290,7 @@ export default {
                 }), request);
             }
 
-            // CREAR PRODUCTO (CON PREVENCIÓN DE DUPLICADOS)
+            // CREAR PRODUCTO
             if (path === '/api/products' && method === 'POST') {
                 const user = await verificarToken(request, env);
                 if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
@@ -306,8 +301,6 @@ export default {
                 const catalogo = await leerCatalogo(env);
 
                 const idFinal = body.id || generarIdUnico(catalogo, body.categoria);
-
-                // Si el ID ya existe, hacemos UPDATE en lugar de CREATE
                 const esActualizacion = !!catalogo[idFinal];
 
                 catalogo[idFinal] = { ...catalogo[idFinal], ...body, id: idFinal, _id: idFinal };
@@ -338,7 +331,6 @@ export default {
                 const body = await request.json();
                 const catalogo = await leerCatalogo(env);
 
-                // ✅ Buscar la clave real (robusto con IDs numéricos y strings)
                 let claveReal = null;
                 if (catalogo[productId]) {
                     claveReal = productId;
@@ -367,71 +359,52 @@ export default {
                 }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
-            // ============================================
-            // ELIMINAR PRODUCTO (VERSIÓN A PRUEBA DE BALAS)
-            // Busca el producto por id, _id, o String(id)
-            // ============================================
+            // ELIMINAR PRODUCTO (VERSIÓN ROBUSTA)
             if (path.startsWith('/api/products/') && method === 'DELETE') {
                 console.log('🗑️ DELETE INICIADO:', path);
                 
                 const user = await verificarToken(request, env);
                 if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
-                    console.log('🗑️ ❌ No autorizado');
                     return addCors(new Response(JSON.stringify({ error: 'No autorizado' }),
                         { status: 403, headers: { 'Content-Type': 'application/json' } }), request);
                 }
                 
                 const productId = path.split('/')[3];
-                console.log('🗑️ ID solicitado:', productId, '| tipo:', typeof productId);
-                
-                // Leer el catálogo RAW
                 const catalogoStr = await env.PRODUCTOS_KV.get('catalogo_completo');
                 if (!catalogoStr) {
-                    return addCors(new Response(JSON.stringify({ 
-                        error: 'Catálogo vacío' 
-                    }), { status: 404, headers: { 'Content-Type': 'application/json' } }), request);
+                    return addCors(new Response(JSON.stringify({ error: 'Catálogo vacío' }),
+                        { status: 404, headers: { 'Content-Type': 'application/json' } }), request);
                 }
                 
                 const catalogo = JSON.parse(catalogoStr);
                 const clavesAntes = Object.keys(catalogo);
-                console.log('🗑️ Claves antes:', clavesAntes.length);
                 
-                // Buscar la clave REAL que corresponde al productId
                 let claveReal = null;
                 let productoEncontrado = null;
                 
-                // 1. Buscar por coincidencia directa de clave
                 if (catalogo[productId]) {
                     claveReal = productId;
                     productoEncontrado = catalogo[productId];
-                    console.log('🗑️ ✅ Encontrado por clave directa:', productId);
                 } else {
-                    // 2. Buscar en todos los productos por id o _id
                     for (const clave of clavesAntes) {
                         const p = catalogo[clave];
-                        if (
-                            String(p.id) === String(productId) ||
-                            String(p._id) === String(productId) ||
-                            String(clave) === String(productId)
-                        ) {
+                        if (String(p.id) === String(productId) || 
+                            String(p._id) === String(productId) || 
+                            String(clave) === String(productId)) {
                             claveReal = clave;
                             productoEncontrado = p;
-                            console.log('🗑️ ✅ Encontrado por escaneo:', clave, '→', p.nombre);
                             break;
                         }
                     }
                 }
                 
                 if (!claveReal || !productoEncontrado) {
-                    console.log('🗑️ ❌ No encontrado. Claves disponibles:', clavesAntes);
                     return addCors(new Response(JSON.stringify({ 
                         error: 'Producto no encontrado',
-                        idBuscado: productId,
-                        clavesDisponibles: clavesAntes
+                        idBuscado: productId
                     }), { status: 404, headers: { 'Content-Type': 'application/json' } }), request);
                 }
                 
-                // Crear nuevo catálogo SIN el producto (evitar delete)
                 const nuevoCatalogo = {};
                 clavesAntes.forEach(clave => {
                     if (clave !== claveReal) {
@@ -440,23 +413,16 @@ export default {
                 });
                 
                 const clavesDespues = Object.keys(nuevoCatalogo);
-                console.log('🗑️ Claves después:', clavesDespues.length);
                 
                 if (clavesAntes.length === clavesDespues.length) {
                     return addCors(new Response(JSON.stringify({ 
-                        error: 'No se eliminó ninguna clave',
-                        claveReal,
-                        clavesAntes: clavesAntes.length,
-                        clavesDespues: clavesDespues.length
+                        error: 'No se eliminó ninguna clave'
                     }), { status: 500, headers: { 'Content-Type': 'application/json' } }), request);
                 }
                 
-                // Guardar el nuevo catálogo
                 await env.PRODUCTOS_KV.put('catalogo_completo', JSON.stringify(nuevoCatalogo));
-                console.log('🗑️ ✅ Catálogo guardado en KV');
                 
-                // Verificar
-                await new Promise(r => setTimeout(r, 500));
+                await new Promise(r => setTimeout(r, 300));
                 const verificacionStr = await env.PRODUCTOS_KV.get('catalogo_completo');
                 const verificacion = JSON.parse(verificacionStr);
                 const clavesVerificacion = Object.keys(verificacion).length;
@@ -472,59 +438,80 @@ export default {
                 await registrarAuditoria(env, user, 'DELETE_PRODUCT', { 
                     id: productId,
                     claveReal,
-                    nombre: productoEncontrado.nombre,
-                    clavesAntes: clavesAntes.length,
-                    clavesDespues: clavesDespues.length
+                    nombre: productoEncontrado.nombre
                 });
                 
                 return addCors(new Response(JSON.stringify({ 
                     success: true,
                     idEliminado: productId,
-                    claveReal,
-                    nombre: productoEncontrado.nombre,
-                    clavesAntes: clavesAntes.length,
-                    clavesDespues: clavesDespues.length
+                    nombre: productoEncontrado.nombre
                 }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
-            // TOGGLE OFERTA
+            // ============================================
+            // TOGGLE OFERTA (CON TIPOS AVANZADOS)
+            // ============================================
             if (path.startsWith('/api/offers/toggle/') && method === 'PATCH') {
                 const user = await verificarToken(request, env);
                 if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
                     return addCors(new Response(JSON.stringify({ error: 'No autorizado' }),
                         { status: 403, headers: { 'Content-Type': 'application/json' } }), request);
                 }
+                
                 const productId = path.split('/').pop();
                 const body = await request.json();
                 const catalogo = await leerCatalogo(env);
 
-                // ✅ Buscar la clave real
                 let claveReal = null;
                 if (catalogo[productId]) {
                     claveReal = productId;
                 } else {
                     for (const clave of Object.keys(catalogo)) {
                         const p = catalogo[clave];
-                        if (String(p.id) === String(productId) || String(p._id) === String(productId) || String(clave) === String(productId)) {
+                        if (String(p.id) === String(productId) || 
+                            String(p._id) === String(productId) || 
+                            String(clave) === String(productId)) {
                             claveReal = clave;
                             break;
                         }
                     }
                 }
 
-                if (claveReal && catalogo[claveReal]) {
-                    catalogo[claveReal].enOferta = body.enOferta;
-                    if (body.descuento !== undefined) {
-                        catalogo[claveReal].descuento = body.descuento;
-                    }
-                    await guardarCatalogo(env, catalogo);
-                    await registrarAuditoria(env, user, 'TOGGLE_OFFER', { id: productId, enOferta: body.enOferta });
+                if (!claveReal || !catalogo[claveReal]) {
+                    return addCors(new Response(JSON.stringify({ error: 'Producto no encontrado' }),
+                        { status: 404, headers: { 'Content-Type': 'application/json' } }), request);
                 }
-                return addCors(new Response(JSON.stringify({ success: true }),
-                    { headers: { 'Content-Type': 'application/json' } }), request);
+
+                // Actualizar campos de oferta
+                catalogo[claveReal].enOferta = body.enOferta;
+                
+                if (body.tipoOferta !== undefined) {
+                    catalogo[claveReal].tipoOferta = body.tipoOferta;
+                }
+                
+                if (body.descuento !== undefined) {
+                    catalogo[claveReal].descuento = parseInt(body.descuento) || 0;
+                }
+                
+                if (body.promocion !== undefined) {
+                    catalogo[claveReal].promocion = body.promocion || '';
+                }
+
+                await guardarCatalogo(env, catalogo);
+                await registrarAuditoria(env, user, 'TOGGLE_OFFER', { 
+                    id: productId, 
+                    enOferta: body.enOferta,
+                    tipoOferta: catalogo[claveReal].tipoOferta,
+                    descuento: catalogo[claveReal].descuento
+                });
+
+                return addCors(new Response(JSON.stringify({ 
+                    success: true,
+                    producto: catalogo[claveReal]
+                }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
-            // LOGIN (CON TURNSTILE)
+            // LOGIN
             if (path === '/api/auth/login' && (method === 'POST' || method === 'GET')) {
                 const rateLimit = await verificarRateLimit(env, ip);
                 if (rateLimit.bloqueado) {
