@@ -1652,16 +1652,38 @@ function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit }) {
 
     let html = '';
     campos.forEach(campo => {
+    if (campo.type === 'select') {
         html += `
             <div class="login-group">
                 <label>${campo.label}</label>
-                ${campo.type === 'select' 
-                    ? `<select id="${campo.id}">${campo.opciones.map(o => `<option value="${o.value}">${o.label}</option>`).join('')}</select>`
-                    : `<input type="${campo.type || 'text'}" id="${campo.id}" placeholder="${campo.placeholder || ''}" ${campo.required ? 'required' : ''}>`
-                }
+                <select id="${campo.id}">
+                    ${campo.opciones.map(o => `<option value="${o.value}">${o.label}</option>`).join('')}
+                </select>
             </div>
         `;
-    });
+    } else if (campo.type === 'password') {
+        // ✅ Campo de contraseña con ojito
+        html += `
+            <div class="login-group">
+                <label>${campo.label}</label>
+                <input type="password" id="${campo.id}" placeholder="${campo.placeholder || ''}" ${campo.required ? 'required' : ''}>
+                <button type="button" class="toggle-password" aria-label="Mostrar contraseña">
+                    <svg class="icono-ojo" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                </button>
+            </div>
+        `;
+    } else {
+        html += `
+            <div class="login-group">
+                <label>${campo.label}</label>
+                <input type="${campo.type || 'text'}" id="${campo.id}" placeholder="${campo.placeholder || ''}" ${campo.required ? 'required' : ''}>
+            </div>
+        `;
+    }
+});
     camposContainer.innerHTML = html;
     submitBtn.textContent = 'Aceptar';
 
@@ -1685,6 +1707,16 @@ function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit }) {
         const resultado = await onSubmit(datos);
         if (resultado !== false) cerrarModal();
     };
+    // ✅ Activar el ojito para los campos de contraseña
+camposContainer.querySelectorAll('.toggle-password').forEach(button => {
+    button.addEventListener('click', function() {
+        const input = this.parentElement.querySelector('input[type="password"], input[type="text"]');
+        if (!input) return;
+        const isPassword = input.type === 'password';
+        input.type = isPassword ? 'text' : 'password';
+        this.classList.toggle('visible');
+    });
+});
 }
 
 // ============================================
@@ -1844,34 +1876,51 @@ loginOverlay?.addEventListener('click', cerrarLogin);
 // ============================================
 // 18. FORZAR CIERRE DE SESIÓN (por si quedó colgada)
 // ============================================
-document.getElementById('forzar-cierre-link')?.addEventListener('click', async function(e) {
+document.getElementById('forzar-cierre-link')?.addEventListener('click', function(e) {
     e.preventDefault();
+    cerrarLogin();
     
-    const username = prompt('Tu nombre de usuario:');
-    if (!username) return;
-    
-    const password = prompt('Tu contraseña:');
-    if (!password) return;
-    
-    try {
-        const respuesta = await fetch(`${API_URL}/auth/force-logout`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
-        });
-        
-        const data = await respuesta.json();
-        
-        if (respuesta.ok) {
-            mostrarNotificacion('✅ Sesión cerrada. Ya puedes iniciar sesión.', 'success');
-            localStorage.removeItem(SESSION_KEY);
-            sessionStorage.removeItem('tm_pestana_activa');
-        } else {
-            mostrarNotificacion(data.error || 'Error al forzar cierre', 'error');
+    abrirModalGenerico({
+        titulo: 'Forzar cierre de sesión',
+        subtitulo: 'Introduce tus credenciales para desbloquear tu cuenta',
+        campos: [
+            { id: 'username', label: 'Usuario', type: 'text', placeholder: 'Tu nombre de usuario', required: true },
+            { id: 'password', label: 'Contraseña', type: 'password', placeholder: 'Tu contraseña', required: true }
+        ],
+        onSubmit: async (datos) => {
+            if (!datos.username || !datos.password) {
+                mostrarNotificacion('Completa ambos campos', 'error');
+                return false;
+            }
+            
+            try {
+                const respuesta = await fetch(`${API_URL}/auth/force-logout`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        username: datos.username, 
+                        password: datos.password 
+                    })
+                });
+                
+                const data = await respuesta.json();
+                
+                if (respuesta.ok) {
+                    mostrarNotificacion('Sesión cerrada. Ya puedes iniciar sesión.', 'success');
+                    localStorage.removeItem(SESSION_KEY);
+                    sessionStorage.removeItem('tm_pestana_activa');
+                    
+                    setTimeout(() => mostrarLogin(), 800);
+                } else {
+                    mostrarNotificacion(data.error || 'Error al forzar cierre', 'error');
+                    return false;
+                }
+            } catch (error) {
+                mostrarNotificacion('Error de conexión', 'error');
+                return false;
+            }
         }
-    } catch (error) {
-        mostrarNotificacion('Error de conexión', 'error');
-    }
+    });
 });
 
 // ============================================
