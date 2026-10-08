@@ -473,6 +473,12 @@
                 </div>
                 <button type="submit" class="btn-admin btn-primario btn-login">Acceder</button>
             </form>
+            <!-- ✅ NUEVO: Link para forzar cierre de sesión -->
+            <div style="text-align:center;margin-top:12px;">
+                <a href="#" id="forzar-cierre-link" style="color:var(--color-gris);font-size:0.75rem;text-decoration:underline;">
+                    ¿Problemas para entrar? Forzar cierre de sesión
+                </a>
+            </div>
             <div class="login-footer">
                 <span>¿No tienes cuenta? </span>
                 <a href="#" id="login-registro-link">Regístrate aquí</a>
@@ -656,7 +662,7 @@
         </div>
     </div>
 
-    <!-- ✅ MODAL DE CONFIRMACIÓN PROPIO (NUEVO) -->
+    <!-- MODAL DE CONFIRMACIÓN PROPIO -->
     <div id="modal-confirmar" class="confirmar-oculto">
         <div class="confirmar-overlay" id="confirmar-overlay"></div>
         <div class="confirmar-contenido">

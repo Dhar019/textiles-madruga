@@ -1,6 +1,6 @@
 // ============================================
 // SCRIPT.JS - Textiles Madruga
-// Versión 4.0 - Ofertas avanzadas con tipos
+// Versión 4.1 - Sesiones con timeout y sendBeacon
 // ============================================
 
 const API_URL = 'https://textiles-madruga-api.eldani000219.workers.dev/api';
@@ -390,14 +390,49 @@ document.addEventListener('visibilitychange', () => {
     }
 });
 
+// ============================================
+// 4. CIERRE DE SESIÓN AL CERRAR PESTAÑA/VENTANA
+// ============================================
 window.addEventListener('pagehide', () => {
     if (isLoggedIn()) {
         sessionStorage.setItem('tm_pestana_activa', 'false');
+        
+        const session = getSession();
+        if (session && session.token) {
+            const url = `${API_URL}/auth/logout`;
+            try {
+                const blob = new Blob(
+                    [JSON.stringify({ token: session.token })],
+                    { type: 'application/json' }
+                );
+                navigator.sendBeacon(url, blob);
+                console.log('🔓 Logout enviado vía sendBeacon (pagehide)');
+            } catch (e) {
+                console.warn('No se pudo cerrar sesión con sendBeacon:', e);
+            }
+        }
+    }
+});
+
+window.addEventListener('beforeunload', () => {
+    if (isLoggedIn()) {
+        const session = getSession();
+        if (session && session.token) {
+            const url = `${API_URL}/auth/logout`;
+            try {
+                const blob = new Blob(
+                    [JSON.stringify({ token: session.token })],
+                    { type: 'application/json' }
+                );
+                navigator.sendBeacon(url, blob);
+                console.log('🔓 Logout enviado vía sendBeacon (beforeunload)');
+            } catch (e) {}
+        }
     }
 });
 
 // ============================================
-// 4. NOTIFICACIONES
+// 5. NOTIFICACIONES
 // ============================================
 function mostrarNotificacion(mensaje, tipo = 'info') {
     const existente = document.querySelector('.notificacion');
@@ -416,7 +451,7 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
 }
 
 // ============================================
-// 5. CARGA DE PRODUCTOS
+// 6. CARGA DE PRODUCTOS
 // ============================================
 async function cargarProductos() {
     try {
@@ -473,7 +508,7 @@ function obtenerProductoPorId(id, datos) {
 }
 
 // ============================================
-// 6. RENDERIZADO DE PRODUCTOS
+// 7. RENDERIZADO DE PRODUCTOS
 // ============================================
 function renderizarOfertas(ofertasIds, datos) {
     const contenedor = document.querySelector('#ofertas-ropa .grid-productos');
@@ -576,7 +611,6 @@ function renderizarProductosConModal(productos, contenedorSelector, datos) {
         const promocion = producto.promocion || '';
         const precioOferta = descuento > 0 ? producto.precio * (1 - descuento / 100) : null;
 
-        // Badge según tipo
         let badge = '';
         if (enOferta) {
             switch (tipoOferta) {
@@ -623,7 +657,7 @@ function renderizarProductosConModal(productos, contenedorSelector, datos) {
 }
 
 // ============================================
-// 7. MODAL DE DETALLE
+// 8. MODAL DE DETALLE
 // ============================================
 const modal = document.getElementById('modal-detalle');
 const modalBody = document.getElementById('modal-body');
@@ -659,7 +693,6 @@ function abrirModal(producto, datos) {
     ];
     const descripcion = producto.descripcion || descripciones[0];
 
-    // Etiqueta de oferta
     let etiquetaOferta = '';
     if (enOferta) {
         switch (tipoOfertaActual) {
@@ -724,7 +757,7 @@ modalOverlay?.addEventListener('click', cerrarModal);
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrarModal(); });
 
 // ============================================
-// 8. LIGHTBOX DE IMAGEN
+// 9. LIGHTBOX DE IMAGEN
 // ============================================
 const lightbox = document.getElementById('lightbox');
 const lightboxImg = document.getElementById('lightbox-img');
@@ -765,7 +798,7 @@ window.abrirLightbox = abrirLightbox;
 window.cerrarLightbox = cerrarLightbox;
 
 // ============================================
-// 9. SOLICITAR PEDIDO (SIN REGISTRO)
+// 10. SOLICITAR PEDIDO (SIN REGISTRO)
 // ============================================
 function solicitarPedido(producto) {
     const modalPedido = document.getElementById('modal-pedido');
@@ -808,7 +841,7 @@ function solicitarPedido(producto) {
 }
 
 // ============================================
-// 10. PANEL DE ADMINISTRACIÓN
+// 11. PANEL DE ADMINISTRACIÓN
 // ============================================
 const adminPanel = document.getElementById('admin-panel');
 const adminCerrar = document.getElementById('admin-cerrar');
@@ -1183,7 +1216,7 @@ adminCerrar?.addEventListener('click', cerrarAdmin);
 adminOverlay?.addEventListener('click', cerrarAdmin);
 
 // ============================================
-// 11. GESTIÓN DE OFERTAS CON TIPOS AVANZADOS
+// 12. GESTIÓN DE OFERTAS CON TIPOS AVANZADOS
 // ============================================
 async function cargarOfertasAdmin() {
     const container = document.getElementById('lista-ofertas-admin');
@@ -1286,9 +1319,6 @@ async function cargarOfertasAdmin() {
     }
 }
 
-// ============================================
-// GUARDAR OFERTA INDIVIDUAL (con botón o Enter)
-// ============================================
 async function guardarOferta(id) {
     const tipoOferta = document.getElementById(`tipo-${id}`).value;
     const descuento = parseInt(document.getElementById(`descuento-${id}`).value) || 0;
@@ -1405,7 +1435,7 @@ async function quitarOferta(productoId) {
 }
 
 // ============================================
-// 12. GESTIÓN DE USUARIOS
+// 13. GESTIÓN DE USUARIOS
 // ============================================
 async function renderizarUsuariosAdmin() {
     const container = document.getElementById('admin-usuarios-lista');
@@ -1577,7 +1607,7 @@ document.getElementById('btn-nuevo-usuario')?.addEventListener('click', function
 });
 
 // ============================================
-// 13. FILTROS DE BÚSQUEDA
+// 14. FILTROS DE BÚSQUEDA
 // ============================================
 function filtrarProductosAdmin(termino) {
     const items = document.querySelectorAll('#admin-productos-lista .admin-producto-item');
@@ -1607,7 +1637,7 @@ function filtrarUsuariosAdmin(termino) {
 }
 
 // ============================================
-// 14. MODAL GENÉRICO
+// 15. MODAL GENÉRICO
 // ============================================
 function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit }) {
     const modal = document.getElementById('modal-generico');
@@ -1658,7 +1688,7 @@ function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit }) {
 }
 
 // ============================================
-// 15. MODAL DE BIENVENIDA
+// 16. MODAL DE BIENVENIDA
 // ============================================
 function mostrarModalBienvenida() {
     const modal = document.getElementById('modal-bienvenida');
@@ -1708,7 +1738,7 @@ document.getElementById('modal-bienvenida-cerrar')?.addEventListener('click', ce
 document.getElementById('modal-bienvenida-overlay')?.addEventListener('click', cerrarModalBienvenida);
 
 // ============================================
-// 16. LOGIN/LOGOUT
+// 17. LOGIN/LOGOUT
 // ============================================
 const btnAcceder = document.getElementById('btn-acceder');
 const btnCerrarSesion = document.getElementById('btn-cerrar-sesion');
@@ -1812,7 +1842,40 @@ loginCerrar?.addEventListener('click', cerrarLogin);
 loginOverlay?.addEventListener('click', cerrarLogin);
 
 // ============================================
-// 17. OJITO PARA CONTRASEÑA
+// 18. FORZAR CIERRE DE SESIÓN (por si quedó colgada)
+// ============================================
+document.getElementById('forzar-cierre-link')?.addEventListener('click', async function(e) {
+    e.preventDefault();
+    
+    const username = prompt('Tu nombre de usuario:');
+    if (!username) return;
+    
+    const password = prompt('Tu contraseña:');
+    if (!password) return;
+    
+    try {
+        const respuesta = await fetch(`${API_URL}/auth/force-logout`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        
+        const data = await respuesta.json();
+        
+        if (respuesta.ok) {
+            mostrarNotificacion('✅ Sesión cerrada. Ya puedes iniciar sesión.', 'success');
+            localStorage.removeItem(SESSION_KEY);
+            sessionStorage.removeItem('tm_pestana_activa');
+        } else {
+            mostrarNotificacion(data.error || 'Error al forzar cierre', 'error');
+        }
+    } catch (error) {
+        mostrarNotificacion('Error de conexión', 'error');
+    }
+});
+
+// ============================================
+// 19. OJITO PARA CONTRASEÑA
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.toggle-password').forEach(button => {
@@ -1827,7 +1890,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ============================================
-// 18. DROP ZONE PARA IMÁGENES
+// 20. DROP ZONE PARA IMÁGENES
 // ============================================
 function inicializarDropZone() {
     const dropZone = document.getElementById('drop-zone');
@@ -1886,7 +1949,7 @@ function manejarArchivoImagen(file, preview, hiddenInput, content) {
 }
 
 // ============================================
-// 19. INICIO
+// 21. INICIO
 // ============================================
 async function iniciar() {
     console.log('🚀 Cargando productos...');
@@ -1928,7 +1991,7 @@ document.addEventListener('DOMContentLoaded', iniciar);
 document.addEventListener('DOMContentLoaded', inicializarDropZone);
 
 // ============================================
-// 20. EXPOSICIÓN GLOBAL
+// 22. EXPOSICIÓN GLOBAL
 // ============================================
 window.confirmar = confirmar;
 window.guardarOferta = guardarOferta;
@@ -1956,7 +2019,7 @@ window.cerrarModalBienvenida = cerrarModalBienvenida;
 window.eliminarUsuario = eliminarUsuario;
 
 // ============================================
-// 21. MENÚ HAMBURGUESA
+// 23. MENÚ HAMBURGUESA
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
     const hamburguesa = document.getElementById('menu-hamburguesa');

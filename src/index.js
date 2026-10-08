@@ -1,6 +1,7 @@
 // ============================================
 // WORKER - TEXTILES MADRUGA API
-// Versión 4.0 - Ofertas avanzadas (tipos + descuento)
+// Versión 4.1 - Sesiones con timeout automático
+// + Logout vía sendBeacon + IDs alfanuméricos
 // ============================================
 
 // ============================================
@@ -107,13 +108,20 @@ async function verificarPassword(password, hash) {
 }
 
 // ============================================
-// SESIÓN BLOQUEADA
+// SESIÓN ÚNICA CON TIMEOUT
 // ============================================
+const MAX_INACTIVIDAD_MS = 2 * 60 * 60 * 1000; // 2 horas
+
 async function crearSesionUnica(env, userId) {
     const sessionId = crypto.randomUUID();
+    const session = {
+        sessionId: sessionId,
+        lastActivity: Date.now(),
+        createdAt: Date.now()
+    };
     await env.PRODUCTOS_KV.put(
         `SESSIONS:${userId}`,
-        sessionId,
+        JSON.stringify(session),
         { expirationTtl: 8 * 60 * 60 }
     );
     return sessionId;
@@ -123,12 +131,53 @@ async function eliminarSesion(env, userId) {
     await env.PRODUCTOS_KV.delete(`SESSIONS:${userId}`);
 }
 
+async function verificarSesionActiva(env, userId) {
+    const sessionStr = await env.PRODUCTOS_KV.get(`SESSIONS:${userId}`);
+    if (!sessionStr) return null;
+    
+    let session;
+    try {
+        session = JSON.parse(sessionStr);
+    } catch {
+        // Compatibilidad con formato viejo (solo string)
+        return { sessionId: sessionStr, lastActivity: Date.now() };
+    }
+    
+    // Verificar inactividad
+    if (Date.now() - session.lastActivity > MAX_INACTIVIDAD_MS) {
+        console.log(`⏰ Sesión expirada por inactividad: ${userId}`);
+        await env.PRODUCTOS_KV.delete(`SESSIONS:${userId}`);
+        return null;
+    }
+    
+    return session;
+}
+
+async function actualizarActividadSesion(env, userId) {
+    const sessionStr = await env.PRODUCTOS_KV.get(`SESSIONS:${userId}`);
+    if (!sessionStr) return;
+    
+    let session;
+    try {
+        session = JSON.parse(sessionStr);
+    } catch {
+        return; // Formato viejo, no actualizamos
+    }
+    
+    session.lastActivity = Date.now();
+    await env.PRODUCTOS_KV.put(
+        `SESSIONS:${userId}`,
+        JSON.stringify(session),
+        { expirationTtl: 8 * 60 * 60 }
+    );
+}
+
 async function obtenerSesionActiva(env, userId) {
-    return await env.PRODUCTOS_KV.get(`SESSIONS:${userId}`);
+    return await verificarSesionActiva(env, userId);
 }
 
 // ============================================
-// VERIFICACIÓN DE TOKEN
+// VERIFICACIÓN DE TOKEN (CON ACTIVIDAD)
 // ============================================
 async function verificarToken(request, env) {
     const authHeader = request.headers.get('Authorization');
@@ -138,11 +187,16 @@ async function verificarToken(request, env) {
         const payload = JSON.parse(atob(token));
 
         if (!payload.sessionId) return null;
-        const kvSessionId = await env.PRODUCTOS_KV.get(`SESSIONS:${payload.id}`);
-        if (!kvSessionId || kvSessionId !== payload.sessionId) {
+        
+        // Verificar sesión con timeout
+        const session = await verificarSesionActiva(env, payload.id);
+        if (!session || session.sessionId !== payload.sessionId) {
             return null;
         }
-
+        
+        // Actualizar actividad en cada petición
+        await actualizarActividadSesion(env, payload.id);
+        
         return payload;
     } catch (e) {
         console.error('Token verify failed:', e.message);
@@ -275,8 +329,14 @@ export default {
                     status: 'ok',
                     message: 'API de Textiles Madruga funcionando (KV)',
                     db: 'kv',
-                    version: '4.0',
-                    features: ['IDs alfanuméricos', 'Ofertas avanzadas', 'DELETE robusto'],
+                    version: '4.1',
+                    features: [
+                        'IDs alfanuméricos',
+                        'Ofertas avanzadas',
+                        'DELETE robusto',
+                        'Timeout de sesión (2h)',
+                        'Logout vía sendBeacon'
+                    ],
                     timestamp: new Date().toISOString()
                 }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
@@ -359,7 +419,7 @@ export default {
                 }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
-            // ELIMINAR PRODUCTO (VERSIÓN ROBUSTA)
+            // ELIMINAR PRODUCTO (VERSIÓN A PRUEBA DE BALAS)
             if (path.startsWith('/api/products/') && method === 'DELETE') {
                 console.log('🗑️ DELETE INICIADO:', path);
                 
@@ -370,6 +430,7 @@ export default {
                 }
                 
                 const productId = path.split('/')[3];
+                
                 const catalogoStr = await env.PRODUCTOS_KV.get('catalogo_completo');
                 if (!catalogoStr) {
                     return addCors(new Response(JSON.stringify({ error: 'Catálogo vacío' }),
@@ -482,7 +543,6 @@ export default {
                         { status: 404, headers: { 'Content-Type': 'application/json' } }), request);
                 }
 
-                // Actualizar campos de oferta
                 catalogo[claveReal].enOferta = body.enOferta;
                 
                 if (body.tipoOferta !== undefined) {
@@ -557,10 +617,11 @@ export default {
                     }), { status: 401, headers: { 'Content-Type': 'application/json' } }), request);
                 }
 
+                // Verificar sesión existente (ahora con timeout automático)
                 const sesionExistente = await obtenerSesionActiva(env, user.id);
                 if (sesionExistente) {
                     return addCors(new Response(JSON.stringify({
-                        error: 'Ya hay una sesión activa en otro dispositivo. Cierra sesión allí primero.'
+                        error: 'Ya hay una sesión activa en otro dispositivo. Usa "Forzar cierre" si quedó bloqueada.'
                     }), { status: 409, headers: { 'Content-Type': 'application/json' } }), request);
                 }
 
@@ -614,9 +675,31 @@ export default {
                 }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
-            // LOGOUT
+            // ============================================
+            // LOGOUT (acepta header O body para sendBeacon)
+            // ============================================
             if (path === '/api/auth/logout' && method === 'POST') {
-                const user = await verificarToken(request, env);
+                // 1. Intentar verificar token desde header
+                let user = await verificarToken(request, env);
+                
+                // 2. Si no hay header, intentar desde el body (sendBeacon)
+                if (!user) {
+                    try {
+                        const body = await request.json();
+                        if (body.token) {
+                            const payload = JSON.parse(atob(body.token));
+                            if (payload.id) {
+                                await eliminarSesion(env, payload.id);
+                                console.log('✅ Logout vía sendBeacon:', payload.username);
+                                return addCors(new Response(JSON.stringify({ success: true }),
+                                    { headers: { 'Content-Type': 'application/json' } }), request);
+                            }
+                        }
+                    } catch (e) {
+                        // Silencioso, es normal si no hay body
+                    }
+                }
+                
                 if (user && user.id) {
                     await eliminarSesion(env, user.id);
                     await registrarAuditoria(env, user, 'LOGOUT', { ip });
