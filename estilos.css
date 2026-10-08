@@ -2656,6 +2656,179 @@ body.admin-abierto .nav {
 }
 
 /* ============================================ */
+/* ✅ NUEVO: INFO ADICIONAL EN ADMIN PRODUCTOS  */
+/* (FASE 2) - Muestra ID y descripción          */
+/* ============================================ */
+.admin-producto-item .info-texto {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 180px;
+}
+
+.admin-producto-item .info-texto .nombre {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--color-negro);
+}
+
+.admin-producto-item .info-texto .descripcion {
+    font-size: 0.75rem;
+    color: var(--color-gris);
+    font-style: italic;
+    line-height: 1.2;
+}
+
+.admin-producto-item .info-texto .id-producto {
+    font-size: 0.7rem;
+    color: var(--color-naranja);
+    font-family: monospace;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+/* ============================================ */
+/* ✅ NUEVO: FICHA DE OFERTAS EN PANEL ADMIN    */
+/* (FASE 2) - Muestra imagen, descripción, ID   */
+/* ============================================ */
+.oferta-editar-item {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+    border-left: 3px solid var(--color-naranja);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.oferta-card-producto {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+}
+
+.oferta-card-img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 12px;
+    background: var(--color-crema);
+    flex-shrink: 0;
+}
+
+.oferta-card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+}
+
+.oferta-card-nombre {
+    font-family: var(--font-serif);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--color-negro);
+}
+
+.oferta-card-descripcion {
+    font-size: 0.85rem;
+    color: var(--color-gris);
+    font-style: italic;
+    line-height: 1.3;
+}
+
+.oferta-card-categoria {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--color-naranja);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.oferta-card-id {
+    font-size: 0.7rem;
+    color: var(--color-gris);
+    font-family: monospace;
+}
+
+.oferta-card-precios {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: #FFF5EB;
+    border-radius: 12px;
+}
+
+.oferta-card-precio-original {
+    text-decoration: line-through;
+    color: var(--color-gris);
+    font-size: 0.95rem;
+}
+
+.oferta-card-precio-oferta {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--color-naranja);
+}
+
+.oferta-card-edicion {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+.oferta-card-edicion .campo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 120px;
+}
+
+.oferta-card-edicion .campo label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--color-gris);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.oferta-card-edicion .campo input {
+    padding: 8px 12px;
+    border: 2px solid #EDE8E1;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-family: var(--font-sans);
+    background: #FAF8F5;
+}
+
+.oferta-card-edicion .campo input:focus {
+    border-color: var(--color-naranja);
+    outline: none;
+    background: white;
+}
+
+@media (max-width: 768px) {
+    .oferta-card-producto {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    
+    .oferta-card-info {
+        align-items: center;
+    }
+    
+    .admin-producto-item .info-texto {
+        min-width: auto;
+    }
+}
+
+/* ============================================ */
 /* RESPONSIVE - GLOBAL                         */
 /* ============================================ */
 @media (max-width: 768px) {

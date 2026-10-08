@@ -1,6 +1,6 @@
 // ============================================
 // SCRIPT.JS - Textiles Madruga
-// Versión 3.5 - Fase 1: Buscador, ficha ofertas, descripción, ID
+// Versión 3.7 - IDs únicos de 6 dígitos
 // ============================================
 
 const API_URL = 'https://textiles-madruga-api.eldani000219.workers.dev/api';
@@ -366,7 +366,7 @@ async function cargarProductos() {
         if (!Array.isArray(productos)) throw new Error('La API no devolvió un array');
 
         const datos = {
-            ofertas: productos.filter(p => p.enOferta).map(p => p._id),
+            ofertas: productos.filter(p => p.enOferta).map(p => p.id || p._id),
             productos: {
                 hombre: productos.filter(p => p.categoria === 'hombre'),
                 mujer: productos.filter(p => p.categoria === 'mujer'),
@@ -397,7 +397,7 @@ function obtenerProductoPorId(id, datos) {
         const productos = datos.productos[categoria];
         if (productos) {
             const encontrado = productos.find(p =>
-                String(p._id) === String(id) || String(p.id) === String(id)
+                String(p.id) === String(id) || String(p._id) === String(id)
             );
             if (encontrado) return encontrado;
         }
@@ -440,7 +440,7 @@ function renderizarOfertas(ofertasIds, datos) {
                     <span class="tachado">$${producto.precio.toFixed(2)}</span>
                     <span class="precio-oferta-grande">$${precioOferta.toFixed(2)}</span>
                 </p>
-                <button class="btn-secundario btn-detalle" data-id="${producto._id || producto.id}">Ver detalle</button>
+                <button class="btn-secundario btn-detalle" data-id="${producto.id || producto._id}">Ver detalle</button>
             </div>
         `;
     });
@@ -489,7 +489,7 @@ function renderizarProductosConModal(productos, contenedorSelector, datos) {
                         ? `<span class="tachado">$${producto.precio.toFixed(2)}</span> $${precioOferta.toFixed(2)}${unidad}` 
                         : `$${producto.precio.toFixed(2)}${unidad}`}
                 </p>
-                <button class="btn-secundario btn-detalle" data-id="${producto._id || producto.id}">Ver detalle</button>
+                <button class="btn-secundario btn-detalle" data-id="${producto.id || producto._id}">Ver detalle</button>
             </div>
         `;
     });
@@ -522,7 +522,7 @@ function abrirModal(producto, datos) {
     const categoriaMap = { 'hombre': 'Hombre', 'mujer': 'Mujer', 'telas': 'Telas', 'objetos': 'Otros' };
     let categoriaTexto = 'Producto';
     for (const [key, value] of Object.entries(datos.productos)) {
-        if (value.some(p => String(p._id) === String(producto._id) || String(p.id) === String(producto.id))) {
+        if (value.some(p => String(p.id) === String(producto.id) || String(p._id) === String(producto._id))) {
             categoriaTexto = categoriaMap[key] || key;
             break;
         }
@@ -534,7 +534,7 @@ function abrirModal(producto, datos) {
         'Hecho con dedicación y atención al detalle. Perfecto para quienes buscan lo mejor.',
         'Telas seleccionadas con los más altos estándares de calidad y durabilidad.'
     ];
-    const descripcion = descripciones[(producto._id || producto.id) % descripciones.length];
+    const descripcion = descripciones[(producto.id || producto._id) % descripciones.length];
 
     modalBody.innerHTML = `
         <div class="modal-producto">
@@ -737,12 +737,18 @@ function renderizarAdminProductos() {
         const productos = adminDatos.productos[categoria] || [];
         productos.forEach(producto => {
             const enOferta = producto.enOferta || false;
-            const id = producto._id || producto.id;
+            const id = producto.id || producto._id || 'sin-id';
+            const descripcion = producto.descripcion || 'Sin descripción';
+
             html += `
                 <div class="admin-producto-item" data-id="${id}" data-categoria="${categoria}">
                     <div class="info">
                         <img src="${producto.imagen}" alt="${producto.nombre}" onerror="this.src='assets/img/placeholder.webp'; this.onerror=null;">
-                        <span class="nombre">${producto.nombre}</span>
+                        <div class="info-texto">
+                            <span class="nombre">${producto.nombre}</span>
+                            <span class="descripcion">${descripcion.substring(0, 60)}${descripcion.length > 60 ? '...' : ''}</span>
+                            <span class="id-producto">ID: ${id}</span>
+                        </div>
                         <span class="precio">$${producto.precio.toFixed(2)}</span>
                         <span class="categoria-tag">${categoriaNombres[categoria]}</span>
                         ${enOferta ? '<span style="background:#E87A20;color:white;padding:2px 12px;border-radius:50px;font-size:0.7rem;font-weight:600;">OFERTA</span>' : ''}
@@ -835,13 +841,25 @@ async function eliminarProductoAdmin(id) {
 function editarProductoAdmin(id) {
     modoEdicion = id;
     const producto = obtenerProductoPorId(id, adminDatos);
-    if (!producto) return;
+    if (!producto) {
+        mostrarNotificacion('Producto no encontrado', 'error');
+        return;
+    }
 
-    document.getElementById('prod-nombre').value = producto.nombre;
-    document.getElementById('prod-precio').value = producto.precio;
+    document.getElementById('prod-nombre').value = producto.nombre || '';
+    document.getElementById('prod-precio').value = producto.precio || '';
     document.getElementById('prod-imagen').value = producto.imagen || '';
     document.getElementById('prod-descripcion').value = producto.descripcion || '';
-    document.getElementById('prod-id').value = producto._id || producto.id || '';
+    document.getElementById('prod-id').value = producto.id || producto._id || 'sin-id';
+
+    for (const categoria of ['hombre', 'mujer', 'telas', 'objetos']) {
+        if (adminDatos.productos[categoria]?.some(p => 
+            String(p._id) === String(id) || String(p.id) === String(id)
+        )) {
+            document.getElementById('prod-categoria').value = categoria;
+            break;
+        }
+    }
 
     const preview = document.getElementById('drop-zone-preview');
     const content = document.getElementById('drop-zone-content');
@@ -851,19 +869,14 @@ function editarProductoAdmin(id) {
         content.style.display = 'none';
     } else if (preview && content) {
         preview.style.display = 'none';
+        preview.src = '';
         content.style.display = 'flex';
-    }
-
-    for (const categoria of ['hombre', 'mujer', 'telas', 'objetos']) {
-        if (adminDatos.productos[categoria]?.some(p => String(p._id) === String(id) || String(p.id) === String(id))) {
-            document.getElementById('prod-categoria').value = categoria;
-            break;
-        }
     }
 
     formProducto.className = 'form-visible';
     document.querySelector('#producto-form button[type="submit"]').textContent = 'Actualizar';
     document.getElementById('form-title').textContent = 'Editar Producto';
+    formProducto.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 document.getElementById('producto-form')?.addEventListener('submit', async function(e) {
@@ -874,7 +887,9 @@ document.getElementById('producto-form')?.addEventListener('submit', async funct
     let imagen = document.getElementById('prod-imagen').value.trim();
     const categoria = document.getElementById('prod-categoria').value;
     const descripcion = document.getElementById('prod-descripcion').value.trim();
-    const idEditable = document.getElementById('prod-id').value.trim();
+    let idEditable = document.getElementById('prod-id').value.trim();
+
+    if (idEditable === 'sin-id') idEditable = '';
 
     if (!nombre || !precio) {
         mostrarNotificacion('Completa nombre y precio', 'error');
@@ -888,7 +903,9 @@ document.getElementById('producto-form')?.addEventListener('submit', async funct
 
     try {
         const productoData = { nombre, precio, imagen, categoria, descripcion };
-        if (idEditable) productoData.id = idEditable;
+        if (idEditable && !modoEdicion) {
+            productoData.id = idEditable;
+        }
 
         let respuesta;
 
@@ -912,7 +929,10 @@ document.getElementById('producto-form')?.addEventListener('submit', async funct
             });
         }
 
-        if (!respuesta.ok) throw new Error('Error al guardar');
+        if (!respuesta.ok) {
+            const errorData = await respuesta.json().catch(() => ({}));
+            throw new Error(errorData.error || 'Error al guardar');
+        }
 
         modoEdicion = null;
         formProducto.className = 'form-oculto';
@@ -925,6 +945,7 @@ document.getElementById('producto-form')?.addEventListener('submit', async funct
             preview.src = '';
             content.style.display = 'flex';
         }
+        document.getElementById('prod-id').value = '';
 
         document.querySelector('#producto-form button[type="submit"]').textContent = 'Crear';
         document.getElementById('form-title').textContent = 'Nuevo Producto';
@@ -941,9 +962,11 @@ document.getElementById('producto-form')?.addEventListener('submit', async funct
             renderizarProductosConModal(datosActualizados.productos.mujer, '#ropa-mujer .grid-productos', datosActualizados);
             renderizarProductosConModal(datosActualizados.productos.telas, '#telas .grid-productos', datosActualizados);
             renderizarProductosConModal(datosActualizados.productos.objetos, '#otros .grid-productos', datosActualizados);
+            cargarOfertasAdmin();
         }
     } catch (error) {
-        mostrarNotificacion('Error al guardar producto', 'error');
+        console.error('Error guardar:', error);
+        mostrarNotificacion(error.message || 'Error al guardar producto', 'error');
     }
 });
 
@@ -975,6 +998,8 @@ btnNuevoProducto?.addEventListener('click', function() {
     }
 
     formProducto.className = 'form-visible';
+    document.querySelector('#producto-form button[type="submit"]').textContent = 'Crear';
+    document.getElementById('form-title').textContent = 'Nuevo Producto';
 });
 
 adminCerrar?.addEventListener('click', cerrarAdmin);
@@ -1002,23 +1027,33 @@ async function cargarOfertasAdmin() {
         ofertas.forEach(producto => {
             const descuento = producto.descuento || 15;
             const precioOferta = producto.precio * (1 - descuento / 100);
+            const imagen = producto.imagen || 'assets/img/placeholder.webp';
+            const descripcion = producto.descripcion || 'Sin descripción';
+            const id = producto.id || producto._id || 'sin-id';
+            const categoria = producto.categoria || 'sin categoría';
 
             html += `
-                <div class="oferta-editar-item">
-                    <div class="header">
-                        <span class="nombre">${producto.nombre}</span>
-                        <span class="precio">
-                            <span class="tachado">$${producto.precio.toFixed(2)}</span>
-                            $${precioOferta.toFixed(2)}
-                        </span>
-                    </div>
-                    <div class="campos">
-                        <div class="campo">
-                            <label>Descuento (%)</label>
-                            <input type="number" value="${descuento}" min="0" max="100" onchange="actualizarDescuento('${producto._id}', this.value)">
+                <div class="oferta-editar-item" data-id="${id}">
+                    <div class="oferta-card-producto">
+                        <img src="${imagen}" alt="${producto.nombre}" class="oferta-card-img" onerror="this.src='assets/img/placeholder.webp'; this.onerror=null;">
+                        <div class="oferta-card-info">
+                            <span class="oferta-card-nombre">${producto.nombre}</span>
+                            <span class="oferta-card-descripcion">${descripcion.substring(0, 80)}${descripcion.length > 80 ? '...' : ''}</span>
+                            <span class="oferta-card-categoria">${categoria}</span>
+                            <span class="oferta-card-id">ID: ${id}</span>
                         </div>
                     </div>
-                    <button class="btn-admin btn-peligro" onclick="quitarOferta('${producto._id}')">Quitar oferta</button>
+                    <div class="oferta-card-precios">
+                        <span class="oferta-card-precio-original">$${producto.precio.toFixed(2)}</span>
+                        <span class="oferta-card-precio-oferta">$${precioOferta.toFixed(2)}</span>
+                    </div>
+                    <div class="oferta-card-edicion">
+                        <div class="campo">
+                            <label>Descuento (%)</label>
+                            <input type="number" value="${descuento}" min="0" max="100" onchange="actualizarDescuento('${id}', this.value)">
+                        </div>
+                        <button class="btn-admin btn-peligro" onclick="quitarOferta('${id}')">Quitar oferta</button>
+                    </div>
                 </div>
             `;
         });
