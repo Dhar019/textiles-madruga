@@ -166,3 +166,21 @@ actualizar-mongodb.cjs
 "usuarios.json" 
 "catalogo_temp.json" 
 ".wrangler/" 
+
+# Archivos sensibles
+usuarios.json
+migrar-ids.cjs
+productos.json
+seed-mongo.js
+.env
+.env.local
+*.log
+
+# Backups
+backup-*.json
+
+# Node modules
+node_modules/
+
+# Submódulos
+backend/textiles-madruga-api/node_modules/
