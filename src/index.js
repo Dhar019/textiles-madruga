@@ -1,6 +1,7 @@
 // ============================================
 // WORKER - TEXTILES MADRUGA API
-// Versión 3.6 - Con Turnstile, sin jose
+// Versión 3.9 - Fix DELETE robusto + IDs alfanuméricos
+// Formato: HOM-0001, MUJ-0001, TEL-0001, OBJ-0001
 // Base64 + SHA-256 + RateLimit + Turnstile + Auditoría
 // ============================================
 
@@ -47,6 +48,39 @@ async function leerUsuarios(env) {
 
 async function guardarUsuarios(env, usuarios) {
     await env.PRODUCTOS_KV.put('usuarios', JSON.stringify(usuarios));
+}
+
+// ============================================
+// GENERAR ID ALFANUMÉRICO CON PREFIJO (4 DÍGITOS)
+// Formato: HOM-0001, MUJ-0001, TEL-0001, OBJ-0001
+// ============================================
+function generarIdUnico(catalogo, categoria) {
+    const prefijos = {
+        'hombre': 'HOM',
+        'mujer': 'MUJ',
+        'telas': 'TEL',
+        'objetos': 'OBJ'
+    };
+    
+    const prefijo = prefijos[categoria] || 'PRD';
+    
+    let maxNumero = 0;
+    
+    Object.values(catalogo).forEach(p => {
+        const idActual = String(p.id || p._id || '');
+        if (idActual.startsWith(prefijo + '-')) {
+            const numeroStr = idActual.replace(prefijo + '-', '');
+            const numero = parseInt(numeroStr, 10);
+            if (!isNaN(numero) && numero > maxNumero) {
+                maxNumero = numero;
+            }
+        }
+    });
+    
+    const siguienteNumero = maxNumero + 1;
+    const numeroFormateado = String(siguienteNumero).padStart(4, '0');
+    
+    return `${prefijo}-${numeroFormateado}`;
 }
 
 // ============================================
@@ -245,7 +279,9 @@ export default {
                     status: 'ok',
                     message: 'API de Textiles Madruga funcionando (KV)',
                     db: 'kv',
+                    version: '3.9',
                     security: ['Base64', 'SHA-256', 'RateLimit', 'Turnstile', 'Audit'],
+                    idFormat: 'PREFIJO-NNNN (HOM-0001, MUJ-0001, TEL-0001, OBJ-0001)',
                     timestamp: new Date().toISOString()
                 }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
@@ -259,7 +295,7 @@ export default {
                 }), request);
             }
 
-            // CREAR PRODUCTO
+            // CREAR PRODUCTO (CON PREVENCIÓN DE DUPLICADOS)
             if (path === '/api/products' && method === 'POST') {
                 const user = await verificarToken(request, env);
                 if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
@@ -267,14 +303,26 @@ export default {
                         { status: 403, headers: { 'Content-Type': 'application/json' } }), request);
                 }
                 const body = await request.json();
-                const id = body.id || `prod_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
                 const catalogo = await leerCatalogo(env);
-                catalogo[id] = { ...body, _id: id };
+
+                const idFinal = body.id || generarIdUnico(catalogo, body.categoria);
+
+                // Si el ID ya existe, hacemos UPDATE en lugar de CREATE
+                const esActualizacion = !!catalogo[idFinal];
+
+                catalogo[idFinal] = { ...catalogo[idFinal], ...body, id: idFinal, _id: idFinal };
                 await guardarCatalogo(env, catalogo);
-                await registrarAuditoria(env, user, 'CREATE_PRODUCT', { id, nombre: body.nombre });
+                await registrarAuditoria(env, user, esActualizacion ? 'UPDATE_PRODUCT' : 'CREATE_PRODUCT', { 
+                    id: idFinal, 
+                    nombre: body.nombre, 
+                    categoria: body.categoria 
+                });
+
                 return addCors(new Response(JSON.stringify({
                     success: true,
-                    _id: id,
+                    id: idFinal,
+                    _id: idFinal,
+                    esActualizacion,
                     ...body
                 }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
@@ -289,33 +337,154 @@ export default {
                 const productId = path.split('/')[3];
                 const body = await request.json();
                 const catalogo = await leerCatalogo(env);
-                if (!catalogo[productId]) {
+
+                // ✅ Buscar la clave real (robusto con IDs numéricos y strings)
+                let claveReal = null;
+                if (catalogo[productId]) {
+                    claveReal = productId;
+                } else {
+                    for (const clave of Object.keys(catalogo)) {
+                        const p = catalogo[clave];
+                        if (String(p.id) === String(productId) || String(p._id) === String(productId) || String(clave) === String(productId)) {
+                            claveReal = clave;
+                            break;
+                        }
+                    }
+                }
+
+                if (!claveReal) {
                     return addCors(new Response(JSON.stringify({ error: 'Producto no encontrado' }),
                         { status: 404, headers: { 'Content-Type': 'application/json' } }), request);
                 }
-                catalogo[productId] = { ...catalogo[productId], ...body };
+
+                catalogo[claveReal] = { ...catalogo[claveReal], ...body };
                 await guardarCatalogo(env, catalogo);
-                await registrarAuditoria(env, user, 'UPDATE_PRODUCT', { id: productId });
+                await registrarAuditoria(env, user, 'UPDATE_PRODUCT', { id: productId, claveReal });
+
                 return addCors(new Response(JSON.stringify({
                     success: true,
-                    ...catalogo[productId]
+                    ...catalogo[claveReal]
                 }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
-            // ELIMINAR PRODUCTO
+            // ============================================
+            // ELIMINAR PRODUCTO (VERSIÓN A PRUEBA DE BALAS)
+            // Busca el producto por id, _id, o String(id)
+            // ============================================
             if (path.startsWith('/api/products/') && method === 'DELETE') {
+                console.log('🗑️ DELETE INICIADO:', path);
+                
                 const user = await verificarToken(request, env);
                 if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
+                    console.log('🗑️ ❌ No autorizado');
                     return addCors(new Response(JSON.stringify({ error: 'No autorizado' }),
                         { status: 403, headers: { 'Content-Type': 'application/json' } }), request);
                 }
+                
                 const productId = path.split('/')[3];
-                const catalogo = await leerCatalogo(env);
-                delete catalogo[productId];
-                await guardarCatalogo(env, catalogo);
-                await registrarAuditoria(env, user, 'DELETE_PRODUCT', { id: productId });
-                return addCors(new Response(JSON.stringify({ success: true }),
-                    { headers: { 'Content-Type': 'application/json' } }), request);
+                console.log('🗑️ ID solicitado:', productId, '| tipo:', typeof productId);
+                
+                // Leer el catálogo RAW
+                const catalogoStr = await env.PRODUCTOS_KV.get('catalogo_completo');
+                if (!catalogoStr) {
+                    return addCors(new Response(JSON.stringify({ 
+                        error: 'Catálogo vacío' 
+                    }), { status: 404, headers: { 'Content-Type': 'application/json' } }), request);
+                }
+                
+                const catalogo = JSON.parse(catalogoStr);
+                const clavesAntes = Object.keys(catalogo);
+                console.log('🗑️ Claves antes:', clavesAntes.length);
+                
+                // Buscar la clave REAL que corresponde al productId
+                let claveReal = null;
+                let productoEncontrado = null;
+                
+                // 1. Buscar por coincidencia directa de clave
+                if (catalogo[productId]) {
+                    claveReal = productId;
+                    productoEncontrado = catalogo[productId];
+                    console.log('🗑️ ✅ Encontrado por clave directa:', productId);
+                } else {
+                    // 2. Buscar en todos los productos por id o _id
+                    for (const clave of clavesAntes) {
+                        const p = catalogo[clave];
+                        if (
+                            String(p.id) === String(productId) ||
+                            String(p._id) === String(productId) ||
+                            String(clave) === String(productId)
+                        ) {
+                            claveReal = clave;
+                            productoEncontrado = p;
+                            console.log('🗑️ ✅ Encontrado por escaneo:', clave, '→', p.nombre);
+                            break;
+                        }
+                    }
+                }
+                
+                if (!claveReal || !productoEncontrado) {
+                    console.log('🗑️ ❌ No encontrado. Claves disponibles:', clavesAntes);
+                    return addCors(new Response(JSON.stringify({ 
+                        error: 'Producto no encontrado',
+                        idBuscado: productId,
+                        clavesDisponibles: clavesAntes
+                    }), { status: 404, headers: { 'Content-Type': 'application/json' } }), request);
+                }
+                
+                // Crear nuevo catálogo SIN el producto (evitar delete)
+                const nuevoCatalogo = {};
+                clavesAntes.forEach(clave => {
+                    if (clave !== claveReal) {
+                        nuevoCatalogo[clave] = catalogo[clave];
+                    }
+                });
+                
+                const clavesDespues = Object.keys(nuevoCatalogo);
+                console.log('🗑️ Claves después:', clavesDespues.length);
+                
+                if (clavesAntes.length === clavesDespues.length) {
+                    return addCors(new Response(JSON.stringify({ 
+                        error: 'No se eliminó ninguna clave',
+                        claveReal,
+                        clavesAntes: clavesAntes.length,
+                        clavesDespues: clavesDespues.length
+                    }), { status: 500, headers: { 'Content-Type': 'application/json' } }), request);
+                }
+                
+                // Guardar el nuevo catálogo
+                await env.PRODUCTOS_KV.put('catalogo_completo', JSON.stringify(nuevoCatalogo));
+                console.log('🗑️ ✅ Catálogo guardado en KV');
+                
+                // Verificar
+                await new Promise(r => setTimeout(r, 500));
+                const verificacionStr = await env.PRODUCTOS_KV.get('catalogo_completo');
+                const verificacion = JSON.parse(verificacionStr);
+                const clavesVerificacion = Object.keys(verificacion).length;
+                
+                if (clavesVerificacion !== clavesDespues.length) {
+                    return addCors(new Response(JSON.stringify({ 
+                        error: 'Error de persistencia',
+                        esperado: clavesDespues.length,
+                        real: clavesVerificacion
+                    }), { status: 500, headers: { 'Content-Type': 'application/json' } }), request);
+                }
+                
+                await registrarAuditoria(env, user, 'DELETE_PRODUCT', { 
+                    id: productId,
+                    claveReal,
+                    nombre: productoEncontrado.nombre,
+                    clavesAntes: clavesAntes.length,
+                    clavesDespues: clavesDespues.length
+                });
+                
+                return addCors(new Response(JSON.stringify({ 
+                    success: true,
+                    idEliminado: productId,
+                    claveReal,
+                    nombre: productoEncontrado.nombre,
+                    clavesAntes: clavesAntes.length,
+                    clavesDespues: clavesDespues.length
+                }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
             // TOGGLE OFERTA
@@ -328,10 +497,25 @@ export default {
                 const productId = path.split('/').pop();
                 const body = await request.json();
                 const catalogo = await leerCatalogo(env);
+
+                // ✅ Buscar la clave real
+                let claveReal = null;
                 if (catalogo[productId]) {
-                    catalogo[productId].enOferta = body.enOferta;
+                    claveReal = productId;
+                } else {
+                    for (const clave of Object.keys(catalogo)) {
+                        const p = catalogo[clave];
+                        if (String(p.id) === String(productId) || String(p._id) === String(productId) || String(clave) === String(productId)) {
+                            claveReal = clave;
+                            break;
+                        }
+                    }
+                }
+
+                if (claveReal && catalogo[claveReal]) {
+                    catalogo[claveReal].enOferta = body.enOferta;
                     if (body.descuento !== undefined) {
-                        catalogo[productId].descuento = body.descuento;
+                        catalogo[claveReal].descuento = body.descuento;
                     }
                     await guardarCatalogo(env, catalogo);
                     await registrarAuditoria(env, user, 'TOGGLE_OFFER', { id: productId, enOferta: body.enOferta });
@@ -340,7 +524,7 @@ export default {
                     { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
-            // LOGIN (CON TURNSTILE, SIN JOSE)
+            // LOGIN (CON TURNSTILE)
             if (path === '/api/auth/login' && (method === 'POST' || method === 'GET')) {
                 const rateLimit = await verificarRateLimit(env, ip);
                 if (rateLimit.bloqueado) {

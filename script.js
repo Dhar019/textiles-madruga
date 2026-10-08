@@ -1,10 +1,83 @@
 // ============================================
 // SCRIPT.JS - Textiles Madruga
-// Versión 3.7 - IDs únicos de 6 dígitos
+// Versión 4.0 - Modal de confirmación propio
 // ============================================
 
 const API_URL = 'https://textiles-madruga-api.eldani000219.workers.dev/api';
 const SESSION_KEY = 'tm_session';
+
+// ============================================
+// MODAL DE CONFIRMACIÓN PROPIO
+// ============================================
+function confirmar(opciones) {
+    return new Promise((resolve) => {
+        // Acepta tanto un string como un objeto
+        if (typeof opciones === 'string') {
+            opciones = { mensaje: opciones };
+        }
+        
+        const {
+            titulo = '¿Estás seguro?',
+            mensaje = 'Esta acción no se puede deshacer.',
+            tipo = 'info',
+            textoAceptar = 'Aceptar',
+            textoCancelar = 'Cancelar'
+        } = opciones;
+
+        const modal = document.getElementById('modal-confirmar');
+        const overlay = document.getElementById('confirmar-overlay');
+        const btnAceptar = document.getElementById('confirmar-aceptar');
+        const btnCancelar = document.getElementById('confirmar-cancelar');
+        const icono = document.getElementById('confirmar-icono');
+        const tituloEl = document.getElementById('confirmar-titulo');
+        const mensajeEl = document.getElementById('confirmar-mensaje');
+
+        // Configurar textos
+        tituloEl.textContent = titulo;
+        mensajeEl.textContent = mensaje;
+        btnAceptar.textContent = textoAceptar;
+        btnCancelar.textContent = textoCancelar;
+
+        // Configurar icono según el tipo
+        icono.className = 'confirmar-icono';
+        if (tipo === 'peligro') {
+            icono.classList.add('peligro');
+            btnAceptar.className = 'confirmar-btn confirmar-btn-aceptar peligro';
+        } else if (tipo === 'exito') {
+            icono.classList.add('exito');
+            btnAceptar.className = 'confirmar-btn confirmar-btn-aceptar';
+        } else {
+            btnAceptar.className = 'confirmar-btn confirmar-btn-aceptar';
+        }
+
+        // Mostrar el modal
+        modal.className = 'confirmar-visible';
+        document.body.style.overflow = 'hidden';
+
+        // Funciones de cierre
+        const cerrar = (resultado) => {
+            modal.className = 'confirmar-oculto';
+            document.body.style.overflow = 'auto';
+            btnAceptar.onclick = null;
+            btnCancelar.onclick = null;
+            overlay.onclick = null;
+            resolve(resultado);
+        };
+
+        btnAceptar.onclick = () => cerrar(true);
+        btnCancelar.onclick = () => cerrar(false);
+        overlay.onclick = () => cerrar(false);
+
+        // Cerrar con Escape
+        const escapeHandler = (e) => {
+            if (e.key === 'Escape') {
+                document.removeEventListener('keydown', escapeHandler);
+                cerrar(false);
+            }
+        };
+        document.addEventListener('keydown', escapeHandler);
+    });
+}
 
 // ============================================
 // TURNSTILE
@@ -534,7 +607,7 @@ function abrirModal(producto, datos) {
         'Hecho con dedicación y atención al detalle. Perfecto para quienes buscan lo mejor.',
         'Telas seleccionadas con los más altos estándares de calidad y durabilidad.'
     ];
-    const descripcion = descripciones[(producto.id || producto._id) % descripciones.length];
+    const descripcion = producto.descripcion || descripciones[0];
 
     modalBody.innerHTML = `
         <div class="modal-producto">
@@ -548,7 +621,7 @@ function abrirModal(producto, datos) {
                     ${enOferta ? `<span class="precio-oferta">$${producto.precio.toFixed(2)}</span>` : ''}
                     <span class="precio">${enOferta ? `$${precioOferta}` : `$${producto.precio.toFixed(2)}`}${unidad}</span>
                 </div>
-                <p class="descripcion">${producto.descripcion || descripcion}</p>
+                <p class="descripcion">${descripcion}</p>
                 <p style="font-size: 0.9rem; color: var(--color-gris);">Disponible para pedido por encargo</p>
                 <button class="btn-comprar" onclick="solicitarPedido('${producto.nombre}')">Solicitar pedido</button>
             </div>
@@ -808,16 +881,34 @@ async function toggleOfertaAdmin(id) {
 }
 
 async function eliminarProductoAdmin(id) {
-    if (!confirm('¿Seguro que quieres eliminar este producto?')) return;
+    const confirmado = await confirmar({ 
+        titulo: 'Eliminar producto',
+        mensaje: '¿Seguro que quieres eliminar este producto? Esta acción no se puede deshacer.',
+        tipo: 'peligro',
+        textoAceptar: 'Eliminar',
+        textoCancelar: 'Cancelar'
+    });
+    
+    if (!confirmado) return;
 
     try {
         const session = getSession();
         const respuesta = await fetch(`${API_URL}/products/${id}`, {
             method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${session.token}` }
+            headers: { 
+                'Authorization': `Bearer ${session.token}`,
+                'Content-Type': 'application/json'
+            }
         });
 
-        if (!respuesta.ok) throw new Error('Error al eliminar');
+        if (!respuesta.ok) {
+            const errorData = await respuesta.json().catch(() => ({}));
+            console.error('Error del servidor:', respuesta.status, errorData);
+            throw new Error(errorData.error || `Error ${respuesta.status}`);
+        }
+
+        const data = await respuesta.json();
+        console.log('✅ Respuesta del servidor:', data);
 
         mostrarNotificacion('Producto eliminado', 'success');
 
@@ -834,7 +925,8 @@ async function eliminarProductoAdmin(id) {
             renderizarProductosConModal(datosActualizados.productos.objetos, '#otros .grid-productos', datosActualizados);
         }
     } catch (error) {
-        mostrarNotificacion('Error al eliminar producto', 'error');
+        console.error('Error al eliminar:', error);
+        mostrarNotificacion(`Error al eliminar: ${error.message}`, 'error');
     }
 }
 
@@ -1067,7 +1159,7 @@ async function cargarOfertasAdmin() {
 async function actualizarDescuento(productoId, descuento) {
     try {
         const session = getSession();
-        await fetch(`${API_URL}/products/${productoId}`, {
+        const respuesta = await fetch(`${API_URL}/products/${productoId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -1075,14 +1167,40 @@ async function actualizarDescuento(productoId, descuento) {
             },
             body: JSON.stringify({ descuento: parseInt(descuento) })
         });
+
+        if (!respuesta.ok) throw new Error('Error al actualizar');
+
         mostrarNotificacion('Descuento actualizado', 'success');
+
+        // ✅ FORZAR RECARGA desde el servidor
+        const datosActualizados = await cargarProductos();
+        if (datosActualizados) {
+            datosGlobales = datosActualizados;
+            adminDatos = JSON.parse(JSON.stringify(datosActualizados));
+            renderizarAdminProductos();
+            cargarOfertasAdmin();
+            renderizarOfertas(datosActualizados.ofertas, datosActualizados);
+            renderizarProductosConModal(datosActualizados.productos.hombre, '#ropa-hombre .grid-productos', datosActualizados);
+            renderizarProductosConModal(datosActualizados.productos.mujer, '#ropa-mujer .grid-productos', datosActualizados);
+            renderizarProductosConModal(datosActualizados.productos.telas, '#telas .grid-productos', datosActualizados);
+            renderizarProductosConModal(datosActualizados.productos.objetos, '#otros .grid-productos', datosActualizados);
+        }
     } catch (error) {
+        console.error('Error al actualizar descuento:', error);
         mostrarNotificacion('Error al actualizar descuento', 'error');
     }
 }
 
 async function quitarOferta(productoId) {
-    if (!confirm('¿Quitar esta oferta?')) return;
+    const confirmado = await confirmar({ 
+        titulo: 'Quitar oferta',
+        mensaje: 'El producto dejará de aparecer en la sección de ofertas.',
+        tipo: 'info',
+        textoAceptar: 'Quitar oferta',
+        textoCancelar: 'Cancelar'
+    });
+    
+    if (!confirmado) return;
 
     try {
         const session = getSession();
@@ -1186,7 +1304,16 @@ async function cambiarRolUsuario(userId, nuevoRol) {
 
 async function eliminarUsuario(userId) {
     if (!isSuperAdmin()) { mostrarNotificacion('Solo el SuperAdmin', 'error'); return; }
-    if (!confirm('¿Eliminar este usuario?')) return;
+    
+    const confirmado = await confirmar({ 
+        titulo: 'Eliminar usuario',
+        mensaje: '¿Seguro que quieres eliminar este usuario? Perderá acceso inmediatamente.',
+        tipo: 'peligro',
+        textoAceptar: 'Eliminar usuario',
+        textoCancelar: 'Cancelar'
+    });
+    
+    if (!confirmado) return;
 
     try {
         const session = getSession();
@@ -1274,8 +1401,8 @@ function filtrarOfertasAdmin(termino) {
     const items = document.querySelectorAll('#lista-ofertas-admin .oferta-editar-item');
     termino = termino.toLowerCase();
     items.forEach(item => {
-        const nombre = item.querySelector('.nombre')?.textContent.toLowerCase() || '';
-        item.style.display = nombre.includes(termino) ? 'block' : 'none';
+        const nombre = item.querySelector('.oferta-card-nombre')?.textContent.toLowerCase() || '';
+        item.style.display = nombre.includes(termino) ? 'flex' : 'none';
     });
 }
 
@@ -1422,9 +1549,18 @@ function actualizarBotonCerrarSesion() {
 }
 
 if (btnCerrarSesion) {
-    btnCerrarSesion.addEventListener('click', function(e) {
+    btnCerrarSesion.addEventListener('click', async function(e) {
         e.preventDefault();
-        if (confirm('¿Cerrar sesión?')) logout();
+        
+        const confirmado = await confirmar({ 
+            titulo: '¿Cerrar sesión?',
+            mensaje: 'Tendrás que volver a iniciar sesión para acceder al panel.',
+            tipo: 'info',
+            textoAceptar: 'Sí, cerrar sesión',
+            textoCancelar: 'Cancelar'
+        });
+        
+        if (confirmado) logout();
     });
 }
 
@@ -1552,6 +1688,9 @@ function manejarArchivoImagen(file, preview, hiddenInput, content) {
 async function iniciar() {
     console.log('🚀 Cargando productos...');
 
+    // ✅ Forzar recarga desde el servidor
+    localStorage.removeItem('productos_data');
+
     let datos = null;
     try {
         datos = await cargarProductos();
@@ -1589,6 +1728,7 @@ document.addEventListener('DOMContentLoaded', inicializarDropZone);
 // ============================================
 // EXPOSICIÓN GLOBAL
 // ============================================
+window.confirmar = confirmar;
 window.toggleOfertaAdmin = toggleOfertaAdmin;
 window.editarProductoAdmin = editarProductoAdmin;
 window.eliminarProductoAdmin = eliminarProductoAdmin;

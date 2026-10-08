@@ -356,16 +356,14 @@
                                         <option value="objetos">Otros</option>
                                     </select>
                                 </div>
-                                <!-- ✅ NUEVO: Campo de descripción -->
                                 <div class="form-group form-group-full">
                                     <label>Descripción</label>
                                     <textarea id="prod-descripcion" placeholder="Descripción del producto..." rows="3"></textarea>
                                 </div>
-                                <!-- ✅ NUEVO: Campo de ID -->
                                 <div class="form-group">
                                     <label>ID del Producto</label>
-                                    <input type="text" id="prod-id" placeholder="Se genera automáticamente" readonly>
-                                    <span style="font-size:0.65rem;color:var(--color-gris);">Solo editable en el panel admin</span>
+                                    <input type="text" id="prod-id" placeholder="Ej: HOM-0001 (automático)" readonly>
+                                    <span style="font-size:0.65rem;color:var(--color-gris);">Formato: PREFIJO-0000 (ej: HOM-0001)</span>
                                 </div>
                             </div>
                             <div class="form-actions">
@@ -655,6 +653,30 @@
                 </svg>
             </button>
             <img id="lightbox-img" src="" alt="Imagen ampliada">
+        </div>
+    </div>
+
+    <!-- ✅ MODAL DE CONFIRMACIÓN PROPIO (NUEVO) -->
+    <div id="modal-confirmar" class="confirmar-oculto">
+        <div class="confirmar-overlay" id="confirmar-overlay"></div>
+        <div class="confirmar-contenido">
+            <div class="confirmar-icono" id="confirmar-icono">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+            </div>
+            <h3 class="confirmar-titulo" id="confirmar-titulo">¿Estás seguro?</h3>
+            <p class="confirmar-mensaje" id="confirmar-mensaje">Esta acción no se puede deshacer.</p>
+            <div class="confirmar-acciones">
+                <button type="button" class="confirmar-btn confirmar-btn-cancelar" id="confirmar-cancelar">
+                    Cancelar
+                </button>
+                <button type="button" class="confirmar-btn confirmar-btn-aceptar" id="confirmar-aceptar">
+                    Aceptar
+                </button>
+            </div>
         </div>
     </div>
 
