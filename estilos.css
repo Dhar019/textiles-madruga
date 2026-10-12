@@ -514,8 +514,8 @@ main, .main-content {
     height: 280px;
     object-fit: contain;
     border-radius: 12px;
-    background: #FFFFFF;
-    padding: 10px;
+    background: transparent;
+    padding: 0;
     cursor: zoom-in;
     transition: transform 0.3s ease;
 }
@@ -967,7 +967,7 @@ main, .main-content {
     flex: 1 1 250px;
     border-radius: 16px;
     overflow: hidden;
-    background: #FFFFFF;
+    background: transparent;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -981,8 +981,7 @@ main, .main-content {
     object-fit: contain;
     display: block;
     cursor: zoom-in;
-    padding: 10px;
-    background: #FFFFFF;
+    border-radius: 12px;
 }
 
 .modal-producto-info {
@@ -1695,7 +1694,7 @@ body.admin-abierto .nav {
     height: 80px;
     object-fit: cover;
     border-radius: 12px;
-    background: #FFFFFF;
+    background: transparent;
     flex-shrink: 0;
 }
 
@@ -2879,8 +2878,8 @@ body.admin-abierto .nav {
     .producto-img {
         height: 240px;
         object-fit: contain;
-        background: #FFFFFF;
-        padding: 8px;
+        background: transparent;
+        padding: 0;
     }
 
     .producto-hint {
@@ -2932,8 +2931,8 @@ body.admin-abierto .nav {
     .producto-img {
         height: 220px;
         object-fit: contain;
-        background: #FFFFFF;
-        padding: 8px;
+        background: transparent;
+        padding: 0;
     }
 
     .producto-nombre {
