@@ -514,7 +514,7 @@ main, .main-content {
     height: 280px;
     object-fit: contain;
     border-radius: 12px;
-    background-color: #FAF8F5;
+    background: linear-gradient(135deg, #FAF8F5 0%, #F5F0E8 100%);
     padding: 10px;
     cursor: zoom-in;
     transition: transform 0.3s ease;
@@ -1689,7 +1689,7 @@ body.admin-abierto .nav {
     height: 80px;
     object-fit: cover;
     border-radius: 12px;
-    background: var(--color-crema);
+    background: linear-gradient(135deg, #FAF8F5 0%, #F5F0E8 100%);
     flex-shrink: 0;
 }
 
@@ -2873,7 +2873,7 @@ body.admin-abierto .nav {
     .producto-img {
         height: 240px;
         object-fit: contain;
-        background-color: #FAF8F5;
+        background: linear-gradient(135deg, #FAF8F5 0%, #F5F0E8 100%);
         padding: 8px;
     }
 
@@ -2926,6 +2926,7 @@ body.admin-abierto .nav {
     .producto-img {
         height: 220px;
         object-fit: contain;
+        background: linear-gradient(135deg, #FAF8F5 0%, #F5F0E8 100%);
         padding: 8px;
     }
 
