@@ -469,7 +469,7 @@ main, .main-content {
 }
 
 /* ============================================ */
-/* 5. CATÁLOGO                                */
+/* 5. CATÁLOGO - IMÁGENES COMPLETAS            */
 /* ============================================ */
 .section-title {
     font-family: var(--font-serif);
@@ -508,12 +508,14 @@ main, .main-content {
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
 }
 
+/* ✅ IMAGEN COMPLETA (object-fit: contain) */
 .producto-img {
     width: 100%;
-    height: 250px;
-    object-fit: cover;
+    height: 280px;
+    object-fit: contain;
     border-radius: 12px;
-    background-color: var(--color-crema);
+    background-color: #FAF8F5;
+    padding: 10px;
     cursor: zoom-in;
     transition: transform 0.3s ease;
 }
@@ -1208,7 +1210,6 @@ body.admin-abierto .nav {
     z-index: 2000;
 }
 
-/* ✅ ESTRUCTURA DE 3 ZONAS: header fijo + tabs fijas + contenido con scroll */
 .admin-contenido {
     position: fixed;
     top: 50%;
@@ -1227,7 +1228,6 @@ body.admin-abierto .nav {
     overflow: hidden;
 }
 
-/* HEADER FIJO ARRIBA */
 .admin-header {
     flex-shrink: 0;
     padding: 25px 35px 15px 35px;
@@ -1280,7 +1280,6 @@ body.admin-abierto .nav {
     text-transform: uppercase;
 }
 
-/* ✅ LA X DEL ADMIN - SIEMPRE VISIBLE A LA DERECHA */
 .admin-cerrar {
     background: none;
     border: none;
@@ -1308,7 +1307,6 @@ body.admin-abierto .nav {
     background: rgba(0, 0, 0, 0.05);
 }
 
-/* ✅ TABS FIJAS DEBAJO DEL HEADER CON SOMBRA SUTIL */
 .admin-tabs {
     flex-shrink: 0;
     display: flex;
@@ -1348,7 +1346,6 @@ body.admin-abierto .nav {
     box-shadow: 0 2px 12px rgba(0,0,0,0.06);
 }
 
-/* ✅ CONTENIDO CON SCROLL INTERNO */
 .admin-tab-content {
     display: none;
     flex: 1;
@@ -1441,7 +1438,6 @@ body.admin-abierto .nav {
     background: white;
 }
 
-/* TEXTAREA Y FORM GROUP FULL */
 .form-group-full {
     grid-column: 1 / -1;
 }
@@ -1570,7 +1566,6 @@ body.admin-abierto .nav {
     color: white;
 }
 
-/* INFO ADICIONAL EN ADMIN PRODUCTOS */
 .admin-producto-item .info-texto {
     display: flex;
     flex-direction: column;
@@ -1786,12 +1781,22 @@ body.admin-abierto .nav {
     font-size: 0.9rem;
     font-family: var(--font-sans);
     background: #FAF8F5;
+    transition: all 0.2s ease;
 }
 
 .oferta-card-edicion .campo input:focus {
     border-color: var(--color-naranja);
     outline: none;
     background: white;
+}
+
+/* ✅ INPUTS DESHABILITADOS EN OFERTAS */
+.oferta-card-edicion input:disabled {
+    background: #F0EBE5;
+    cursor: not-allowed;
+    color: #A0A0A0;
+    opacity: 0.6;
+    border-color: #E0DAD2;
 }
 
 .oferta-card-edicion .btn-admin {
@@ -2866,10 +2871,10 @@ body.admin-abierto .nav {
     }
 
     .producto-img {
-        height: 220px;
+        height: 240px;
         object-fit: contain;
         background-color: #FAF8F5;
-        padding: 5px;
+        padding: 8px;
     }
 
     .producto-hint {
@@ -2919,9 +2924,9 @@ body.admin-abierto .nav {
     }
 
     .producto-img {
-        height: 200px;
+        height: 220px;
         object-fit: contain;
-        padding: 5px;
+        padding: 8px;
     }
 
     .producto-nombre {

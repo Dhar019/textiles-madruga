@@ -1,7 +1,7 @@
 // ============================================
 // SCRIPT.JS - Textiles Madruga
-// Versión 4.2 - Fix forzar-cierre con modal propio
-// + ojito en modal genérico + sin emoji en notificaciones
+// Versión 4.3 - Tipos de oferta simplificados
+// + inputs dinámicos según tipo
 // ============================================
 
 const API_URL = 'https://textiles-madruga-api.eldani000219.workers.dev/api';
@@ -407,7 +407,6 @@ window.addEventListener('pagehide', () => {
                     { type: 'application/json' }
                 );
                 navigator.sendBeacon(url, blob);
-                console.log('🔓 Logout enviado vía sendBeacon (pagehide)');
             } catch (e) {
                 console.warn('No se pudo cerrar sesión con sendBeacon:', e);
             }
@@ -426,7 +425,6 @@ window.addEventListener('beforeunload', () => {
                     { type: 'application/json' }
                 );
                 navigator.sendBeacon(url, blob);
-                console.log('🔓 Logout enviado vía sendBeacon (beforeunload)');
             } catch (e) {}
         }
     }
@@ -552,14 +550,6 @@ function renderizarOfertas(ofertasIds, datos) {
                 badge = '3x2';
                 descripcionOferta = 'Lleva 3, paga 2';
                 break;
-            case 'descuento_2x1':
-                badge = `-${descuento}% + 2x1`;
-                descripcionOferta = `${descuento}% OFF + Lleva 2, paga 1`;
-                break;
-            case 'descuento_3x2':
-                badge = `-${descuento}% + 3x2`;
-                descripcionOferta = `${descuento}% OFF + Lleva 3, paga 2`;
-                break;
             case 'personalizado':
                 badge = promocion || 'OFERTA';
                 descripcionOferta = promocion;
@@ -618,8 +608,6 @@ function renderizarProductosConModal(productos, contenedorSelector, datos) {
                 case 'descuento': badge = `-${descuento}%`; break;
                 case '2x1': badge = '2x1'; break;
                 case '3x2': badge = '3x2'; break;
-                case 'descuento_2x1': badge = `-${descuento}% + 2x1`; break;
-                case 'descuento_3x2': badge = `-${descuento}% + 3x2`; break;
                 case 'personalizado': badge = promocion || 'OFERTA'; break;
             }
         }
@@ -705,12 +693,6 @@ function abrirModal(producto, datos) {
                 break;
             case '3x2':
                 etiquetaOferta = 'Lleva 3, paga 2';
-                break;
-            case 'descuento_2x1':
-                etiquetaOferta = `${descuentoActual}% OFF + Lleva 2, paga 1`;
-                break;
-            case 'descuento_3x2':
-                etiquetaOferta = `${descuentoActual}% OFF + Lleva 3, paga 2`;
                 break;
             case 'personalizado':
                 etiquetaOferta = promocionActual;
@@ -1272,12 +1254,10 @@ async function cargarOfertasAdmin() {
                     <div class="oferta-card-edicion">
                         <div class="campo">
                             <label>Tipo de oferta</label>
-                            <select id="tipo-${id}" class="oferta-select">
+                            <select id="tipo-${id}" class="oferta-select" onchange="toggleDescuentoInput('${id}')">
                                 <option value="descuento" ${tipoOferta === 'descuento' ? 'selected' : ''}>Descuento</option>
                                 <option value="2x1" ${tipoOferta === '2x1' ? 'selected' : ''}>Lleva 2, paga 1</option>
                                 <option value="3x2" ${tipoOferta === '3x2' ? 'selected' : ''}>Lleva 3, paga 2</option>
-                                <option value="descuento_2x1" ${tipoOferta === 'descuento_2x1' ? 'selected' : ''}>Descuento + 2x1</option>
-                                <option value="descuento_3x2" ${tipoOferta === 'descuento_3x2' ? 'selected' : ''}>Descuento + 3x2</option>
                                 <option value="personalizado" ${tipoOferta === 'personalizado' ? 'selected' : ''}>Personalizado</option>
                             </select>
                         </div>
@@ -1314,9 +1294,58 @@ async function cargarOfertasAdmin() {
         });
 
         container.innerHTML = html;
+        
+        // ✅ Aplicar el estado inicial del descuento/promoción según tipo
+        ofertas.forEach(producto => {
+            const id = producto.id || producto._id;
+            if (id) toggleDescuentoInput(id);
+        });
     } catch (error) {
         console.error('Error al cargar ofertas:', error);
         container.innerHTML = '<p style="text-align:center;padding:40px;color:var(--color-gris);">Error al cargar ofertas.</p>';
+    }
+}
+
+// ============================================
+// TOGGLE DE INPUTS SEGÚN TIPO DE OFERTA
+// ============================================
+function toggleDescuentoInput(id) {
+    const tipoEl = document.getElementById(`tipo-${id}`);
+    const descuentoEl = document.getElementById(`descuento-${id}`);
+    const promocionEl = document.getElementById(`promocion-${id}`);
+    
+    if (!tipoEl || !descuentoEl || !promocionEl) return;
+    
+    const tipo = tipoEl.value;
+    
+    if (tipo === 'descuento') {
+        // Solo descuento activo
+        descuentoEl.disabled = false;
+        descuentoEl.style.opacity = '1';
+        descuentoEl.style.cursor = 'text';
+        promocionEl.disabled = true;
+        promocionEl.style.opacity = '0.4';
+        promocionEl.style.cursor = 'not-allowed';
+        promocionEl.value = '';
+    } else if (tipo === 'personalizado') {
+        // Solo promoción activa
+        descuentoEl.disabled = true;
+        descuentoEl.style.opacity = '0.4';
+        descuentoEl.style.cursor = 'not-allowed';
+        descuentoEl.value = 0;
+        promocionEl.disabled = false;
+        promocionEl.style.opacity = '1';
+        promocionEl.style.cursor = 'text';
+    } else {
+        // 2x1 o 3x2: ambos deshabilitados
+        descuentoEl.disabled = true;
+        descuentoEl.style.opacity = '0.4';
+        descuentoEl.style.cursor = 'not-allowed';
+        descuentoEl.value = 0;
+        promocionEl.disabled = true;
+        promocionEl.style.opacity = '0.4';
+        promocionEl.style.cursor = 'not-allowed';
+        promocionEl.value = '';
     }
 }
 
@@ -1687,7 +1716,6 @@ function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit }) {
     camposContainer.innerHTML = html;
     submitBtn.textContent = 'Aceptar';
 
-    // ✅ Activar el ojito para los campos de contraseña
     camposContainer.querySelectorAll('.toggle-password').forEach(button => {
         button.addEventListener('click', function() {
             const input = this.parentElement.querySelector('input[type="password"], input[type="text"]');
@@ -2045,6 +2073,7 @@ document.addEventListener('DOMContentLoaded', inicializarDropZone);
 // ============================================
 window.confirmar = confirmar;
 window.guardarOferta = guardarOferta;
+window.toggleDescuentoInput = toggleDescuentoInput;
 window.toggleOfertaAdmin = toggleOfertaAdmin;
 window.editarProductoAdmin = editarProductoAdmin;
 window.eliminarProductoAdmin = eliminarProductoAdmin;
