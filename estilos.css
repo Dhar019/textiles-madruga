@@ -514,7 +514,7 @@ main, .main-content {
     height: 280px;
     object-fit: contain;
     border-radius: 12px;
-    background: linear-gradient(135deg, #FAF8F5 0%, #F5F0E8 100%);
+    background: #FFFFFF;
     padding: 10px;
     cursor: zoom-in;
     transition: transform 0.3s ease;
@@ -967,7 +967,11 @@ main, .main-content {
     flex: 1 1 250px;
     border-radius: 16px;
     overflow: hidden;
-    background: var(--color-crema);
+    background: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
 }
 
 .modal-producto-imagen img {
@@ -977,6 +981,8 @@ main, .main-content {
     object-fit: contain;
     display: block;
     cursor: zoom-in;
+    padding: 10px;
+    background: #FFFFFF;
 }
 
 .modal-producto-info {
@@ -1689,7 +1695,7 @@ body.admin-abierto .nav {
     height: 80px;
     object-fit: cover;
     border-radius: 12px;
-    background: linear-gradient(135deg, #FAF8F5 0%, #F5F0E8 100%);
+    background: #FFFFFF;
     flex-shrink: 0;
 }
 
@@ -2873,7 +2879,7 @@ body.admin-abierto .nav {
     .producto-img {
         height: 240px;
         object-fit: contain;
-        background: linear-gradient(135deg, #FAF8F5 0%, #F5F0E8 100%);
+        background: #FFFFFF;
         padding: 8px;
     }
 
@@ -2926,7 +2932,7 @@ body.admin-abierto .nav {
     .producto-img {
         height: 220px;
         object-fit: contain;
-        background: linear-gradient(135deg, #FAF8F5 0%, #F5F0E8 100%);
+        background: #FFFFFF;
         padding: 8px;
     }
 
