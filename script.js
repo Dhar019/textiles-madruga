@@ -1,6 +1,7 @@
 // ============================================
 // SCRIPT.JS - Textiles Madruga
-// Versión 4.1 - Sesiones con timeout y sendBeacon
+// Versión 4.2 - Fix forzar-cierre con modal propio
+// + ojito en modal genérico + sin emoji en notificaciones
 // ============================================
 
 const API_URL = 'https://textiles-madruga-api.eldani000219.workers.dev/api';
@@ -1637,7 +1638,7 @@ function filtrarUsuariosAdmin(termino) {
 }
 
 // ============================================
-// 15. MODAL GENÉRICO
+// 15. MODAL GENÉRICO (CON OJITO EN PASSWORD)
 // ============================================
 function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit }) {
     const modal = document.getElementById('modal-generico');
@@ -1652,40 +1653,50 @@ function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit }) {
 
     let html = '';
     campos.forEach(campo => {
-    if (campo.type === 'select') {
-        html += `
-            <div class="login-group">
-                <label>${campo.label}</label>
-                <select id="${campo.id}">
-                    ${campo.opciones.map(o => `<option value="${o.value}">${o.label}</option>`).join('')}
-                </select>
-            </div>
-        `;
-    } else if (campo.type === 'password') {
-        // ✅ Campo de contraseña con ojito
-        html += `
-            <div class="login-group">
-                <label>${campo.label}</label>
-                <input type="password" id="${campo.id}" placeholder="${campo.placeholder || ''}" ${campo.required ? 'required' : ''}>
-                <button type="button" class="toggle-password" aria-label="Mostrar contraseña">
-                    <svg class="icono-ojo" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                        <circle cx="12" cy="12" r="3"/>
-                    </svg>
-                </button>
-            </div>
-        `;
-    } else {
-        html += `
-            <div class="login-group">
-                <label>${campo.label}</label>
-                <input type="${campo.type || 'text'}" id="${campo.id}" placeholder="${campo.placeholder || ''}" ${campo.required ? 'required' : ''}>
-            </div>
-        `;
-    }
-});
+        if (campo.type === 'select') {
+            html += `
+                <div class="login-group">
+                    <label>${campo.label}</label>
+                    <select id="${campo.id}">
+                        ${campo.opciones.map(o => `<option value="${o.value}">${o.label}</option>`).join('')}
+                    </select>
+                </div>
+            `;
+        } else if (campo.type === 'password') {
+            html += `
+                <div class="login-group">
+                    <label>${campo.label}</label>
+                    <input type="password" id="${campo.id}" placeholder="${campo.placeholder || ''}" ${campo.required ? 'required' : ''}>
+                    <button type="button" class="toggle-password" aria-label="Mostrar contraseña">
+                        <svg class="icono-ojo" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </button>
+                </div>
+            `;
+        } else {
+            html += `
+                <div class="login-group">
+                    <label>${campo.label}</label>
+                    <input type="${campo.type || 'text'}" id="${campo.id}" placeholder="${campo.placeholder || ''}" ${campo.required ? 'required' : ''}>
+                </div>
+            `;
+        }
+    });
     camposContainer.innerHTML = html;
     submitBtn.textContent = 'Aceptar';
+
+    // ✅ Activar el ojito para los campos de contraseña
+    camposContainer.querySelectorAll('.toggle-password').forEach(button => {
+        button.addEventListener('click', function() {
+            const input = this.parentElement.querySelector('input[type="password"], input[type="text"]');
+            if (!input) return;
+            const isPassword = input.type === 'password';
+            input.type = isPassword ? 'text' : 'password';
+            this.classList.toggle('visible');
+        });
+    });
 
     modal.className = 'login-visible';
     document.body.style.overflow = 'hidden';
@@ -1707,16 +1718,6 @@ function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit }) {
         const resultado = await onSubmit(datos);
         if (resultado !== false) cerrarModal();
     };
-    // ✅ Activar el ojito para los campos de contraseña
-camposContainer.querySelectorAll('.toggle-password').forEach(button => {
-    button.addEventListener('click', function() {
-        const input = this.parentElement.querySelector('input[type="password"], input[type="text"]');
-        if (!input) return;
-        const isPassword = input.type === 'password';
-        input.type = isPassword ? 'text' : 'password';
-        this.classList.toggle('visible');
-    });
-});
 }
 
 // ============================================
@@ -1874,7 +1875,7 @@ loginCerrar?.addEventListener('click', cerrarLogin);
 loginOverlay?.addEventListener('click', cerrarLogin);
 
 // ============================================
-// 18. FORZAR CIERRE DE SESIÓN (por si quedó colgada)
+// 18. FORZAR CIERRE DE SESIÓN (CON MODAL PROPIO)
 // ============================================
 document.getElementById('forzar-cierre-link')?.addEventListener('click', function(e) {
     e.preventDefault();
@@ -1924,7 +1925,7 @@ document.getElementById('forzar-cierre-link')?.addEventListener('click', functio
 });
 
 // ============================================
-// 19. OJITO PARA CONTRASEÑA
+// 19. OJITO PARA CONTRASEÑA (LOGIN PRINCIPAL)
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.toggle-password').forEach(button => {
