@@ -1,7 +1,6 @@
 // ============================================
 // SCRIPT.JS - Textiles Madruga
-// Versión 4.3 - Tipos de oferta simplificados
-// + inputs dinámicos según tipo
+// Versión 4.4 - Precios en CUP
 // ============================================
 
 const API_URL = 'https://textiles-madruga-api.eldani000219.workers.dev/api';
@@ -566,9 +565,9 @@ function renderizarOfertas(ofertasIds, datos) {
                 <p class="producto-descripcion-corta">${descripcionOferta}</p>
                 <p class="producto-precio">
                     ${mostrarPrecioOferta 
-                        ? `<span class="tachado">$${producto.precio.toFixed(2)}</span>
-                           <span class="precio-oferta-grande">$${precioOferta.toFixed(2)}</span>`
-                        : `$${producto.precio.toFixed(2)}`}
+                        ? `<span class="tachado">${producto.precio.toFixed(2)} CUP</span>
+                           <span class="precio-oferta-grande">${precioOferta.toFixed(2)} CUP</span>`
+                        : `${producto.precio.toFixed(2)} CUP`}
                 </p>
                 <button class="btn-secundario btn-detalle" data-id="${producto.id || producto._id}">Ver detalle</button>
             </div>
@@ -628,8 +627,8 @@ function renderizarProductosConModal(productos, contenedorSelector, datos) {
                 <h3 class="producto-nombre">${producto.nombre}</h3>
                 <p class="producto-precio">
                     ${enOferta && descuento > 0
-                        ? `<span class="tachado">$${producto.precio.toFixed(2)}</span> $${precioOferta.toFixed(2)}${unidad}` 
-                        : `$${producto.precio.toFixed(2)}${unidad}`}
+                        ? `<span class="tachado">${producto.precio.toFixed(2)} CUP</span> ${precioOferta.toFixed(2)} CUP${unidad}` 
+                        : `${producto.precio.toFixed(2)} CUP${unidad}`}
                 </p>
                 <button class="btn-secundario btn-detalle" data-id="${producto.id || producto._id}">Ver detalle</button>
             </div>
@@ -709,8 +708,8 @@ function abrirModal(producto, datos) {
                 <span class="categoria">${categoriaTexto}</span>
                 <h2>${producto.nombre}</h2>
                 <div>
-                    ${enOferta && descuentoActual > 0 ? `<span class="precio-oferta">$${producto.precio.toFixed(2)}</span>` : ''}
-                    <span class="precio">${enOferta && descuentoActual > 0 ? `$${precioOferta}` : `$${producto.precio.toFixed(2)}`}${unidad}</span>
+                    ${enOferta && descuentoActual > 0 ? `<span class="precio-oferta">${producto.precio.toFixed(2)} CUP</span>` : ''}
+                    <span class="precio">${enOferta && descuentoActual > 0 ? `${precioOferta} CUP` : `${producto.precio.toFixed(2)} CUP`}${unidad}</span>
                 </div>
                 ${enOferta && etiquetaOferta ? `
                     <div style="background:#FFF5EB;padding:10px 16px;border-radius:8px;border-left:3px solid var(--color-naranja);margin:8px 0;">
@@ -918,7 +917,7 @@ function renderizarAdminProductos() {
                             <span class="descripcion">${descripcion.substring(0, 60)}${descripcion.length > 60 ? '...' : ''}</span>
                             <span class="id-producto">ID: ${id}</span>
                         </div>
-                        <span class="precio">$${producto.precio.toFixed(2)}</span>
+                        <span class="precio">${producto.precio.toFixed(2)} CUP</span>
                         <span class="categoria-tag">${categoriaNombres[categoria]}</span>
                         ${enOferta ? '<span style="background:#E87A20;color:white;padding:2px 12px;border-radius:50px;font-size:0.7rem;font-weight:600;">OFERTA</span>' : ''}
                     </div>
@@ -1245,9 +1244,9 @@ async function cargarOfertasAdmin() {
                     </div>
                     
                     <div class="oferta-card-precios">
-                        <span class="oferta-card-precio-original">$${producto.precio.toFixed(2)}</span>
+                        <span class="oferta-card-precio-original">${producto.precio.toFixed(2)} CUP</span>
                         ${descuento > 0 ? `
-                            <span class="oferta-card-precio-oferta">$${precioOferta.toFixed(2)}</span>
+                            <span class="oferta-card-precio-oferta">${precioOferta.toFixed(2)} CUP</span>
                         ` : ''}
                     </div>
                     
@@ -1295,7 +1294,6 @@ async function cargarOfertasAdmin() {
 
         container.innerHTML = html;
         
-        // ✅ Aplicar el estado inicial del descuento/promoción según tipo
         ofertas.forEach(producto => {
             const id = producto.id || producto._id;
             if (id) toggleDescuentoInput(id);
@@ -1306,9 +1304,6 @@ async function cargarOfertasAdmin() {
     }
 }
 
-// ============================================
-// TOGGLE DE INPUTS SEGÚN TIPO DE OFERTA
-// ============================================
 function toggleDescuentoInput(id) {
     const tipoEl = document.getElementById(`tipo-${id}`);
     const descuentoEl = document.getElementById(`descuento-${id}`);
@@ -1319,7 +1314,6 @@ function toggleDescuentoInput(id) {
     const tipo = tipoEl.value;
     
     if (tipo === 'descuento') {
-        // Solo descuento activo
         descuentoEl.disabled = false;
         descuentoEl.style.opacity = '1';
         descuentoEl.style.cursor = 'text';
@@ -1328,7 +1322,6 @@ function toggleDescuentoInput(id) {
         promocionEl.style.cursor = 'not-allowed';
         promocionEl.value = '';
     } else if (tipo === 'personalizado') {
-        // Solo promoción activa
         descuentoEl.disabled = true;
         descuentoEl.style.opacity = '0.4';
         descuentoEl.style.cursor = 'not-allowed';
@@ -1337,7 +1330,6 @@ function toggleDescuentoInput(id) {
         promocionEl.style.opacity = '1';
         promocionEl.style.cursor = 'text';
     } else {
-        // 2x1 o 3x2: ambos deshabilitados
         descuentoEl.disabled = true;
         descuentoEl.style.opacity = '0.4';
         descuentoEl.style.cursor = 'not-allowed';
