@@ -1137,12 +1137,22 @@ function solicitarPedido(producto) {
 
     productoPedidoActual = producto;
     document.getElementById('modal-pedido-producto').textContent = `Producto: ${producto}`;
-    modalPedido.className = 'login-visible';
-    document.body.style.overflow = 'hidden';
     
     const formPedido = document.getElementById('modal-pedido-form');
     if (formPedido) formPedido.scrollTop = 0;
+    const contenedorPedido = modalPedido.querySelector('.login-contenido');
+    if (contenedorPedido) contenedorPedido.scrollTop = 0;
+    
     document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
+    
+    modalPedido.className = 'login-visible';
+    document.body.style.overflow = 'hidden';
+
+    setTimeout(() => {
+        if (formPedido) formPedido.scrollTop = 0;
+        if (contenedorPedido) contenedorPedido.scrollTop = 0;
+    }, 50);
     
     inicializarVariantes();
 
@@ -1152,7 +1162,9 @@ function solicitarPedido(producto) {
         if (formPedido) formPedido.reset();
         productoPedidoActual = '';
         if (formPedido) formPedido.scrollTop = 0;
-        setTimeout(() => scrollModalAlTop(modalPedido), 50);
+        if (contenedorPedido) contenedorPedido.scrollTop = 0;
+        document.body.scrollTop = 0;
+        document.documentElement.scrollTop = 0;
     };
 
     document.getElementById('modal-pedido-cerrar').onclick = cerrar;

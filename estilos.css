@@ -2337,6 +2337,8 @@ body.admin-abierto .nav {
     transform: translate(-50%, -50%);
     text-align: center;
     z-index: 2;
+    width: 100%;
+    padding: 0 20px;
 }
 
 .bienvenida-logo-img {
@@ -2373,6 +2375,7 @@ body.admin-abierto .nav {
     flex-direction: column;
     overflow-y: auto;
     position: relative;
+    min-width: 0;
 }
 
 .bienvenida-cerrar {
@@ -2558,6 +2561,175 @@ body.admin-abierto .nav {
     text-align: center;
     font-style: italic;
     line-height: 1.4;
+    flex-shrink: 0;
+}
+
+/* ============================================ */
+/* MODAL DE BIENVENIDA - RESPONSIVE MÓVIL       */
+/* ============================================ */
+@media (max-width: 768px) {
+    .bienvenida-contenido {
+        flex-direction: column;
+        width: 95%;
+        max-width: 95%;
+        max-height: 92vh;
+        overflow: hidden;
+    }
+
+    .bienvenida-decoracion {
+        width: 100%;
+        height: 110px;
+        flex-shrink: 0;
+    }
+
+    .bienvenida-logo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        padding: 0 15px;
+    }
+
+    .bienvenida-logo-img {
+        height: 45px;
+        margin-bottom: 0;
+    }
+
+    .bienvenida-logo-textiles,
+    .bienvenida-logo-madruga {
+        display: inline;
+        font-size: 0.95rem;
+        letter-spacing: 2px;
+    }
+
+    .bienvenida-info {
+        padding: 20px 18px 20px 18px;
+        overflow-y: auto;
+        flex: 1;
+        min-height: 0;
+    }
+
+    .bienvenida-cerrar {
+        top: 10px;
+        right: 12px;
+        width: 34px;
+        height: 34px;
+    }
+
+    .bienvenida-header {
+        margin-bottom: 18px;
+    }
+
+    .bienvenida-icono {
+        font-size: 2rem;
+        margin-bottom: 6px;
+    }
+
+    .bienvenida-titulo {
+        font-size: 1.25rem;
+        line-height: 1.25;
+    }
+
+    .bienvenida-subtitulo {
+        font-size: 0.85rem;
+    }
+
+    .bienvenida-beneficios {
+        grid-template-columns: 1fr;
+        gap: 8px;
+        margin-bottom: 15px;
+    }
+
+    .bienvenida-beneficio {
+        padding: 10px 12px;
+    }
+
+    .beneficio-icono {
+        width: 28px;
+        height: 28px;
+    }
+
+    .beneficio-icono svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .bienvenida-beneficio strong {
+        font-size: 0.8rem;
+    }
+
+    .bienvenida-beneficio p {
+        font-size: 0.7rem;
+        display: none; /* En móvil ocultamos la descripción para ahorrar espacio */
+    }
+
+    .bienvenida-acciones {
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+
+    .bienvenida-btn-primario {
+        padding: 12px 20px;
+        font-size: 0.85rem;
+    }
+
+    .bienvenida-btn-secundario {
+        padding: 10px 20px;
+        font-size: 0.8rem;
+    }
+
+    .bienvenida-nota {
+        font-size: 0.65rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .bienvenida-contenido {
+        width: 98%;
+        max-width: 98%;
+        max-height: 96vh;
+        border-radius: 16px;
+    }
+
+    .bienvenida-decoracion {
+        height: 90px;
+    }
+
+    .bienvenida-logo-img {
+        height: 38px;
+    }
+
+    .bienvenida-logo-textiles,
+    .bienvenida-logo-madruga {
+        font-size: 0.85rem;
+    }
+
+    .bienvenida-info {
+        padding: 16px 14px;
+    }
+
+    .bienvenida-titulo {
+        font-size: 1.1rem;
+    }
+
+    .bienvenida-icono svg {
+        width: 32px;
+        height: 32px;
+    }
+
+    .bienvenida-beneficios {
+        gap: 6px;
+    }
+
+    .bienvenida-beneficio {
+        padding: 8px 10px;
+    }
+
+    .bienvenida-btn-primario,
+    .bienvenida-btn-secundario {
+        padding: 10px 16px;
+        font-size: 0.78rem;
+    }
 }
 
 /* ============================================ */
@@ -4480,8 +4652,12 @@ body.admin-abierto .nav {
 /* 33. RESPONSIVE - MÓVIL (<= 480px)            */
 /* ============================================ */
 @media (max-width: 480px) {
+    /* Productos: 1 columna en móvil muy pequeño */
     .grid-productos { grid-template-columns: 1fr; }
-    .grid-categorias { grid-template-columns: 1fr; }
+    
+    /* Categorías: 2 columnas (igual que en tablet) */
+    .grid-categorias { grid-template-columns: 1fr 1fr; }
+    
     .logo-hero { max-width: 120px; }
     .hero-slogan { font-size: 1rem; }
     .letra-madruga { font-size: 2.8rem; }
@@ -4525,6 +4701,61 @@ body.admin-abierto .nav {
     }
     .producto-hint { font-size: 0.6rem; }
 
+    /* Categorías destacadas - cards más compactas en móvil */
+    .categoria-card {
+        padding: 15px 10px;
+        min-height: 130px;
+    }
+
+    .categoria-card img {
+        width: 100%;
+        max-width: 90px;
+        height: 90px;
+        object-fit: cover;
+        display: block;
+    }
+
+    .categoria-card h3 {
+        font-size: 0.9rem;
+        margin-top: 6px;
+    }
+
+    /* Subcategorías (Hombre/Mujer) - 2 columnas */
+    .grid-subcategorias {
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+
+    .subcategoria-card {
+        padding: 20px 12px;
+        min-height: 180px;
+    }
+
+    .subcategoria-card-imagen span {
+        font-size: 3.5rem;
+        display: block;
+        margin-bottom: 8px;
+    }
+
+    .subcategoria-card-imagen img {
+        width: 100%;
+        max-width: 110px;
+        height: 110px;
+        object-fit: cover;
+        border-radius: 10%;
+        display: block;
+    }
+
+    .subcategoria-card-imagen h3 {
+        font-size: 1rem;
+        margin-top: 6px;
+    }
+
+    .subcategoria-card-imagen p {
+        font-size: 0.7rem;
+    }
+
+    /* Modal de bienvenida */
     .bienvenida-contenido {
         max-height: 95vh;
         border-radius: 16px;
