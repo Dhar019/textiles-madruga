@@ -1,6 +1,6 @@
 // ============================================
 // SCRIPT.JS - Textiles Madruga
-// Versión 4.6 - EmailJS + Pedidos en admin
+// Versión 5.0 - Pedidos ampliados + Gmail vía Worker
 // ============================================
 
 const API_URL = 'https://textiles-madruga-api.eldani000219.workers.dev/api';
@@ -14,21 +14,6 @@ const NEGOCIO = {
     email: 'textilesmadruga@gmail.com',
     telegram: ''
 };
-
-// ============================================
-// CONFIGURACIÓN DE EMAILJS
-// ============================================
-const EMAILJS = {
-    publicKey: '9PrX2qLveoQE-eYq7',
-    serviceId: 'service_fb39axc',
-    templateId: 'template_ucz90qr'
-};
-
-// Inicializar EmailJS
-if (typeof emailjs !== 'undefined') {
-    emailjs.init(EMAILJS.publicKey);
-    console.log('✅ EmailJS inicializado');
-}
 
 // ============================================
 // MODAL DE CONFIRMACIÓN PROPIO
@@ -807,7 +792,7 @@ window.abrirLightbox = abrirLightbox;
 window.cerrarLightbox = cerrarLightbox;
 
 // ============================================
-// 10. SOLICITAR PEDIDO (MULTI-CANAL CON EMAILJS)
+// 10. SOLICITAR PEDIDO (AMPLIADO)
 // ============================================
 function solicitarPedido(producto) {
     const modalPedido = document.getElementById('modal-pedido');
@@ -837,24 +822,61 @@ function solicitarPedido(producto) {
     document.getElementById('modal-pedido-form').onsubmit = (e) => {
         e.preventDefault();
     };
+
+    // Escuchar cambios en el tipo de entrega
+    document.querySelectorAll('input[name="tipo-entrega"]').forEach(radio => {
+        radio.addEventListener('change', toggleCamposEntrega);
+    });
+    toggleCamposEntrega();
+}
+
+function toggleCamposEntrega() {
+    const tipo = document.querySelector('input[name="tipo-entrega"]:checked')?.value;
+    const camposDomicilio = document.getElementById('campos-domicilio');
+    
+    if (camposDomicilio) {
+        camposDomicilio.style.display = (tipo === 'domicilio') ? 'block' : 'none';
+    }
 }
 
 async function enviarPedidoPor(via) {
+    // Recoger todos los campos
     const nombre = document.getElementById('pedido-nombre').value.trim();
-    const contacto = document.getElementById('pedido-contacto').value.trim();
+    const telefono = document.getElementById('pedido-telefono').value.trim();
+    const email = document.getElementById('pedido-email').value.trim();
+    const tipoEntrega = document.querySelector('input[name="tipo-entrega"]:checked')?.value || 'domicilio';
+    const direccion = document.getElementById('pedido-direccion').value.trim();
+    const referencia = document.getElementById('pedido-referencia').value.trim();
+    const municipio = document.getElementById('pedido-municipio').value.trim();
     const cantidad = document.getElementById('pedido-cantidad').value.trim();
+    const talla = document.getElementById('pedido-talla').value.trim();
+    const color = document.getElementById('pedido-color').value.trim();
     const notas = document.getElementById('pedido-notas').value.trim();
+    const metodoPago = document.querySelector('input[name="metodo-pago"]:checked')?.value || 'efectivo';
+    const contactoPreferido = document.querySelector('input[name="contacto-preferido"]:checked')?.value || 'whatsapp';
 
-    // Validación
+    // Validaciones
     if (!nombre) {
         mostrarNotificacion('Por favor, escribe tu nombre', 'error');
         document.getElementById('pedido-nombre').focus();
         return;
     }
-    if (!contacto) {
-        mostrarNotificacion('Por favor, escribe tu teléfono o Gmail', 'error');
-        document.getElementById('pedido-contacto').focus();
+    if (!telefono) {
+        mostrarNotificacion('Por favor, escribe tu teléfono', 'error');
+        document.getElementById('pedido-telefono').focus();
         return;
+    }
+    if (tipoEntrega === 'domicilio') {
+        if (!direccion) {
+            mostrarNotificacion('Por favor, escribe tu dirección', 'error');
+            document.getElementById('pedido-direccion').focus();
+            return;
+        }
+        if (!municipio) {
+            mostrarNotificacion('Por favor, escribe tu municipio', 'error');
+            document.getElementById('pedido-municipio').focus();
+            return;
+        }
     }
     if (!cantidad || parseInt(cantidad) < 1) {
         mostrarNotificacion('La cantidad debe ser al menos 1', 'error');
@@ -862,16 +884,26 @@ async function enviarPedidoPor(via) {
         return;
     }
 
-    // 1. Guardar el pedido en el Worker (siempre)
+    // Datos del pedido para enviar al Worker
     const pedidoData = {
         producto: productoPedidoActual,
         nombre,
-        contacto,
+        telefono,
+        email,
+        tipoEntrega,
+        direccion: tipoEntrega === 'domicilio' ? direccion : '',
+        referencia: tipoEntrega === 'domicilio' ? referencia : '',
+        municipio: tipoEntrega === 'domicilio' ? municipio : '',
         cantidad: parseInt(cantidad),
+        talla,
+        color,
         notas,
+        metodoPago,
+        contactoPreferido,
         via
     };
 
+    // 1. Guardar el pedido en el Worker (siempre)
     try {
         const respuesta = await fetch(`${API_URL}/pedidos`, {
             method: 'POST',
@@ -889,42 +921,29 @@ async function enviarPedidoPor(via) {
         console.warn('⚠️ Error al guardar pedido:', error);
     }
 
-    // 2. Enviar Gmail vía EmailJS (si es la vía elegida)
-    if (via === 'email' && typeof emailjs !== 'undefined') {
-        try {
-            const templateParams = {
-                producto: productoPedidoActual,
-                nombre_cliente: nombre,
-                contacto: contacto,
-                cantidad: cantidad,
-                notas: notas || 'Sin notas',
-                via: 'Gmail',
-                fecha: new Date().toLocaleString('es-CU', { 
-                    dateStyle: 'full', 
-                    timeStyle: 'short' 
-                })
-            };
-            
-            await emailjs.send(EMAILJS.serviceId, EMAILJS.templateId, templateParams);
-            console.log('✅ Gmail enviado al negocio vía EmailJS');
-            mostrarNotificacion('¡Pedido enviado! Recibirás respuesta por Gmail.', 'success');
-        } catch (error) {
-            console.error('❌ Error al enviar Gmail:', error);
-            mostrarNotificacion('Pedido guardado, pero hubo un error al enviar el Gmail.', 'warning');
-        }
-    }
-
-    // 3. Abrir la vía elegida
+    // 2. Mensaje para WhatsApp/Gmail
     const mensaje = `¡Hola! Quiero hacer un pedido:\n\n` +
         `📦 Producto: ${productoPedidoActual}\n` +
         `👤 Nombre: ${nombre}\n` +
-        `📞 Contacto: ${contacto}\n` +
+        `📞 Teléfono: ${telefono}\n` +
+        (email ? `✉️ Gmail: ${email}\n` : '') +
         `🔢 Cantidad: ${cantidad}\n` +
+        (talla ? `📏 Talla: ${talla}\n` : '') +
+        (color ? `🎨 Color: ${color}\n` : '') +
+        `🚚 Entrega: ${tipoEntrega === 'domicilio' ? 'A domicilio' : 'Recoger en tienda'}\n` +
+        (tipoEntrega === 'domicilio' ? 
+            `📍 Dirección: ${direccion}\n` +
+            (referencia ? `📌 Referencia: ${referencia}\n` : '') +
+            `🏘️ Municipio: ${municipio}\n` 
+            : '') +
+        `💳 Pago: ${metodoPago === 'efectivo' ? 'Efectivo' : 'Transferencia'}\n` +
+        `📱 Contacto preferido: ${contactoPreferido}\n` +
         (notas ? `📝 Notas: ${notas}\n` : '') +
         `\n¡Gracias!`;
 
     const mensajeEncoded = encodeURIComponent(mensaje);
 
+    // 3. Abrir la vía elegida
     if (via === 'whatsapp') {
         const esMovil = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         const url = esMovil 
@@ -934,8 +953,8 @@ async function enviarPedidoPor(via) {
         window.open(url, '_blank');
         mostrarNotificacion('Pedido enviado. Se abrirá WhatsApp.', 'success');
     } else if (via === 'email') {
-        // Gmail ya se envió vía EmailJS
-        console.log('✅ Gmail ya enviado vía EmailJS');
+        // Gmail se envía desde el Worker. Aquí solo notificamos.
+        mostrarNotificacion('Pedido enviado. Te llegará confirmación por Gmail.', 'success');
     } else {
         mostrarNotificacion('¡Pedido enviado! Te contactaremos pronto.', 'success');
     }
@@ -1403,7 +1422,6 @@ function renderizarPedidosAdmin() {
     const container = document.getElementById('lista-pedidos-admin');
     if (!container) return;
 
-    // Filtrar por estado
     let pedidosFiltrados = pedidosGlobales;
     if (filtroPedidoActual !== 'todos') {
         pedidosFiltrados = pedidosGlobales.filter(p => p.estado === filtroPedidoActual);
@@ -1464,12 +1482,60 @@ function renderizarPedidosAdmin() {
                         <span>${pedido.nombre}</span>
                     </div>
                     <div class="pedido-dato">
-                        <strong>Contacto:</strong>
-                        <span>${pedido.contacto}</span>
+                        <strong>Teléfono:</strong>
+                        <span>${pedido.telefono || pedido.contacto || 'N/A'}</span>
                     </div>
+                    ${pedido.email ? `
+                    <div class="pedido-dato">
+                        <strong>Gmail:</strong>
+                        <span>${pedido.email}</span>
+                    </div>
+                    ` : ''}
                     <div class="pedido-dato">
                         <strong>Cantidad:</strong>
                         <span>${pedido.cantidad}</span>
+                    </div>
+                    ${pedido.talla ? `
+                    <div class="pedido-dato">
+                        <strong>Talla:</strong>
+                        <span>${pedido.talla}</span>
+                    </div>
+                    ` : ''}
+                    ${pedido.color ? `
+                    <div class="pedido-dato">
+                        <strong>Color:</strong>
+                        <span>${pedido.color}</span>
+                    </div>
+                    ` : ''}
+                    <div class="pedido-dato">
+                        <strong>Entrega:</strong>
+                        <span>${pedido.tipoEntrega === 'domicilio' ? '🏠 A domicilio' : '🏪 Recoger en tienda'}</span>
+                    </div>
+                    ${pedido.direccion ? `
+                    <div class="pedido-dato">
+                        <strong>Dirección:</strong>
+                        <span>${pedido.direccion}</span>
+                    </div>
+                    ` : ''}
+                    ${pedido.referencia ? `
+                    <div class="pedido-dato">
+                        <strong>Referencia:</strong>
+                        <span>${pedido.referencia}</span>
+                    </div>
+                    ` : ''}
+                    ${pedido.municipio ? `
+                    <div class="pedido-dato">
+                        <strong>Municipio:</strong>
+                        <span>${pedido.municipio}</span>
+                    </div>
+                    ` : ''}
+                    <div class="pedido-dato">
+                        <strong>Pago:</strong>
+                        <span>${pedido.metodoPago === 'efectivo' ? '💵 Efectivo' : '🏦 Transferencia'}</span>
+                    </div>
+                    <div class="pedido-dato">
+                        <strong>Contacto pref.:</strong>
+                        <span>${pedido.contactoPreferido === 'whatsapp' ? '📱 WhatsApp' : pedido.contactoPreferido === 'llamada' ? '📞 Llamada' : '✉️ Gmail'}</span>
                     </div>
                     <div class="pedido-dato">
                         <strong>Fecha:</strong>
@@ -1570,10 +1636,10 @@ function filtrarPedidosAdmin(termino) {
     
     items.forEach(item => {
         const nombre = item.querySelector('.pedido-dato:nth-child(1) span')?.textContent.toLowerCase() || '';
-        const contacto = item.querySelector('.pedido-dato:nth-child(2) span')?.textContent.toLowerCase() || '';
+        const telefono = item.querySelector('.pedido-dato:nth-child(2) span')?.textContent.toLowerCase() || '';
         const producto = item.querySelector('.pedido-producto')?.textContent.toLowerCase() || '';
         
-        const coincide = nombre.includes(termino) || contacto.includes(termino) || producto.includes(termino);
+        const coincide = nombre.includes(termino) || telefono.includes(termino) || producto.includes(termino);
         item.style.display = coincide ? 'block' : 'none';
     });
 }
@@ -1772,40 +1838,6 @@ async function guardarOferta(id) {
     } catch (error) {
         console.error('Error al guardar oferta:', error);
         mostrarNotificacion('Error al guardar oferta', 'error');
-    }
-}
-
-async function actualizarDescuento(productoId, descuento) {
-    try {
-        const session = getSession();
-        const respuesta = await fetch(`${API_URL}/products/${productoId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${session.token}`
-            },
-            body: JSON.stringify({ descuento: parseInt(descuento) })
-        });
-
-        if (!respuesta.ok) throw new Error('Error al actualizar');
-
-        mostrarNotificacion('Descuento actualizado', 'success');
-
-        const datosActualizados = await cargarProductos();
-        if (datosActualizados) {
-            datosGlobales = datosActualizados;
-            adminDatos = JSON.parse(JSON.stringify(datosActualizados));
-            renderizarAdminProductos();
-            cargarOfertasAdmin();
-            renderizarOfertas(datosActualizados.ofertas, datosActualizados);
-            renderizarProductosConModal(datosActualizados.productos.hombre, '#ropa-hombre .grid-productos', datosActualizados);
-            renderizarProductosConModal(datosActualizados.productos.mujer, '#ropa-mujer .grid-productos', datosActualizados);
-            renderizarProductosConModal(datosActualizados.productos.telas, '#telas .grid-productos', datosActualizados);
-            renderizarProductosConModal(datosActualizados.productos.objetos, '#otros .grid-productos', datosActualizados);
-        }
-    } catch (error) {
-        console.error('Error al actualizar descuento:', error);
-        mostrarNotificacion('Error al actualizar descuento', 'error');
     }
 }
 
@@ -2460,8 +2492,8 @@ window.renderizarUsuariosAdmin = renderizarUsuariosAdmin;
 window.mostrarNotificacion = mostrarNotificacion;
 window.solicitarPedido = solicitarPedido;
 window.enviarPedidoPor = enviarPedidoPor;
+window.toggleCamposEntrega = toggleCamposEntrega;
 window.cargarOfertasAdmin = cargarOfertasAdmin;
-window.actualizarDescuento = actualizarDescuento;
 window.quitarOferta = quitarOferta;
 window.filtrarProductosAdmin = filtrarProductosAdmin;
 window.filtrarOfertasAdmin = filtrarOfertasAdmin;

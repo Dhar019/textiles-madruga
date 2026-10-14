@@ -633,7 +633,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE PEDIDO MULTI-CANAL -->
+    <!-- MODAL DE PEDIDO MULTI-CANAL AMPLIADO -->
     <div id="modal-pedido" class="login-oculto">
         <div class="login-overlay" id="modal-pedido-overlay"></div>
         <div class="login-contenido modal-pedido-contenido">
@@ -655,23 +655,195 @@
                 <p class="login-subtitle" id="modal-pedido-producto"></p>
             </div>
             <form id="modal-pedido-form" class="login-form">
-                <div class="login-group">
-                    <label>Tu nombre *</label>
-                    <input type="text" id="pedido-nombre" placeholder="Nombre completo" required maxlength="100">
-                </div>
-                <div class="login-group">
-                    <label>Tu teléfono o Gmail *</label>
-                    <input type="text" id="pedido-contacto" placeholder="Teléfono o Gmail" required maxlength="100">
-                </div>
-                <div class="login-group">
-                    <label>Cantidad *</label>
-                    <input type="number" id="pedido-cantidad" value="1" min="1" max="999" required>
-                </div>
-                <div class="login-group">
-                    <label>Notas adicionales (opcional)</label>
-                    <input type="text" id="pedido-notas" placeholder="Ej: Talla M, color azul..." maxlength="500">
-                </div>
+            
+                <!-- ============================================ -->
+                <!-- SECCIÓN: TUS DATOS -->
+                <!-- ============================================ -->
+                <div class="pedido-seccion">
+                    <h3 class="pedido-seccion-titulo">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                        Tus datos
+                    </h3>
                 
+                    <div class="login-group">
+                        <label>Nombre completo *</label>
+                        <input type="text" id="pedido-nombre" placeholder="Ej: Daniel García" required maxlength="100">
+                    </div>
+                
+                    <div class="login-group">
+                        <label>Teléfono *</label>
+                        <input type="tel" id="pedido-telefono" placeholder="Ej: 54108544" required maxlength="20">
+                    </div>
+                
+                    <div class="login-group">
+                        <label>Gmail (opcional)</label>
+                        <input type="email" id="pedido-email" placeholder="Ej: tucorreo@gmail.com" maxlength="100">
+                    </div>
+                </div>
+            
+                <!-- ============================================ -->
+                <!-- SECCIÓN: ENTREGA -->
+                <!-- ============================================ -->
+                <div class="pedido-seccion">
+                    <h3 class="pedido-seccion-titulo">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="1" y="3" width="15" height="13"/>
+                            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+                            <circle cx="5.5" cy="18.5" r="2.5"/>
+                            <circle cx="18.5" cy="18.5" r="2.5"/>
+                        </svg>
+                        Entrega
+                    </h3>
+                
+                    <div class="login-group">
+                        <label>Tipo de entrega *</label>
+                        <div class="radio-group">
+                            <label class="radio-option">
+                                <input type="radio" name="tipo-entrega" value="domicilio" id="entrega-domicilio" checked>
+                                <span>A domicilio</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="tipo-entrega" value="tienda" id="entrega-tienda">
+                                <span>Recoger en tienda</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div id="campos-domicilio">
+                        <div class="login-group">
+                            <label>Dirección *</label>
+                            <input type="text" id="pedido-direccion" placeholder="Ej: Calle 12, #345, entre 5ta y 6ta" maxlength="200">
+                        </div>
+                    
+                        <div class="login-group">
+                            <label>Puntos de referencia (opcional)</label>
+                            <input type="text" id="pedido-referencia" placeholder="Ej: Frente al parque central" maxlength="200">
+                        </div>
+
+                        <div class="login-group">
+                            <label>Localidad/Municipio/Provincia *</label>
+                            <input type="text" id="pedido-municipio" placeholder="Ej: Madruga, Mayabeque" maxlength="100">
+                        </div>
+                    
+                        <div class="aviso-madruga">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="12" y1="8" x2="12" y2="12"/>
+                                <line x1="12" y1="16" x2="12.01" y2="16"/>
+                            </svg>
+                            <span>Aviso: por ahora solo hacemos entregas en <strong>Madruga</strong>.</span>
+                        </div>
+                    </div>
+                </div>
+            
+                <!-- ============================================ -->
+                <!-- SECCIÓN: DETALLES DEL PEDIDO -->
+                <!-- ============================================ -->
+                <div class="pedido-seccion">
+                    <h3 class="pedido-seccion-titulo">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="9" cy="21" r="1"/>
+                            <circle cx="20" cy="21" r="1"/>
+                            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                        </svg>
+                        Detalles del pedido
+                    </h3>
+                
+                    <div class="form-row-2">
+                        <div class="login-group">
+                            <label>Cantidad *</label>
+                            <input type="number" id="pedido-cantidad" value="1" min="1" max="999" required>
+                        </div>
+                    
+                        <div class="login-group">
+                            <label>Talla (opcional)</label>
+                            <input type="text" id="pedido-talla" placeholder="Ej: M, L, XL" maxlength="20">
+                        </div>
+                    </div>
+                
+                    <div class="login-group">
+                        <label>Color (opcional)</label>
+                        <input type="text" id="pedido-color" placeholder="Ej: Azul, Rojo" maxlength="50">
+                    </div>
+                
+                    <div class="login-group">
+                        <label>Notas adicionales (opcional)</label>
+                        <input type="text" id="pedido-notas" placeholder="Ej: Entregar después de las 5pm" maxlength="500">
+                    </div>
+                </div>
+            
+                <!-- ============================================ -->
+                <!-- SECCIÓN: PAGO -->
+                <!-- ============================================ -->
+                <div class="pedido-seccion">
+                    <h3 class="pedido-seccion-titulo">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                            <line x1="1" y1="10" x2="23" y2="10"/>
+                        </svg>
+                        Pago
+                    </h3>
+                
+                    <div class="login-group">
+                        <label>Método de pago *</label>
+                        <div class="radio-group">
+                            <label class="radio-option">
+                                <input type="radio" name="metodo-pago" value="efectivo" checked>
+                                <span>Efectivo</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="metodo-pago" value="transferencia">
+                                <span>Transferencia</span>
+                            </label>
+                        </div>
+                    </div>
+                
+                    <div class="aviso-envio" id="aviso-envio">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="8" x2="12" y2="12"/>
+                            <line x1="12" y1="16" x2="12.01" y2="16"/>
+                        </svg>
+                        <span>El costo de envío a domicilio será calculado por el negocio según la distancia y te será informado al contactarte.</span>
+                    </div>
+                </div>
+
+                <!-- ============================================ -->
+                <!-- SECCIÓN: CONTACTO PREFERIDO -->
+                <!-- ============================================ -->
+                <div class="pedido-seccion">
+                    <h3 class="pedido-seccion-titulo">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+                        </svg>
+                        Contacto preferido
+                    </h3>
+                
+                    <div class="login-group">
+                        <label>¿Cómo prefieres que te contactemos? *</label>
+                        <div class="radio-group">
+                            <label class="radio-option">
+                                <input type="radio" name="contacto-preferido" value="whatsapp" checked>
+                                <span>WhatsApp</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="contacto-preferido" value="llamada">
+                                <span>Llamada</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="contacto-preferido" value="gmail">
+                                <span>Gmail</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            
+                <!-- ============================================ -->
+                <!-- AYUDA + BOTONES DE ENVÍO -->
+                <!-- ============================================ -->
                 <div class="pedido-ayuda-link">
                     <button type="button" id="btn-ayuda-pedido" class="btn-ayuda-pedido">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -682,7 +854,7 @@
                         ¿No sabes cómo proceder? Lee nuestra explicación
                     </button>
                 </div>
-                
+
                 <div class="pedido-vias">
                     <p class="pedido-vias-titulo">¿Cómo quieres enviar el pedido?</p>
                     
@@ -737,6 +909,17 @@
             </div>
             
             <div class="ayuda-contenido">
+                
+                <!-- ============================================ -->
+                <!-- EXPLICACIÓN DE LAS VÍAS DE CONTACTO -->
+                <!-- ============================================ -->
+                <h3 class="ayuda-categoria-titulo">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+                    </svg>
+                    Vías de contacto
+                </h3>
+                
                 <div class="ayuda-opcion">
                     <div class="ayuda-opcion-header">
                         <span class="ayuda-icono">📱</span>
@@ -806,8 +989,123 @@
                     </div>
                 </div>
                 
+                <!-- ============================================ -->
+                <!-- EXPLICACIÓN DE ENTREGA -->
+                <!-- ============================================ -->
+                <h3 class="ayuda-categoria-titulo">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="1" y="3" width="15" height="13"/>
+                        <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+                        <circle cx="5.5" cy="18.5" r="2.5"/>
+                        <circle cx="18.5" cy="18.5" r="2.5"/>
+                    </svg>
+                    Tipos de entrega
+                </h3>
+                
+                <div class="ayuda-opcion">
+                    <div class="ayuda-opcion-header">
+                        <span class="ayuda-icono">🏠</span>
+                        <div>
+                            <h3>A domicilio</h3>
+                            <p class="ayuda-subtitulo">Recibe en tu casa</p>
+                        </div>
+                    </div>
+                    <div class="ayuda-ventajas">
+                        <p class="ayuda-label ventajas">✅ Ventajas:</p>
+                        <ul>
+                            <li>No tienes que salir de casa</li>
+                            <li>Te llevamos el pedido a tu puerta</li>
+                        </ul>
+                        <p class="ayuda-label atencion">⚠️ Ten en cuenta:</p>
+                        <ul>
+                            <li>Tiene un costo adicional según la distancia</li>
+                            <li>Por ahora solo entregamos en <strong>Madruga</strong></li>
+                            <li>El costo lo calcula el negocio al contactarte</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="ayuda-opcion">
+                    <div class="ayuda-opcion-header">
+                        <span class="ayuda-icono">🏪</span>
+                        <div>
+                            <h3>Recoger en tienda</h3>
+                            <p class="ayuda-subtitulo">La opción más económica</p>
+                        </div>
+                    </div>
+                    <div class="ayuda-ventajas">
+                        <p class="ayuda-label ventajas">✅ Ventajas:</p>
+                        <ul>
+                            <li>Sin costo adicional de envío</li>
+                            <li>Puedes ver el producto antes de llevártelo</li>
+                        </ul>
+                        <p class="ayuda-label atencion">⚠️ Ten en cuenta:</p>
+                        <ul>
+                            <li>Tienes que venir a nuestra tienda</li>
+                            <li>Te avisaremos cuando esté listo</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- ============================================ -->
+                <!-- EXPLICACIÓN DE PAGO -->
+                <!-- ============================================ -->
+                <h3 class="ayuda-categoria-titulo">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                        <line x1="1" y1="10" x2="23" y2="10"/>
+                    </svg>
+                    Métodos de pago
+                </h3>
+                
+                <div class="ayuda-opcion">
+                    <div class="ayuda-opcion-header">
+                        <span class="ayuda-icono">💵</span>
+                        <div>
+                            <h3>Efectivo</h3>
+                            <p class="ayuda-subtitulo">La opción más directa</p>
+                        </div>
+                    </div>
+                    <div class="ayuda-ventajas">
+                        <p class="ayuda-label ventajas">✅ Ventajas:</p>
+                        <ul>
+                            <li>Sin comisiones</li>
+                            <li>Pagas al recibir tu pedido</li>
+                        </ul>
+                        <p class="ayuda-label atencion">⚠️ Ten en cuenta:</p>
+                        <ul>
+                            <li>Debes tener el monto exacto si es posible</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="ayuda-opcion">
+                    <div class="ayuda-opcion-header">
+                        <span class="ayuda-icono">🏦</span>
+                        <div>
+                            <h3>Transferencia</h3>
+                            <p class="ayuda-subtitulo">La opción más segura</p>
+                        </div>
+                    </div>
+                    <div class="ayuda-ventajas">
+                        <p class="ayuda-label ventajas">✅ Ventajas:</p>
+                        <ul>
+                            <li>Queda constancia del pago</li>
+                            <li>No necesitas llevar efectivo</li>
+                        </ul>
+                        <p class="ayuda-label atencion">⚠️ Ten en cuenta:</p>
+                        <ul>
+                            <li>Te enviaremos los datos bancarios al contactarte</li>
+                            <li>El pedido se prepara al confirmar el pago</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- ============================================ -->
+                <!-- CONSEJO FINAL -->
+                <!-- ============================================ -->
                 <div class="ayuda-consejo">
-                    <p>💡 <strong>Consejo:</strong> Si tienes WhatsApp, úsalo. Es la forma más rápida de que te atendamos.</p>
+                    <p>💡 <strong>Consejo:</strong> Si tienes WhatsApp, úsalo. Es la forma más rápida de que te atendamos. Y si tienes dudas sobre el costo de envío, pregúntanos sin compromiso.</p>
                 </div>
                 
                 <button type="button" class="btn-admin btn-primario btn-login" id="btn-volver-pedido">
