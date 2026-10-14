@@ -1,10 +1,17 @@
 // ============================================
 // SCRIPT.JS - Textiles Madruga
-// Versión 4.4 - Precios en CUP
+// Versión 4.5 - Precios en CUP + Pedidos multi-canal
 // ============================================
 
 const API_URL = 'https://textiles-madruga-api.eldani000219.workers.dev/api';
 const SESSION_KEY = 'tm_session';
+
+// Datos del negocio (cámbialos cuando quieras)
+const NEGOCIO = {
+    whatsapp: '+5354108544',
+    email: 'textilesmadruga@gmail.com',
+    telegram: ''
+};
 
 // ============================================
 // MODAL DE CONFIRMACIÓN PROPIO
@@ -116,6 +123,7 @@ let temporizadorInactividad = null;
 let temporizadorAviso = null;
 let tiempoOculto = null;
 let verificadorSesion = null;
+let productoPedidoActual = '';
 
 // ============================================
 // 1. AUTENTICACIÓN
@@ -780,18 +788,19 @@ window.abrirLightbox = abrirLightbox;
 window.cerrarLightbox = cerrarLightbox;
 
 // ============================================
-// 10. SOLICITAR PEDIDO (SIN REGISTRO)
+// 10. SOLICITAR PEDIDO (MULTI-CANAL)
 // ============================================
 function solicitarPedido(producto) {
     const modalPedido = document.getElementById('modal-pedido');
     if (!modalPedido) {
         mostrarNotificacion(
-            `Contáctanos para pedir "${producto}": textilesmadruga@email.com`,
+            `Contáctanos para pedir "${producto}": ${NEGOCIO.email}`,
             'success'
         );
         return;
     }
 
+    productoPedidoActual = producto;
     document.getElementById('modal-pedido-producto').textContent = `Producto: ${producto}`;
     modalPedido.className = 'login-visible';
     document.body.style.overflow = 'hidden';
@@ -800,27 +809,130 @@ function solicitarPedido(producto) {
         modalPedido.className = 'login-oculto';
         document.body.style.overflow = 'auto';
         document.getElementById('modal-pedido-form').reset();
+        productoPedidoActual = '';
     };
 
     document.getElementById('modal-pedido-cerrar').onclick = cerrar;
     document.getElementById('modal-pedido-overlay').onclick = cerrar;
 
+    // Prevenir el submit por defecto (Enter en los campos)
     document.getElementById('modal-pedido-form').onsubmit = (e) => {
         e.preventDefault();
-        const nombre = document.getElementById('pedido-nombre').value;
-        const contacto = document.getElementById('pedido-contacto').value;
-        const cantidad = document.getElementById('pedido-cantidad').value;
-        const notas = document.getElementById('pedido-notas').value;
-
-        console.log('📦 Pedido recibido:', { producto, nombre, contacto, cantidad, notas });
-
-        mostrarNotificacion(
-            `¡Pedido enviado! Te contactaremos pronto, ${nombre}.`,
-            'success'
-        );
-        cerrar();
     };
 }
+
+async function enviarPedidoPor(via) {
+    const nombre = document.getElementById('pedido-nombre').value.trim();
+    const contacto = document.getElementById('pedido-contacto').value.trim();
+    const cantidad = document.getElementById('pedido-cantidad').value.trim();
+    const notas = document.getElementById('pedido-notas').value.trim();
+
+    // Validación
+    if (!nombre) {
+        mostrarNotificacion('Por favor, escribe tu nombre', 'error');
+        document.getElementById('pedido-nombre').focus();
+        return;
+    }
+    if (!contacto) {
+        mostrarNotificacion('Por favor, escribe tu teléfono o email', 'error');
+        document.getElementById('pedido-contacto').focus();
+        return;
+    }
+    if (!cantidad || parseInt(cantidad) < 1) {
+        mostrarNotificacion('La cantidad debe ser al menos 1', 'error');
+        document.getElementById('pedido-cantidad').focus();
+        return;
+    }
+
+    // 1. Guardar el pedido en el Worker (siempre)
+    const pedidoData = {
+        producto: productoPedidoActual,
+        nombre,
+        contacto,
+        cantidad: parseInt(cantidad),
+        notas,
+        via
+    };
+
+    try {
+        const respuesta = await fetch(`${API_URL}/pedidos`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(pedidoData)
+        });
+
+        if (!respuesta.ok) {
+            console.warn('⚠️ No se pudo guardar el pedido en el servidor');
+        } else {
+            const data = await respuesta.json();
+            console.log('✅ Pedido guardado:', data.id);
+        }
+    } catch (error) {
+        console.warn('⚠️ Error al guardar pedido:', error);
+    }
+
+    // 2. Abrir la vía elegida
+    const mensaje = `¡Hola! Quiero hacer un pedido:\n\n` +
+        `📦 Producto: ${productoPedidoActual}\n` +
+        `👤 Nombre: ${nombre}\n` +
+        `📞 Contacto: ${contacto}\n` +
+        `🔢 Cantidad: ${cantidad}\n` +
+        (notas ? `📝 Notas: ${notas}\n` : '') +
+        `\n¡Gracias!`;
+
+    const mensajeEncoded = encodeURIComponent(mensaje);
+
+    if (via === 'whatsapp') {
+        const esMovil = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const url = esMovil 
+            ? `https://wa.me/${NEGOCIO.whatsapp}?text=${mensajeEncoded}`
+            : `https://web.whatsapp.com/send?phone=${NEGOCIO.whatsapp}&text=${mensajeEncoded}`;
+        
+        window.open(url, '_blank');
+        mostrarNotificacion('Pedido enviado. Se abrirá WhatsApp.', 'success');
+    } else if (via === 'email') {
+        const asunto = encodeURIComponent(`Pedido: ${productoPedidoActual}`);
+        const url = `mailto:${NEGOCIO.email}?subject=${asunto}&body=${mensajeEncoded}`;
+        window.location.href = url;
+        mostrarNotificacion('Pedido enviado. Se abrirá tu correo.', 'success');
+    } else {
+        mostrarNotificacion('¡Pedido enviado! Te contactaremos pronto.', 'success');
+    }
+
+    // 3. Cerrar el modal
+    setTimeout(() => {
+        const modalPedido = document.getElementById('modal-pedido');
+        modalPedido.className = 'login-oculto';
+        document.body.style.overflow = 'auto';
+        document.getElementById('modal-pedido-form').reset();
+        productoPedidoActual = '';
+    }, 1500);
+}
+
+// ============================================
+// 10.1 MODAL DE AYUDA PARA PEDIDOS
+// ============================================
+document.addEventListener('DOMContentLoaded', function() {
+    const btnAyuda = document.getElementById('btn-ayuda-pedido');
+    const modalAyuda = document.getElementById('modal-ayuda-pedido');
+    const cerrarAyuda = document.getElementById('modal-ayuda-pedido-cerrar');
+    const overlayAyuda = document.getElementById('modal-ayuda-pedido-overlay');
+    const btnVolver = document.getElementById('btn-volver-pedido');
+
+    if (btnAyuda && modalAyuda) {
+        const abrirAyuda = () => {
+            modalAyuda.className = 'login-visible';
+        };
+        const cerrarModalAyuda = () => {
+            modalAyuda.className = 'login-oculto';
+        };
+
+        btnAyuda.addEventListener('click', abrirAyuda);
+        cerrarAyuda.addEventListener('click', cerrarModalAyuda);
+        overlayAyuda.addEventListener('click', cerrarModalAyuda);
+        btnVolver.addEventListener('click', cerrarModalAyuda);
+    }
+});
 
 // ============================================
 // 11. PANEL DE ADMINISTRACIÓN
@@ -2078,6 +2190,7 @@ window.cambiarRolUsuario = cambiarRolUsuario;
 window.renderizarUsuariosAdmin = renderizarUsuariosAdmin;
 window.mostrarNotificacion = mostrarNotificacion;
 window.solicitarPedido = solicitarPedido;
+window.enviarPedidoPor = enviarPedidoPor;
 window.cargarOfertasAdmin = cargarOfertasAdmin;
 window.actualizarDescuento = actualizarDescuento;
 window.quitarOferta = quitarOferta;

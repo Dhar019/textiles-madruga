@@ -1,7 +1,6 @@
 // ============================================
 // WORKER - TEXTILES MADRUGA API
-// Versión 4.1 - Sesiones con timeout automático
-// + Logout vía sendBeacon + IDs alfanuméricos
+// Versión 4.5 - Sistema de pedidos multi-canal
 // ============================================
 
 // ============================================
@@ -50,7 +49,37 @@ async function guardarUsuarios(env, usuarios) {
 }
 
 // ============================================
-// GENERAR ID ALFANUMÉRICO CON PREFIJO (4 DÍGITOS)
+// HELPERS PEDIDOS
+// ============================================
+async function leerPedidos(env) {
+    const pedidosStr = await env.PRODUCTOS_KV.get('pedidos');
+    return pedidosStr ? JSON.parse(pedidosStr) : [];
+}
+
+async function guardarPedidos(env, pedidos) {
+    await env.PRODUCTOS_KV.put('pedidos', JSON.stringify(pedidos));
+}
+
+// Generar ID único de pedido: PED-0001, PED-0002...
+async function generarIdPedido(env) {
+    const pedidos = await leerPedidos(env);
+    let maxNumero = 0;
+    pedidos.forEach(p => {
+        const idActual = String(p.id || '');
+        if (idActual.startsWith('PED-')) {
+            const numeroStr = idActual.replace('PED-', '');
+            const numero = parseInt(numeroStr, 10);
+            if (!isNaN(numero) && numero > maxNumero) {
+                maxNumero = numero;
+            }
+        }
+    });
+    const siguienteNumero = maxNumero + 1;
+    return `PED-${String(siguienteNumero).padStart(4, '0')}`;
+}
+
+// ============================================
+// GENERAR ID ALFANUMÉRICO PRODUCTO
 // ============================================
 function generarIdUnico(catalogo, categoria) {
     const prefijos = {
@@ -81,7 +110,7 @@ function generarIdUnico(catalogo, categoria) {
 }
 
 // ============================================
-// HASH DE CONTRASEÑAS (SHA-256 con salt)
+// HASH DE CONTRASEÑAS
 // ============================================
 async function hashearPassword(password) {
     const encoder = new TextEncoder();
@@ -110,7 +139,7 @@ async function verificarPassword(password, hash) {
 // ============================================
 // SESIÓN ÚNICA CON TIMEOUT
 // ============================================
-const MAX_INACTIVIDAD_MS = 2 * 60 * 60 * 1000; // 2 horas
+const MAX_INACTIVIDAD_MS = 2 * 60 * 60 * 1000;
 
 async function crearSesionUnica(env, userId) {
     const sessionId = crypto.randomUUID();
@@ -139,13 +168,10 @@ async function verificarSesionActiva(env, userId) {
     try {
         session = JSON.parse(sessionStr);
     } catch {
-        // Compatibilidad con formato viejo (solo string)
         return { sessionId: sessionStr, lastActivity: Date.now() };
     }
     
-    // Verificar inactividad
     if (Date.now() - session.lastActivity > MAX_INACTIVIDAD_MS) {
-        console.log(`⏰ Sesión expirada por inactividad: ${userId}`);
         await env.PRODUCTOS_KV.delete(`SESSIONS:${userId}`);
         return null;
     }
@@ -161,7 +187,7 @@ async function actualizarActividadSesion(env, userId) {
     try {
         session = JSON.parse(sessionStr);
     } catch {
-        return; // Formato viejo, no actualizamos
+        return;
     }
     
     session.lastActivity = Date.now();
@@ -177,7 +203,7 @@ async function obtenerSesionActiva(env, userId) {
 }
 
 // ============================================
-// VERIFICACIÓN DE TOKEN (CON ACTIVIDAD)
+// VERIFICACIÓN DE TOKEN
 // ============================================
 async function verificarToken(request, env) {
     const authHeader = request.headers.get('Authorization');
@@ -188,13 +214,11 @@ async function verificarToken(request, env) {
 
         if (!payload.sessionId) return null;
         
-        // Verificar sesión con timeout
         const session = await verificarSesionActiva(env, payload.id);
         if (!session || session.sessionId !== payload.sessionId) {
             return null;
         }
         
-        // Actualizar actividad en cada petición
         await actualizarActividadSesion(env, payload.id);
         
         return payload;
@@ -327,21 +351,141 @@ export default {
             if (path === '/api/health' && method === 'GET') {
                 return addCors(new Response(JSON.stringify({
                     status: 'ok',
-                    message: 'API de Textiles Madruga funcionando (KV)',
+                    message: 'API de Textiles Madruga funcionando',
                     db: 'kv',
-                    version: '4.1',
+                    version: '4.5',
                     features: [
                         'IDs alfanuméricos',
                         'Ofertas avanzadas',
                         'DELETE robusto',
-                        'Timeout de sesión (2h)',
-                        'Logout vía sendBeacon'
+                        'Timeout de sesión',
+                        'Logout vía sendBeacon',
+                        'Sistema de pedidos multi-canal'
                     ],
                     timestamp: new Date().toISOString()
                 }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
-            // PRODUCTOS (LISTAR)
+            // ============================================
+            // PEDIDOS
+            // ============================================
+            
+            // CREAR PEDIDO (público, sin autenticación)
+            if (path === '/api/pedidos' && method === 'POST') {
+                const body = await request.json();
+                
+                // Validación básica
+                if (!body.producto || !body.nombre || !body.contacto) {
+                    return addCors(new Response(JSON.stringify({ 
+                        error: 'Faltan datos: producto, nombre y contacto son obligatorios' 
+                    }), { status: 400, headers: { 'Content-Type': 'application/json' } }), request);
+                }
+                
+                const pedidos = await leerPedidos(env);
+                const idPedido = await generarIdPedido(env);
+                
+                const nuevoPedido = {
+                    id: idPedido,
+                    producto: body.producto,
+                    nombre: String(body.nombre).substring(0, 100),
+                    contacto: String(body.contacto).substring(0, 100),
+                    cantidad: parseInt(body.cantidad) || 1,
+                    notas: String(body.notas || '').substring(0, 500),
+                    via: body.via || 'solo_aqui', // whatsapp, email, telegram, solo_aqui
+                    estado: 'pendiente', // pendiente, atendido, completado, cancelado
+                    fecha: new Date().toISOString(),
+                    ip: ip
+                };
+                
+                pedidos.unshift(nuevoPedido); // Añadir al inicio
+                await guardarPedidos(env, pedidos);
+                
+                console.log('📦 Nuevo pedido:', idPedido, '-', body.nombre, 'via', body.via);
+                
+                return addCors(new Response(JSON.stringify({ 
+                    success: true,
+                    id: idPedido,
+                    mensaje: 'Pedido guardado correctamente'
+                }), { headers: { 'Content-Type': 'application/json' } }), request);
+            }
+            
+            // LISTAR PEDIDOS (solo admin)
+            if (path === '/api/pedidos' && method === 'GET') {
+                const user = await verificarToken(request, env);
+                if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
+                    return addCors(new Response(JSON.stringify({ error: 'No autorizado' }),
+                        { status: 403, headers: { 'Content-Type': 'application/json' } }), request);
+                }
+                
+                const pedidos = await leerPedidos(env);
+                return addCors(new Response(JSON.stringify({ pedidos }), {
+                    headers: { 'Content-Type': 'application/json' }
+                }), request);
+            }
+            
+            // CAMBIAR ESTADO DE PEDIDO (solo admin)
+            if (path.startsWith('/api/pedidos/') && method === 'PATCH') {
+                const user = await verificarToken(request, env);
+                if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
+                    return addCors(new Response(JSON.stringify({ error: 'No autorizado' }),
+                        { status: 403, headers: { 'Content-Type': 'application/json' } }), request);
+                }
+                
+                const pedidoId = path.split('/')[3];
+                const body = await request.json();
+                const pedidos = await leerPedidos(env);
+                const idx = pedidos.findIndex(p => p.id === pedidoId);
+                
+                if (idx === -1) {
+                    return addCors(new Response(JSON.stringify({ error: 'Pedido no encontrado' }),
+                        { status: 404, headers: { 'Content-Type': 'application/json' } }), request);
+                }
+                
+                if (body.estado) {
+                    pedidos[idx].estado = body.estado;
+                }
+                if (body.notas !== undefined) {
+                    pedidos[idx].notas = body.notas;
+                }
+                
+                await guardarPedidos(env, pedidos);
+                await registrarAuditoria(env, user, 'UPDATE_PEDIDO', { id: pedidoId, estado: body.estado });
+                
+                return addCors(new Response(JSON.stringify({ 
+                    success: true,
+                    pedido: pedidos[idx]
+                }), { headers: { 'Content-Type': 'application/json' } }), request);
+            }
+            
+            // ELIMINAR PEDIDO (solo admin)
+            if (path.startsWith('/api/pedidos/') && method === 'DELETE') {
+                const user = await verificarToken(request, env);
+                if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
+                    return addCors(new Response(JSON.stringify({ error: 'No autorizado' }),
+                        { status: 403, headers: { 'Content-Type': 'application/json' } }), request);
+                }
+                
+                const pedidoId = path.split('/')[3];
+                let pedidos = await leerPedidos(env);
+                const pedidoEncontrado = pedidos.find(p => p.id === pedidoId);
+                
+                if (!pedidoEncontrado) {
+                    return addCors(new Response(JSON.stringify({ error: 'Pedido no encontrado' }),
+                        { status: 404, headers: { 'Content-Type': 'application/json' } }), request);
+                }
+                
+                pedidos = pedidos.filter(p => p.id !== pedidoId);
+                await guardarPedidos(env, pedidos);
+                await registrarAuditoria(env, user, 'DELETE_PEDIDO', { id: pedidoId });
+                
+                return addCors(new Response(JSON.stringify({ success: true }),
+                    { headers: { 'Content-Type': 'application/json' } }), request);
+            }
+
+            // ============================================
+            // PRODUCTOS
+            // ============================================
+            
             if (path === '/api/productos' && method === 'GET') {
                 const catalogo = await leerCatalogo(env);
                 const productos = Object.values(catalogo);
@@ -350,7 +494,6 @@ export default {
                 }), request);
             }
 
-            // CREAR PRODUCTO
             if (path === '/api/products' && method === 'POST') {
                 const user = await verificarToken(request, env);
                 if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
@@ -380,7 +523,6 @@ export default {
                 }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
-            // ACTUALIZAR PRODUCTO
             if (path.startsWith('/api/products/') && method === 'PUT') {
                 const user = await verificarToken(request, env);
                 if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
@@ -419,10 +561,7 @@ export default {
                 }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
-            // ELIMINAR PRODUCTO (VERSIÓN A PRUEBA DE BALAS)
             if (path.startsWith('/api/products/') && method === 'DELETE') {
-                console.log('🗑️ DELETE INICIADO:', path);
-                
                 const user = await verificarToken(request, env);
                 if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
                     return addCors(new Response(JSON.stringify({ error: 'No autorizado' }),
@@ -473,25 +612,18 @@ export default {
                     }
                 });
                 
-                const clavesDespues = Object.keys(nuevoCatalogo);
-                
-                if (clavesAntes.length === clavesDespues.length) {
-                    return addCors(new Response(JSON.stringify({ 
-                        error: 'No se eliminó ninguna clave'
-                    }), { status: 500, headers: { 'Content-Type': 'application/json' } }), request);
-                }
-                
                 await env.PRODUCTOS_KV.put('catalogo_completo', JSON.stringify(nuevoCatalogo));
                 
                 await new Promise(r => setTimeout(r, 300));
                 const verificacionStr = await env.PRODUCTOS_KV.get('catalogo_completo');
                 const verificacion = JSON.parse(verificacionStr);
                 const clavesVerificacion = Object.keys(verificacion).length;
+                const clavesDespues = Object.keys(nuevoCatalogo).length;
                 
-                if (clavesVerificacion !== clavesDespues.length) {
+                if (clavesVerificacion !== clavesDespues) {
                     return addCors(new Response(JSON.stringify({ 
                         error: 'Error de persistencia',
-                        esperado: clavesDespues.length,
+                        esperado: clavesDespues,
                         real: clavesVerificacion
                     }), { status: 500, headers: { 'Content-Type': 'application/json' } }), request);
                 }
@@ -509,9 +641,7 @@ export default {
                 }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
-            // ============================================
-            // TOGGLE OFERTA (CON TIPOS AVANZADOS)
-            // ============================================
+            // TOGGLE OFERTA
             if (path.startsWith('/api/offers/toggle/') && method === 'PATCH') {
                 const user = await verificarToken(request, env);
                 if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
@@ -571,7 +701,10 @@ export default {
                 }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
-            // LOGIN
+            // ============================================
+            // AUTENTICACIÓN
+            // ============================================
+
             if (path === '/api/auth/login' && (method === 'POST' || method === 'GET')) {
                 const rateLimit = await verificarRateLimit(env, ip);
                 if (rateLimit.bloqueado) {
@@ -617,7 +750,6 @@ export default {
                     }), { status: 401, headers: { 'Content-Type': 'application/json' } }), request);
                 }
 
-                // Verificar sesión existente (ahora con timeout automático)
                 const sesionExistente = await obtenerSesionActiva(env, user.id);
                 if (sesionExistente) {
                     return addCors(new Response(JSON.stringify({
@@ -650,7 +782,6 @@ export default {
                 }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
-            // FORZAR CIERRE DE SESIÓN
             if (path === '/api/auth/force-logout' && method === 'POST') {
                 const { username, password } = await request.json();
                 const usuarios = await leerUsuarios(env);
@@ -675,14 +806,9 @@ export default {
                 }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
-            // ============================================
-            // LOGOUT (acepta header O body para sendBeacon)
-            // ============================================
             if (path === '/api/auth/logout' && method === 'POST') {
-                // 1. Intentar verificar token desde header
                 let user = await verificarToken(request, env);
                 
-                // 2. Si no hay header, intentar desde el body (sendBeacon)
                 if (!user) {
                     try {
                         const body = await request.json();
@@ -690,14 +816,11 @@ export default {
                             const payload = JSON.parse(atob(body.token));
                             if (payload.id) {
                                 await eliminarSesion(env, payload.id);
-                                console.log('✅ Logout vía sendBeacon:', payload.username);
                                 return addCors(new Response(JSON.stringify({ success: true }),
                                     { headers: { 'Content-Type': 'application/json' } }), request);
                             }
                         }
-                    } catch (e) {
-                        // Silencioso, es normal si no hay body
-                    }
+                    } catch (e) {}
                 }
                 
                 if (user && user.id) {
@@ -708,7 +831,6 @@ export default {
                     { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
-            // REGISTRO
             if (path === '/api/auth/register' && method === 'POST') {
                 const user = await verificarToken(request, env);
                 if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
@@ -743,7 +865,6 @@ export default {
                 }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
-            // LISTAR USUARIOS
             if (path === '/api/users' && method === 'GET') {
                 const user = await verificarToken(request, env);
                 if (!user || user.role !== 'superadmin') {
@@ -756,7 +877,6 @@ export default {
                     { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
-            // CAMBIAR ROL
             if (path.startsWith('/api/users/') && path.endsWith('/role') && method === 'PATCH') {
                 const user = await verificarToken(request, env);
                 if (!user || user.role !== 'superadmin') {
@@ -776,7 +896,6 @@ export default {
                     { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
-            // ELIMINAR USUARIO
             if (path.startsWith('/api/users/') && method === 'DELETE') {
                 const user = await verificarToken(request, env);
                 if (!user || user.role !== 'superadmin') {

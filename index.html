@@ -605,10 +605,10 @@
         </div>
     </div>
 
-    <!-- MODAL DE PEDIDO -->
+    <!-- MODAL DE PEDIDO MULTI-CANAL -->
     <div id="modal-pedido" class="login-oculto">
         <div class="login-overlay" id="modal-pedido-overlay"></div>
-        <div class="login-contenido">
+        <div class="login-contenido modal-pedido-contenido">
             <button class="login-cerrar" id="modal-pedido-cerrar" aria-label="Cerrar">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"/>
@@ -628,23 +628,164 @@
             </div>
             <form id="modal-pedido-form" class="login-form">
                 <div class="login-group">
-                    <label>Tu nombre</label>
-                    <input type="text" id="pedido-nombre" placeholder="Nombre completo" required>
+                    <label>Tu nombre *</label>
+                    <input type="text" id="pedido-nombre" placeholder="Nombre completo" required maxlength="100">
                 </div>
                 <div class="login-group">
-                    <label>Tu teléfono o email</label>
-                    <input type="text" id="pedido-contacto" placeholder="Teléfono o email" required>
+                    <label>Tu teléfono o email *</label>
+                    <input type="text" id="pedido-contacto" placeholder="Teléfono o email" required maxlength="100">
                 </div>
                 <div class="login-group">
-                    <label>Cantidad</label>
-                    <input type="number" id="pedido-cantidad" value="1" min="1" required>
+                    <label>Cantidad *</label>
+                    <input type="number" id="pedido-cantidad" value="1" min="1" max="999" required>
                 </div>
                 <div class="login-group">
                     <label>Notas adicionales (opcional)</label>
-                    <input type="text" id="pedido-notas" placeholder="Ej: Talla M, color azul...">
+                    <input type="text" id="pedido-notas" placeholder="Ej: Talla M, color azul..." maxlength="500">
                 </div>
-                <button type="submit" class="btn-admin btn-primario btn-login">Enviar pedido</button>
+            
+                <div class="pedido-ayuda-link">
+                    <button type="button" id="btn-ayuda-pedido" class="btn-ayuda-pedido">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                            <line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
+                        ¿No sabes cómo proceder? Lee nuestra explicación
+                    </button>
+                </div>
+            
+                <div class="pedido-vias">
+                    <p class="pedido-vias-titulo">¿Cómo quieres enviar el pedido?</p>
+                
+                    <button type="button" class="btn-via btn-via-whatsapp" onclick="enviarPedidoPor('whatsapp')">
+                        <span class="via-icono">📱</span>
+                        <span class="via-texto">
+                            <strong>WhatsApp</strong>
+                            <small>La opción más rápida y directa</small>
+                        </span>
+                    </button>
+                
+                    <button type="button" class="btn-via btn-via-email" onclick="enviarPedidoPor('email')">
+                        <span class="via-icono">✉️</span>
+                        <span class="via-texto">
+                            <strong>Email</strong>
+                            <small>Ideal si prefieres dejar constancia</small>
+                        </span>
+                    </button>
+                
+                    <button type="button" class="btn-via btn-via-solo" onclick="enviarPedidoPor('solo_aqui')">
+                        <span class="via-icono">📝</span>
+                        <span class="via-texto">
+                            <strong>Solo enviar aquí</strong>
+                            <small>Sin abrir apps externas</small>
+                        </span>
+                    </button>
+                </div>
             </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE AYUDA PARA PEDIDOS -->
+    <div id="modal-ayuda-pedido" class="login-oculto">
+        <div class="login-overlay" id="modal-ayuda-pedido-overlay"></div>
+        <div class="login-contenido modal-ayuda-contenido">
+            <button class="login-cerrar" id="modal-ayuda-pedido-cerrar" aria-label="Cerrar">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+            <div class="login-header">
+                <span class="login-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                </span>
+                <h2>¿Cómo <span class="login-highlight">funciona</span>?</h2>
+                <p class="login-subtitle">Te explicamos cada opción para que elijas la mejor</p>
+            </div>
+        
+            <div class="ayuda-contenido">
+                <div class="ayuda-opcion">
+                    <div class="ayuda-opcion-header">
+                        <span class="ayuda-icono">📱</span>
+                        <div>
+                            <h3>WhatsApp</h3>
+                            <p class="ayuda-subtitulo">La opción más rápida</p>
+                        </div>
+                    </div>
+                    <div class="ayuda-ventajas">
+                        <p class="ayuda-label ventajas">✅ Ventajas:</p>
+                        <ul>
+                            <li>Respuesta inmediata</li>
+                            <li>Puedes enviar fotos o audios</li>
+                            <li>Recibes confirmación al momento</li>
+                        </ul>
+                        <p class="ayuda-label atencion">⚠️ Ten en cuenta:</p>
+                        <ul>
+                            <li>Necesitas tener WhatsApp instalado</li>
+                            <li>Tu número será visible para el negocio</li>
+                        </ul>
+                    </div>
+                </div>
+            
+                <div class="ayuda-opcion">
+                    <div class="ayuda-opcion-header">
+                        <span class="ayuda-icono">✉️</span>
+                        <div>
+                            <h3>Email</h3>
+                            <p class="ayuda-subtitulo">La opción más formal</p>
+                        </div>
+                    </div>
+                    <div class="ayuda-ventajas">
+                        <p class="ayuda-label ventajas">✅ Ventajas:</p>
+                        <ul>
+                            <li>Queda constancia escrita de todo</li>
+                            <li>Puedes adjuntar archivos</li>
+                            <li>Útil si no tienes prisa</li>
+                        </ul>
+                        <p class="ayuda-label atencion">⚠️ Ten en cuenta:</p>
+                        <ul>
+                            <li>La respuesta puede tardar unas horas</li>
+                            <li>Necesitas tener un email configurado</li>
+                        </ul>
+                    </div>
+                </div>
+            
+                <div class="ayuda-opcion">
+                    <div class="ayuda-opcion-header">
+                        <span class="ayuda-icono">📝</span>
+                        <div>
+                            <h3>Solo enviar aquí</h3>
+                            <p class="ayuda-subtitulo">La opción más sencilla</p>
+                        </div>
+                    </div>
+                    <div class="ayuda-ventajas">
+                        <p class="ayuda-label ventajas">✅ Ventajas:</p>
+                        <ul>
+                            <li>No sales de nuestra web</li>
+                            <li>No necesitas tener apps instaladas</li>
+                            <li>El pedido queda registrado</li>
+                        </ul>
+                        <p class="ayuda-label atencion">⚠️ Ten en cuenta:</p>
+                        <ul>
+                            <li>El negocio te contactará después</li>
+                            <li>No hay confirmación inmediata</li>
+                        </ul>
+                    </div>
+                </div>
+            
+                <div class="ayuda-consejo">
+                    <p>💡 <strong>Consejo:</strong> Si tienes WhatsApp, úsalo. Es la forma más rápida de que te atendamos.</p>
+                </div>
+            
+                <button type="button" class="btn-admin btn-primario btn-login" id="btn-volver-pedido">
+                    Entendido, volver al pedido
+                </button>
+            </div>
         </div>
     </div>
 
