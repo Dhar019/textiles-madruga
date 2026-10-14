@@ -363,6 +363,67 @@
                                         <option value="objetos">Otros</option>
                                     </select>
                                 </div>
+
+                                <!-- ============================================ -->
+                                <!-- TALLAS DISPONIBLES (NUEVO) -->
+                                <!-- ============================================ -->
+                                <div class="form-group form-group-full">
+                                    <label>Tallas disponibles</label>
+                                    <p class="form-help">Selecciona qué tallas tendrá este producto. El cliente solo podrá elegir entre estas.</p>
+                                    
+                                    <!-- Tipo de tallas -->
+                                    <div class="tipo-tallas-group">
+                                        <label class="tipo-talla-opcion">
+                                            <input type="radio" name="tipo-tallas" value="alfabeticas" checked onchange="cambiarTipoTallas('alfabeticas')">
+                                            <span class="radio-punto"></span>
+                                            <span>Alfabéticas</span>
+                                        </label>
+                                        <label class="tipo-talla-opcion">
+                                            <input type="radio" name="tipo-tallas" value="numericas" onchange="cambiarTipoTallas('numericas')">
+                                            <span class="radio-punto"></span>
+                                            <span>Numéricas</span>
+                                        </label>
+                                        <label class="tipo-talla-opcion">
+                                            <input type="radio" name="tipo-tallas" value="sin_tallas" onchange="cambiarTipoTallas('sin_tallas')">
+                                            <span class="radio-punto"></span>
+                                            <span>Sin tallas</span>
+                                        </label>
+                                    </div>
+                                    
+                                    <!-- Checkboxes de tallas alfabéticas -->
+                                    <div id="tallas-alfabeticas" class="tallas-checkboxes">
+                                        <label class="talla-check"><input type="checkbox" value="XS" class="talla-checkbox"><span>XS</span></label>
+                                        <label class="talla-check"><input type="checkbox" value="S" class="talla-checkbox"><span>S</span></label>
+                                        <label class="talla-check"><input type="checkbox" value="M" class="talla-checkbox"><span>M</span></label>
+                                        <label class="talla-check"><input type="checkbox" value="L" class="talla-checkbox"><span>L</span></label>
+                                        <label class="talla-check"><input type="checkbox" value="XL" class="talla-checkbox"><span>XL</span></label>
+                                        <label class="talla-check"><input type="checkbox" value="XXL" class="talla-checkbox"><span>XXL</span></label>
+                                    </div>
+                                    
+                                    <!-- Checkboxes de tallas numéricas -->
+                                    <div id="tallas-numericas" class="tallas-checkboxes" style="display: none;">
+                                        <label class="talla-check"><input type="checkbox" value="28" class="talla-checkbox"><span>28</span></label>
+                                        <label class="talla-check"><input type="checkbox" value="30" class="talla-checkbox"><span>30</span></label>
+                                        <label class="talla-check"><input type="checkbox" value="32" class="talla-checkbox"><span>32</span></label>
+                                        <label class="talla-check"><input type="checkbox" value="34" class="talla-checkbox"><span>34</span></label>
+                                        <label class="talla-check"><input type="checkbox" value="36" class="talla-checkbox"><span>36</span></label>
+                                        <label class="talla-check"><input type="checkbox" value="38" class="talla-checkbox"><span>38</span></label>
+                                        <label class="talla-check"><input type="checkbox" value="40" class="talla-checkbox"><span>40</span></label>
+                                        <label class="talla-check"><input type="checkbox" value="42" class="talla-checkbox"><span>42</span></label>
+                                        <label class="talla-check"><input type="checkbox" value="44" class="talla-checkbox"><span>44</span></label>
+                                    </div>
+                                    
+                                    <!-- Mensaje cuando no hay tallas -->
+                                    <div id="tallas-sin" class="tallas-sin" style="display: none;">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <line x1="12" y1="8" x2="12" y2="12"/>
+                                            <line x1="12" y1="16" x2="12.01" y2="16"/>
+                                        </svg>
+                                        <span>Este producto no tendrá tallas (ideal para telas, objetos, etc.)</span>
+                                    </div>
+                                </div>
+
                                 <div class="form-group form-group-full">
                                     <label>Descripción</label>
                                     <textarea id="prod-descripcion" placeholder="Descripción del producto..." rows="3"></textarea>
@@ -683,9 +744,7 @@
             </div>
             <form id="modal-pedido-form" class="login-form">
             
-                <!-- ============================================ -->
                 <!-- SECCIÓN: TUS DATOS -->
-                <!-- ============================================ -->
                 <div class="pedido-seccion">
                     <h3 class="pedido-seccion-titulo">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -711,9 +770,7 @@
                     </div>
                 </div>
             
-                <!-- ============================================ -->
                 <!-- SECCIÓN: ENTREGA -->
-                <!-- ============================================ -->
                 <div class="pedido-seccion">
                     <h3 class="pedido-seccion-titulo">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -768,9 +825,7 @@
                     </div>
                 </div>
             
-                <!-- ============================================ -->
                 <!-- SECCIÓN: DETALLES DEL PEDIDO (VARIANTES) -->
-                <!-- ============================================ -->
                 <div class="pedido-seccion">
                     <h3 class="pedido-seccion-titulo">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -837,9 +892,7 @@
                     </div>
                 </div>
             
-                <!-- ============================================ -->
                 <!-- SECCIÓN: PAGO -->
-                <!-- ============================================ -->
                 <div class="pedido-seccion">
                     <h3 class="pedido-seccion-titulo">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -875,9 +928,7 @@
                     </div>
                 </div>
 
-                <!-- ============================================ -->
                 <!-- SECCIÓN: CONTACTO PREFERIDO -->
-                <!-- ============================================ -->
                 <div class="pedido-seccion">
                     <h3 class="pedido-seccion-titulo">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -908,9 +959,7 @@
                     </div>
                 </div>
             
-                <!-- ============================================ -->
                 <!-- AYUDA + BOTONES DE ENVÍO -->
-                <!-- ============================================ -->
                 <div class="pedido-ayuda-link">
                     <button type="button" id="btn-ayuda-pedido" class="btn-ayuda-pedido">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -977,9 +1026,7 @@
             
             <div class="ayuda-contenido">
                 
-                <!-- ============================================ -->
                 <!-- EXPLICACIÓN DE LAS VÍAS DE CONTACTO -->
-                <!-- ============================================ -->
                 <h3 class="ayuda-categoria-titulo">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
@@ -1056,9 +1103,7 @@
                     </div>
                 </div>
                 
-                <!-- ============================================ -->
                 <!-- EXPLICACIÓN DE ENTREGA -->
-                <!-- ============================================ -->
                 <h3 class="ayuda-categoria-titulo">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="1" y="3" width="15" height="13"/>
@@ -1114,9 +1159,7 @@
                     </div>
                 </div>
                 
-                <!-- ============================================ -->
                 <!-- EXPLICACIÓN DE PAGO -->
-                <!-- ============================================ -->
                 <h3 class="ayuda-categoria-titulo">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
@@ -1168,9 +1211,7 @@
                     </div>
                 </div>
                 
-                <!-- ============================================ -->
                 <!-- CONSEJO FINAL -->
-                <!-- ============================================ -->
                 <div class="ayuda-consejo">
                     <p>💡 <strong>Consejo:</strong> Si tienes WhatsApp, úsalo. Es la forma más rápida de que te atendamos. Y si tienes dudas sobre el costo de envío, pregúntanos sin compromiso.</p>
                 </div>
