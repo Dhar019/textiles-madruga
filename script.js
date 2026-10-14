@@ -969,6 +969,7 @@ function solicitarPedido(producto) {
         document.body.style.overflow = 'auto';
         document.getElementById('modal-pedido-form').reset();
         productoPedidoActual = '';
+        setTimeout(() => scrollModalAlTop(modalPedido), 50);
     };
 
     document.getElementById('modal-pedido-cerrar').onclick = cerrar;
@@ -1151,7 +1152,10 @@ async function enviarPedidoPor(via) {
     // 4. Cerrar modal
     setTimeout(() => {
         const modalPedido = document.getElementById('modal-pedido');
-        if (modalPedido) modalPedido.className = 'login-oculto';
+        if (modalPedido) {
+            modalPedido.className = 'login-oculto';
+            scrollModalAlTop(modalPedido);
+        }
         document.body.style.overflow = 'auto';
         document.getElementById('modal-pedido-form')?.reset();
         productoPedidoActual = '';
@@ -1175,6 +1179,7 @@ document.addEventListener('DOMContentLoaded', function() {
         };
         const cerrarModalAyuda = () => {
             modalAyuda.className = 'login-oculto';
+            setTimeout(() => scrollModalAlTop(modalAyuda), 50);
         };
 
         btnAyuda.addEventListener('click', abrirAyuda);

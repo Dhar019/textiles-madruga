@@ -2215,13 +2215,14 @@ body.admin-abierto .nav {
     display: flex;
     gap: 10px;
     margin-bottom: 15px;
-    align-items: center;
-    flex-wrap: wrap;
+    align-items: stretch;
+    flex-wrap: nowrap;
+    width: 100%;
 }
 
 .admin-buscador input {
-    flex: 1;
-    min-width: 200px;
+    flex: 1 1 auto;
+    min-width: 0;
     padding: 10px 16px;
     border: 2px solid #EDE8E1;
     border-radius: 12px;
@@ -2229,6 +2230,8 @@ body.admin-abierto .nav {
     font-family: var(--font-sans);
     background: white;
     transition: border-color 0.3s ease;
+    height: 42px;
+    box-sizing: border-box;
 }
 
 .admin-buscador input:focus {
@@ -2238,8 +2241,28 @@ body.admin-abierto .nav {
 }
 
 .admin-buscador button {
-    padding: 10px 20px;
+    padding: 0 20px;
+    height: 42px;
     white-space: nowrap;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+    .admin-buscador {
+        flex-wrap: wrap;
+    }
+    
+    .admin-buscador input {
+        flex: 1 1 100%;
+    }
+    
+    .admin-buscador button {
+        flex: 1 1 calc(50% - 5px);
+    }
 }
 
 @media (max-width: 480px) {
@@ -2250,6 +2273,7 @@ body.admin-abierto .nav {
     
     .admin-buscador button {
         width: 100%;
+        flex: 1 1 auto;
     }
 }
 
