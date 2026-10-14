@@ -1,6 +1,6 @@
 // ============================================
 // WORKER - TEXTILES MADRUGA API
-// Versión 5.0 - Pedidos ampliados + Gmail automático
+// Versión 5.1 - Sistema de variantes
 // ============================================
 
 // ============================================
@@ -89,6 +89,14 @@ async function enviarGmailNotificacion(env, pedido) {
     try {
         const asunto = `🛒 Nuevo pedido ${pedido.id} - ${pedido.producto}`;
         
+        // Construir string de tallas (compatible con variantes y talla única)
+        let tallasTexto = '';
+        if (pedido.variantes && pedido.variantes.length > 0) {
+            tallasTexto = pedido.variantes.map(v => `${v.cantidad}x talla ${v.talla}`).join(', ');
+        } else if (pedido.talla) {
+            tallasTexto = pedido.talla;
+        }
+        
         const cuerpoHtml = `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #FAF8F5; border-radius: 12px;">
                 <h2 style="color: #E87A20; border-bottom: 2px solid #E87A20; padding-bottom: 10px;">
@@ -98,9 +106,8 @@ async function enviarGmailNotificacion(env, pedido) {
                 <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
                     <p style="margin: 5px 0;"><strong>ID Pedido:</strong> <span style="color: #E87A20; font-weight: bold;">${pedido.id}</span></p>
                     <p style="margin: 5px 0;"><strong>Producto:</strong> ${pedido.producto}</p>
-                    <p style="margin: 5px 0;"><strong>Cantidad:</strong> ${pedido.cantidad}</p>
-                    ${pedido.talla ? `<p style="margin: 5px 0;"><strong>Talla:</strong> ${pedido.talla}</p>` : ''}
-                    ${pedido.color ? `<p style="margin: 5px 0;"><strong>Color:</strong> ${pedido.color}</p>` : ''}
+                    <p style="margin: 5px 0;"><strong>Total de piezas:</strong> ${pedido.cantidad}</p>
+                    ${tallasTexto ? `<p style="margin: 5px 0;"><strong>Tallas:</strong> ${tallasTexto}</p>` : ''}
                 </div>
                 
                 <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
@@ -137,25 +144,13 @@ async function enviarGmailNotificacion(env, pedido) {
             </div>
         `;
 
-        // Llamada a la API de Gmail usando OAuth2 con App Password
-        // Codificamos en base64 para el protocolo SMTP
-        const credentials = btoa(`${env.GMAIL_USER}:${env.GMAIL_APP_PASSWORD}`);
-        
-        // Usamos la API REST de Gmail a través de raw MIME
-        // Alternativa más simple: usar un servicio SMTP-como-servicio
-        // En Cloudflare Workers no podemos usar SMTP directo, así que usamos un email service HTTP
-        
-        // Usamos Resend como alternativa gratuita (o similar)
-        // Pero como quieres usar tu Gmail directamente, usamos la API de EmailJS a través del servidor
-        // O usamos una función serverless intermedia
-        
-        // SOLUCIÓN: Usar el servicio de email de Cloudflare Workers (MailChannels cerrado)
-        // Mejor solución: usar un endpoint HTTP de reenvío de email
-        
         console.log('📧 Enviando Gmail para pedido:', pedido.id);
+        console.log('📧 Asunto:', asunto);
+        console.log('📧 Destinatario:', env.GMAIL_USER);
         
-        // Usaremos el endpoint HTTP de un servicio de email gratuito
-        // Por ahora guardamos el pedido y lo mostraremos en el panel admin
+        // NOTA: Cloudflare Workers no soporta SMTP directo.
+        // Aquí se podría integrar con EmailJS, Resend, Brevo, etc.
+        // Por ahora, el pedido se guarda en KV y se ve en el panel admin.
         
         return true;
     } catch (error) {
@@ -439,15 +434,15 @@ export default {
                     status: 'ok',
                     message: 'API de Textiles Madruga funcionando',
                     db: 'kv',
-                    version: '5.0',
+                    version: '5.1',
                     features: [
                         'IDs alfanuméricos',
                         'Ofertas avanzadas',
                         'DELETE robusto',
                         'Timeout de sesión',
                         'Logout vía sendBeacon',
-                        'Sistema de pedidos ampliado',
-                        'Gmail notificaciones'
+                        'Sistema de pedidos con variantes',
+                        'Tallas dinámicas'
                     ],
                     timestamp: new Date().toISOString()
                 }), { headers: { 'Content-Type': 'application/json' } }), request);
@@ -467,6 +462,25 @@ export default {
                     }), { status: 400, headers: { 'Content-Type': 'application/json' } }), request);
                 }
                 
+                // Validar variantes
+                let variantes = [];
+                if (Array.isArray(body.variantes) && body.variantes.length > 0) {
+                    variantes = body.variantes.map(v => ({
+                        talla: String(v.talla || '').substring(0, 10).toUpperCase(),
+                        cantidad: parseInt(v.cantidad) || 1
+                    })).filter(v => v.talla && v.cantidad > 0);
+                }
+                
+                const cantidadTotal = parseInt(body.cantidad) || 1;
+                const cantidadAsignada = variantes.reduce((sum, v) => sum + v.cantidad, 0);
+                
+                // Validar que las variantes sumen la cantidad total (si hay variantes)
+                if (variantes.length > 0 && cantidadAsignada !== cantidadTotal) {
+                    return addCors(new Response(JSON.stringify({ 
+                        error: `Las tallas suman ${cantidadAsignada} pero el total es ${cantidadTotal}. Ajusta las cantidades.`
+                    }), { status: 400, headers: { 'Content-Type': 'application/json' } }), request);
+                }
+                
                 const pedidos = await leerPedidos(env);
                 const idPedido = await generarIdPedido(env);
                 
@@ -480,9 +494,9 @@ export default {
                     direccion: String(body.direccion || '').substring(0, 200),
                     referencia: String(body.referencia || '').substring(0, 200),
                     municipio: String(body.municipio || '').substring(0, 100),
-                    cantidad: parseInt(body.cantidad) || 1,
-                    talla: String(body.talla || '').substring(0, 20),
-                    color: String(body.color || '').substring(0, 50),
+                    cantidad: cantidadTotal,
+                    variantes: variantes,                                    // ← NUEVO: array de {talla, cantidad}
+                    tallasTexto: String(body.tallasTexto || '').substring(0, 300),  // ← NUEVO: string legible
                     notas: String(body.notas || '').substring(0, 500),
                     metodoPago: body.metodoPago || 'efectivo',
                     contactoPreferido: body.contactoPreferido || 'whatsapp',
@@ -495,7 +509,7 @@ export default {
                 pedidos.unshift(nuevoPedido);
                 await guardarPedidos(env, pedidos);
                 
-                console.log('📦 Nuevo pedido:', idPedido, '-', body.nombre, 'via', body.via);
+                console.log('📦 Nuevo pedido:', idPedido, '-', body.nombre, '-', variantes.length, 'variantes');
                 
                 // Intentar enviar notificación por Gmail
                 if (body.via === 'email') {

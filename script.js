@@ -1,6 +1,6 @@
 // ============================================
 // SCRIPT.JS - Textiles Madruga
-// Versión 5.0 - Pedidos ampliados + Gmail vía Worker
+// Versión 5.1 - Sistema de variantes + arreglos
 // ============================================
 
 const API_URL = 'https://textiles-madruga-api.eldani000219.workers.dev/api';
@@ -14,6 +14,18 @@ const NEGOCIO = {
     email: 'textilesmadruga@gmail.com',
     telegram: ''
 };
+
+// ============================================
+// HELPER: Scroll al top de un modal
+// ============================================
+function scrollModalAlTop(modalElement) {
+    if (!modalElement) return;
+    const contenido = modalElement.querySelector('.login-contenido, .modal-contenido, .admin-contenido, .confirmar-contenido, .bienvenida-contenido');
+    if (contenido) {
+        contenido.scrollTop = 0;
+    }
+    document.body.scrollTop = 0;
+}
 
 // ============================================
 // MODAL DE CONFIRMACIÓN PROPIO
@@ -128,6 +140,7 @@ let verificadorSesion = null;
 let productoPedidoActual = '';
 let pedidosGlobales = [];
 let filtroPedidoActual = 'todos';
+let varianteIdCounter = 0;
 
 // ============================================
 // 1. AUTENTICACIÓN
@@ -402,9 +415,6 @@ document.addEventListener('visibilitychange', () => {
     }
 });
 
-// ============================================
-// 4. CIERRE DE SESIÓN AL CERRAR PESTAÑA/VENTANA
-// ============================================
 window.addEventListener('pagehide', () => {
     if (isLoggedIn()) {
         sessionStorage.setItem('tm_pestana_activa', 'false');
@@ -442,7 +452,7 @@ window.addEventListener('beforeunload', () => {
 });
 
 // ============================================
-// 5. NOTIFICACIONES
+// 4. NOTIFICACIONES
 // ============================================
 function mostrarNotificacion(mensaje, tipo = 'info') {
     const existente = document.querySelector('.notificacion');
@@ -461,7 +471,7 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
 }
 
 // ============================================
-// 6. CARGA DE PRODUCTOS
+// 5. CARGA DE PRODUCTOS
 // ============================================
 async function cargarProductos() {
     try {
@@ -518,7 +528,7 @@ function obtenerProductoPorId(id, datos) {
 }
 
 // ============================================
-// 7. RENDERIZADO DE PRODUCTOS
+// 6. RENDERIZADO DE PRODUCTOS
 // ============================================
 function renderizarOfertas(ofertasIds, datos) {
     const contenedor = document.querySelector('#ofertas-ropa .grid-productos');
@@ -657,7 +667,7 @@ function renderizarProductosConModal(productos, contenedorSelector, datos) {
 }
 
 // ============================================
-// 8. MODAL DE DETALLE
+// 7. MODAL DE DETALLE
 // ============================================
 const modal = document.getElementById('modal-detalle');
 const modalBody = document.getElementById('modal-body');
@@ -738,6 +748,7 @@ function abrirModal(producto, datos) {
     modal.className = 'modal-visible';
     document.body.style.overflow = 'hidden';
     document.body.classList.add('modal-abierto');
+    scrollModalAlTop(modal);
 }
 
 function cerrarModal() {
@@ -751,7 +762,7 @@ modalOverlay?.addEventListener('click', cerrarModal);
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrarModal(); });
 
 // ============================================
-// 9. LIGHTBOX DE IMAGEN
+// 8. LIGHTBOX DE IMAGEN
 // ============================================
 const lightbox = document.getElementById('lightbox');
 const lightboxImg = document.getElementById('lightbox-img');
@@ -792,6 +803,146 @@ window.abrirLightbox = abrirLightbox;
 window.cerrarLightbox = cerrarLightbox;
 
 // ============================================
+// 9. SISTEMA DE VARIANTES (TALLAS DINÁMICAS)
+// ============================================
+
+function crearVarianteHTML(talla = '', cantidad = 1) {
+    varianteIdCounter++;
+    const id = varianteIdCounter;
+    return `
+        <div class="variante-item" data-variante-id="${id}">
+            <input type="text" 
+                   class="variante-talla" 
+                   placeholder="Talla (Ej: M)" 
+                   value="${talla}"
+                   maxlength="10"
+                   oninput="actualizarValidacionVariantes()">
+            <div class="variante-cantidad-wrapper">
+                <button type="button" class="variante-btn-restar" onclick="cambiarCantidadVariante(${id}, -1)">−</button>
+                <input type="number" 
+                       class="variante-cantidad" 
+                       value="${cantidad}" 
+                       min="1" 
+                       max="999"
+                       oninput="actualizarValidacionVariantes()">
+                <button type="button" class="variante-btn-sumar" onclick="cambiarCantidadVariante(${id}, 1)">+</button>
+            </div>
+            <button type="button" class="variante-eliminar" onclick="eliminarVariante(${id})" aria-label="Eliminar variante">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+    `;
+}
+
+function añadirVariante(talla = '', cantidad = 1) {
+    const lista = document.getElementById('lista-variantes');
+    if (!lista) return;
+    lista.insertAdjacentHTML('beforeend', crearVarianteHTML(talla, cantidad));
+    actualizarValidacionVariantes();
+    const items = lista.querySelectorAll('.variante-item');
+    const ultimo = items[items.length - 1];
+    ultimo?.querySelector('.variante-talla')?.focus();
+}
+
+function eliminarVariante(id) {
+    const item = document.querySelector(`.variante-item[data-variante-id="${id}"]`);
+    if (!item) return;
+    
+    const total = document.querySelectorAll('.variante-item').length;
+    if (total <= 1) {
+        mostrarNotificacion('Debe haber al menos una talla', 'warning');
+        return;
+    }
+    
+    item.style.opacity = '0';
+    item.style.transform = 'translateX(-20px)';
+    setTimeout(() => {
+        item.remove();
+        actualizarValidacionVariantes();
+    }, 200);
+}
+
+function cambiarCantidadVariante(id, delta) {
+    const item = document.querySelector(`.variante-item[data-variante-id="${id}"]`);
+    if (!item) return;
+    const input = item.querySelector('.variante-cantidad');
+    let valor = parseInt(input.value) || 1;
+    valor = Math.max(1, Math.min(999, valor + delta));
+    input.value = valor;
+    actualizarValidacionVariantes();
+}
+
+function cambiarCantidadTotal(delta) {
+    const input = document.getElementById('cantidad-total');
+    if (!input) return;
+    let valor = parseInt(input.value) || 1;
+    valor = Math.max(1, Math.min(999, valor + delta));
+    input.value = valor;
+    actualizarValidacionVariantes();
+}
+
+function actualizarValidacionVariantes() {
+    const items = document.querySelectorAll('.variante-item');
+    let totalAsignado = 0;
+    let tallasValidas = 0;
+    
+    items.forEach(item => {
+        const talla = item.querySelector('.variante-talla')?.value.trim() || '';
+        const cantidad = parseInt(item.querySelector('.variante-cantidad')?.value) || 0;
+        if (talla && cantidad > 0) {
+            totalAsignado += cantidad;
+            tallasValidas++;
+        }
+    });
+    
+    const cantidadTotal = parseInt(document.getElementById('cantidad-total')?.value) || 1;
+    
+    const elAsignadas = document.getElementById('validacion-asignadas');
+    const elTotal = document.getElementById('validacion-total');
+    const elMensaje = document.getElementById('validacion-mensaje');
+    const elValidacion = document.getElementById('validacion-variantes');
+    
+    if (elAsignadas) elAsignadas.textContent = totalAsignado;
+    if (elTotal) elTotal.textContent = cantidadTotal;
+    
+    if (!elValidacion || !elMensaje) return;
+    
+    elValidacion.classList.remove('ok', 'error', 'pendiente');
+    
+    if (tallasValidas === 0) {
+        elValidacion.classList.add('pendiente');
+        elMensaje.textContent = '👉 Empieza escribiendo una talla';
+    } else if (totalAsignado < cantidadTotal) {
+        elValidacion.classList.add('pendiente');
+        const faltan = cantidadTotal - totalAsignado;
+        elMensaje.textContent = `⚠️ Te faltan ${faltan} pieza${faltan !== 1 ? 's' : ''} por asignar`;
+    } else if (totalAsignado > cantidadTotal) {
+        elValidacion.classList.add('error');
+        const sobran = totalAsignado - cantidadTotal;
+        elMensaje.textContent = `❌ Te sobran ${sobran} pieza${sobran !== 1 ? 's' : ''}. Reduce la cantidad.`;
+    } else {
+        elValidacion.classList.add('ok');
+        elMensaje.textContent = '✅ ¡Perfecto! Las tallas coinciden con el total';
+    }
+}
+
+function inicializarVariantes() {
+    const lista = document.getElementById('lista-variantes');
+    if (!lista) return;
+    lista.innerHTML = '';
+    varianteIdCounter = 0;
+    
+    const cantidadTotal = document.getElementById('cantidad-total');
+    if (cantidadTotal) cantidadTotal.value = 1;
+    
+    añadirVariante();
+    actualizarValidacionVariantes();
+}
+
+// ============================================
 // 10. SOLICITAR PEDIDO (AMPLIADO)
 // ============================================
 function solicitarPedido(producto) {
@@ -808,6 +959,10 @@ function solicitarPedido(producto) {
     document.getElementById('modal-pedido-producto').textContent = `Producto: ${producto}`;
     modalPedido.className = 'login-visible';
     document.body.style.overflow = 'hidden';
+    scrollModalAlTop(modalPedido);
+    
+    // Inicializar sistema de variantes
+    inicializarVariantes();
 
     const cerrar = () => {
         modalPedido.className = 'login-oculto';
@@ -823,7 +978,6 @@ function solicitarPedido(producto) {
         e.preventDefault();
     };
 
-    // Escuchar cambios en el tipo de entrega
     document.querySelectorAll('input[name="tipo-entrega"]').forEach(radio => {
         radio.addEventListener('change', toggleCamposEntrega);
     });
@@ -840,51 +994,88 @@ function toggleCamposEntrega() {
 }
 
 async function enviarPedidoPor(via) {
-    // Recoger todos los campos
-    const nombre = document.getElementById('pedido-nombre').value.trim();
-    const telefono = document.getElementById('pedido-telefono').value.trim();
-    const email = document.getElementById('pedido-email').value.trim();
-    const tipoEntrega = document.querySelector('input[name="tipo-entrega"]:checked')?.value || 'domicilio';
-    const direccion = document.getElementById('pedido-direccion').value.trim();
-    const referencia = document.getElementById('pedido-referencia').value.trim();
-    const municipio = document.getElementById('pedido-municipio').value.trim();
-    const cantidad = document.getElementById('pedido-cantidad').value.trim();
-    const talla = document.getElementById('pedido-talla').value.trim();
-    const color = document.getElementById('pedido-color').value.trim();
-    const notas = document.getElementById('pedido-notas').value.trim();
-    const metodoPago = document.querySelector('input[name="metodo-pago"]:checked')?.value || 'efectivo';
-    const contactoPreferido = document.querySelector('input[name="contacto-preferido"]:checked')?.value || 'whatsapp';
+    const safeGet = (id) => {
+        const el = document.getElementById(id);
+        return el ? el.value.trim() : '';
+    };
 
-    // Validaciones
+    const safeRadio = (name, fallback = '') => {
+        const el = document.querySelector(`input[name="${name}"]:checked`);
+        return el ? el.value : fallback;
+    };
+
+    // Recoger datos del cliente
+    const nombre = safeGet('pedido-nombre');
+    const telefono = safeGet('pedido-telefono');
+    const email = safeGet('pedido-email');
+    const tipoEntrega = safeRadio('tipo-entrega', 'domicilio');
+    const direccion = safeGet('pedido-direccion');
+    const referencia = safeGet('pedido-referencia');
+    const municipio = safeGet('pedido-municipio');
+    const notas = safeGet('pedido-notas');
+    const metodoPago = safeRadio('metodo-pago', 'efectivo');
+    const contactoPreferido = safeRadio('contacto-preferido', 'whatsapp');
+
+    // Recoger variantes
+    const variantesItems = document.querySelectorAll('.variante-item');
+    const variantes = [];
+    let cantidadAsignada = 0;
+
+    variantesItems.forEach(item => {
+        const talla = item.querySelector('.variante-talla')?.value.trim() || '';
+        const cantidad = parseInt(item.querySelector('.variante-cantidad')?.value) || 0;
+        if (talla && cantidad > 0) {
+            variantes.push({ talla: talla.toUpperCase(), cantidad });
+            cantidadAsignada += cantidad;
+        }
+    });
+
+    const cantidadTotal = parseInt(document.getElementById('cantidad-total')?.value) || 1;
+
+    // Validaciones básicas
     if (!nombre) {
         mostrarNotificacion('Por favor, escribe tu nombre', 'error');
-        document.getElementById('pedido-nombre').focus();
+        document.getElementById('pedido-nombre')?.focus();
         return;
     }
     if (!telefono) {
         mostrarNotificacion('Por favor, escribe tu teléfono', 'error');
-        document.getElementById('pedido-telefono').focus();
+        document.getElementById('pedido-telefono')?.focus();
         return;
     }
     if (tipoEntrega === 'domicilio') {
         if (!direccion) {
             mostrarNotificacion('Por favor, escribe tu dirección', 'error');
-            document.getElementById('pedido-direccion').focus();
+            document.getElementById('pedido-direccion')?.focus();
             return;
         }
         if (!municipio) {
             mostrarNotificacion('Por favor, escribe tu municipio', 'error');
-            document.getElementById('pedido-municipio').focus();
+            document.getElementById('pedido-municipio')?.focus();
             return;
         }
     }
-    if (!cantidad || parseInt(cantidad) < 1) {
-        mostrarNotificacion('La cantidad debe ser al menos 1', 'error');
-        document.getElementById('pedido-cantidad').focus();
+
+    // Validación de variantes
+    if (variantes.length === 0) {
+        mostrarNotificacion('Debes asignar al menos una talla', 'error');
+        document.getElementById('lista-variantes')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
     }
 
-    // Datos del pedido para enviar al Worker
+    if (cantidadAsignada !== cantidadTotal) {
+        mostrarNotificacion(
+            `Las tallas suman ${cantidadAsignada} pero pediste ${cantidadTotal} piezas. Ajusta las cantidades.`,
+            'error'
+        );
+        document.getElementById('validacion-variantes')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+    }
+
+    // Construir texto de variantes
+    const variantesTexto = variantes.map(v => `${v.cantidad}x talla ${v.talla}`).join(', ');
+
+    // Datos del pedido
     const pedidoData = {
         producto: productoPedidoActual,
         nombre,
@@ -894,16 +1085,16 @@ async function enviarPedidoPor(via) {
         direccion: tipoEntrega === 'domicilio' ? direccion : '',
         referencia: tipoEntrega === 'domicilio' ? referencia : '',
         municipio: tipoEntrega === 'domicilio' ? municipio : '',
-        cantidad: parseInt(cantidad),
-        talla,
-        color,
+        cantidad: cantidadTotal,
+        variantes: variantes,
+        tallasTexto: variantesTexto,
         notas,
         metodoPago,
         contactoPreferido,
         via
     };
 
-    // 1. Guardar el pedido en el Worker (siempre)
+    // 1. Guardar en el Worker
     try {
         const respuesta = await fetch(`${API_URL}/pedidos`, {
             method: 'POST',
@@ -911,25 +1102,24 @@ async function enviarPedidoPor(via) {
             body: JSON.stringify(pedidoData)
         });
 
-        if (!respuesta.ok) {
-            console.warn('⚠️ No se pudo guardar el pedido en el servidor');
-        } else {
+        if (respuesta.ok) {
             const data = await respuesta.json();
             console.log('✅ Pedido guardado en el servidor:', data.id);
+        } else {
+            console.warn('⚠️ No se pudo guardar el pedido');
         }
     } catch (error) {
         console.warn('⚠️ Error al guardar pedido:', error);
     }
 
-    // 2. Mensaje para WhatsApp/Gmail
+    // 2. Mensaje
     const mensaje = `¡Hola! Quiero hacer un pedido:\n\n` +
         `📦 Producto: ${productoPedidoActual}\n` +
         `👤 Nombre: ${nombre}\n` +
         `📞 Teléfono: ${telefono}\n` +
         (email ? `✉️ Gmail: ${email}\n` : '') +
-        `🔢 Cantidad: ${cantidad}\n` +
-        (talla ? `📏 Talla: ${talla}\n` : '') +
-        (color ? `🎨 Color: ${color}\n` : '') +
+        `🔢 Total: ${cantidadTotal} pieza${cantidadTotal !== 1 ? 's' : ''}\n` +
+        `📏 Tallas: ${variantesTexto}\n` +
         `🚚 Entrega: ${tipoEntrega === 'domicilio' ? 'A domicilio' : 'Recoger en tienda'}\n` +
         (tipoEntrega === 'domicilio' ? 
             `📍 Dirección: ${direccion}\n` +
@@ -943,7 +1133,7 @@ async function enviarPedidoPor(via) {
 
     const mensajeEncoded = encodeURIComponent(mensaje);
 
-    // 3. Abrir la vía elegida
+    // 3. Abrir vía
     if (via === 'whatsapp') {
         const esMovil = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         const url = esMovil 
@@ -953,18 +1143,17 @@ async function enviarPedidoPor(via) {
         window.open(url, '_blank');
         mostrarNotificacion('Pedido enviado. Se abrirá WhatsApp.', 'success');
     } else if (via === 'email') {
-        // Gmail se envía desde el Worker. Aquí solo notificamos.
         mostrarNotificacion('Pedido enviado. Te llegará confirmación por Gmail.', 'success');
     } else {
         mostrarNotificacion('¡Pedido enviado! Te contactaremos pronto.', 'success');
     }
 
-    // 4. Cerrar el modal
+    // 4. Cerrar modal
     setTimeout(() => {
         const modalPedido = document.getElementById('modal-pedido');
-        modalPedido.className = 'login-oculto';
+        if (modalPedido) modalPedido.className = 'login-oculto';
         document.body.style.overflow = 'auto';
-        document.getElementById('modal-pedido-form').reset();
+        document.getElementById('modal-pedido-form')?.reset();
         productoPedidoActual = '';
     }, 2000);
 }
@@ -982,6 +1171,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (btnAyuda && modalAyuda) {
         const abrirAyuda = () => {
             modalAyuda.className = 'login-visible';
+            scrollModalAlTop(modalAyuda);
         };
         const cerrarModalAyuda = () => {
             modalAyuda.className = 'login-oculto';
@@ -1015,6 +1205,7 @@ function mostrarLogin() {
     if (loginModal) {
         loginModal.className = 'login-visible';
         document.body.style.overflow = 'hidden';
+        scrollModalAlTop(loginModal);
     }
 }
 
@@ -1034,6 +1225,7 @@ function abrirAdmin() {
     reiniciarTemporizadorInactividad();
     iniciarVerificadorSesion();
     cargarPedidosAdmin();
+    scrollModalAlTop(adminPanel);
 }
 
 function cerrarAdmin() {
@@ -1463,6 +1655,24 @@ function renderizarPedidosAdmin() {
             minute: '2-digit'
         });
 
+        // Compatibilidad con pedidos antiguos (con talla única) y nuevos (con variantes)
+        let tallasHTML = '';
+        if (pedido.variantes && pedido.variantes.length > 0) {
+            tallasHTML = `
+                <div class="pedido-dato" style="grid-column: 1 / -1;">
+                    <strong>Tallas:</strong>
+                    <span>${pedido.variantes.map(v => `${v.cantidad}x talla ${v.talla}`).join(' · ')}</span>
+                </div>
+            `;
+        } else if (pedido.talla) {
+            tallasHTML = `
+                <div class="pedido-dato">
+                    <strong>Talla:</strong>
+                    <span>${pedido.talla}</span>
+                </div>
+            `;
+        }
+
         html += `
             <div class="pedido-item estado-${pedido.estado}" data-id="${pedido.id}">
                 <div class="pedido-header">
@@ -1495,18 +1705,7 @@ function renderizarPedidosAdmin() {
                         <strong>Cantidad:</strong>
                         <span>${pedido.cantidad}</span>
                     </div>
-                    ${pedido.talla ? `
-                    <div class="pedido-dato">
-                        <strong>Talla:</strong>
-                        <span>${pedido.talla}</span>
-                    </div>
-                    ` : ''}
-                    ${pedido.color ? `
-                    <div class="pedido-dato">
-                        <strong>Color:</strong>
-                        <span>${pedido.color}</span>
-                    </div>
-                    ` : ''}
+                    ${tallasHTML}
                     <div class="pedido-dato">
                         <strong>Entrega:</strong>
                         <span>${pedido.tipoEntrega === 'domicilio' ? '🏠 A domicilio' : '🏪 Recoger en tienda'}</span>
@@ -2133,6 +2332,7 @@ function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit }) {
 
     modal.className = 'login-visible';
     document.body.style.overflow = 'hidden';
+    scrollModalAlTop(modal);
 
     const cerrarModal = () => {
         modal.className = 'login-oculto';
@@ -2162,6 +2362,7 @@ function mostrarModalBienvenida() {
     modal.className = 'bienvenida-visible';
     document.body.style.overflow = 'hidden';
     document.body.classList.add('bienvenida-abierta');
+    scrollModalAlTop(modal);
 }
 
 function cerrarModalBienvenida() {
@@ -2432,7 +2633,21 @@ function manejarArchivoImagen(file, preview, hiddenInput, content) {
 }
 
 // ============================================
-// 22. INICIO
+// 22. LISTENERS DEL SISTEMA DE VARIANTES
+// ============================================
+document.addEventListener('DOMContentLoaded', function() {
+    // Botón sumar cantidad total
+    document.getElementById('cantidad-total-sumar')?.addEventListener('click', () => cambiarCantidadTotal(1));
+    
+    // Botón restar cantidad total
+    document.getElementById('cantidad-total-restar')?.addEventListener('click', () => cambiarCantidadTotal(-1));
+    
+    // Botón añadir variante
+    document.getElementById('btn-añadir-variante')?.addEventListener('click', () => añadirVariante());
+});
+
+// ============================================
+// 23. INICIO
 // ============================================
 async function iniciar() {
     console.log('🚀 Cargando productos...');
@@ -2474,7 +2689,7 @@ document.addEventListener('DOMContentLoaded', iniciar);
 document.addEventListener('DOMContentLoaded', inicializarDropZone);
 
 // ============================================
-// 23. EXPOSICIÓN GLOBAL
+// 24. EXPOSICIÓN GLOBAL
 // ============================================
 window.confirmar = confirmar;
 window.guardarOferta = guardarOferta;
@@ -2507,9 +2722,17 @@ window.abrirModalGenerico = abrirModalGenerico;
 window.mostrarModalBienvenida = mostrarModalBienvenida;
 window.cerrarModalBienvenida = cerrarModalBienvenida;
 window.eliminarUsuario = eliminarUsuario;
+window.abrirLightbox = abrirLightbox;
+window.cerrarLightbox = cerrarLightbox;
+window.añadirVariante = añadirVariante;
+window.eliminarVariante = eliminarVariante;
+window.cambiarCantidadVariante = cambiarCantidadVariante;
+window.cambiarCantidadTotal = cambiarCantidadTotal;
+window.actualizarValidacionVariantes = actualizarValidacionVariantes;
+window.inicializarVariantes = inicializarVariantes;
 
 // ============================================
-// 24. MENÚ HAMBURGUESA
+// 25. MENÚ HAMBURGUESA
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
     const hamburguesa = document.getElementById('menu-hamburguesa');

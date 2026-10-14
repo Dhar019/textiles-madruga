@@ -703,10 +703,12 @@
                         <div class="radio-group">
                             <label class="radio-option">
                                 <input type="radio" name="tipo-entrega" value="domicilio" id="entrega-domicilio" checked>
+                                <span class="radio-punto"></span>
                                 <span>A domicilio</span>
                             </label>
                             <label class="radio-option">
                                 <input type="radio" name="tipo-entrega" value="tienda" id="entrega-tienda">
+                                <span class="radio-punto"></span>
                                 <span>Recoger en tienda</span>
                             </label>
                         </div>
@@ -740,7 +742,7 @@
                 </div>
             
                 <!-- ============================================ -->
-                <!-- SECCIÓN: DETALLES DEL PEDIDO -->
+                <!-- SECCIÓN: DETALLES DEL PEDIDO (VARIANTES) -->
                 <!-- ============================================ -->
                 <div class="pedido-seccion">
                     <h3 class="pedido-seccion-titulo">
@@ -751,25 +753,58 @@
                         </svg>
                         Detalles del pedido
                     </h3>
-                
-                    <div class="form-row-2">
-                        <div class="login-group">
-                            <label>Cantidad *</label>
-                            <input type="number" id="pedido-cantidad" value="1" min="1" max="999" required>
-                        </div>
-                    
-                        <div class="login-group">
-                            <label>Talla (opcional)</label>
-                            <input type="text" id="pedido-talla" placeholder="Ej: M, L, XL" maxlength="20">
+
+                    <!-- Selector de cantidad total -->
+                    <div class="cantidad-total-selector">
+                        <label class="cantidad-total-label">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="7" height="7"/>
+                                <rect x="14" y="3" width="7" height="7"/>
+                                <rect x="14" y="14" width="7" height="7"/>
+                                <rect x="3" y="14" width="7" height="7"/>
+                            </svg>
+                            ¿Cuántas piezas en total?
+                        </label>
+                        <div class="cantidad-total-wrapper">
+                            <button type="button" class="cantidad-btn" id="cantidad-total-restar">−</button>
+                            <input type="number" id="cantidad-total" value="1" min="1" max="999" readonly>
+                            <button type="button" class="cantidad-btn" id="cantidad-total-sumar">+</button>
                         </div>
                     </div>
-                
-                    <div class="login-group">
-                        <label>Color (opcional)</label>
-                        <input type="text" id="pedido-color" placeholder="Ej: Azul, Rojo" maxlength="50">
+
+                    <!-- Lista de tallas -->
+                    <div class="variantes-container">
+                        <p class="variantes-hint">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="12" y1="8" x2="12" y2="12"/>
+                                <line x1="12" y1="16" x2="12.01" y2="16"/>
+                            </svg>
+                            Distribuye las piezas entre las tallas que necesites
+                        </p>
+                        <div id="lista-variantes"></div>
+
+                        <button type="button" class="btn-añadir-variante" id="btn-añadir-variante">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="5" x2="12" y2="19"/>
+                                <line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                            Añadir otra talla
+                        </button>
                     </div>
-                
-                    <div class="login-group">
+
+                    <!-- Contador de validación -->
+                    <div class="validacion-variantes" id="validacion-variantes">
+                        <div class="validacion-info">
+                            <span class="validacion-label">Piezas asignadas:</span>
+                            <span class="validacion-valor" id="validacion-asignadas">0</span>
+                            <span class="validacion-de">de</span>
+                            <span class="validacion-total" id="validacion-total">1</span>
+                        </div>
+                        <div class="validacion-mensaje" id="validacion-mensaje"></div>
+                    </div>
+
+                    <div class="login-group" style="margin-top: 14px;">
                         <label>Notas adicionales (opcional)</label>
                         <input type="text" id="pedido-notas" placeholder="Ej: Entregar después de las 5pm" maxlength="500">
                     </div>
@@ -792,10 +827,12 @@
                         <div class="radio-group">
                             <label class="radio-option">
                                 <input type="radio" name="metodo-pago" value="efectivo" checked>
+                                <span class="radio-punto"></span>
                                 <span>Efectivo</span>
                             </label>
                             <label class="radio-option">
                                 <input type="radio" name="metodo-pago" value="transferencia">
+                                <span class="radio-punto"></span>
                                 <span>Transferencia</span>
                             </label>
                         </div>
@@ -827,14 +864,17 @@
                         <div class="radio-group">
                             <label class="radio-option">
                                 <input type="radio" name="contacto-preferido" value="whatsapp" checked>
+                                <span class="radio-punto"></span>
                                 <span>WhatsApp</span>
                             </label>
                             <label class="radio-option">
                                 <input type="radio" name="contacto-preferido" value="llamada">
+                                <span class="radio-punto"></span>
                                 <span>Llamada</span>
                             </label>
                             <label class="radio-option">
                                 <input type="radio" name="contacto-preferido" value="gmail">
+                                <span class="radio-punto"></span>
                                 <span>Gmail</span>
                             </label>
                         </div>
