@@ -1,6 +1,6 @@
 // ============================================
 // SCRIPT.JS - Textiles Madruga
-// Versión 5.1 - Sistema de variantes + arreglos
+// Versión 5.2 - Sistema de tallas por producto
 // ============================================
 
 const API_URL = 'https://textiles-madruga-api.eldani000219.workers.dev/api';
@@ -95,14 +95,121 @@ function confirmar(opciones) {
 }
 
 // ============================================
-// TURNSTILE
+// TURNSTILE - Con soporte de reintento
 // ============================================
 let turnstileToken = null;
+let turnstileWidgetId = null;
 
 window.onTurnstileSuccess = function(token) {
     turnstileToken = token;
     console.log('✅ Turnstile token recibido');
+    
+    const btnReintentar = document.getElementById('btn-reintentar-turnstile');
+    const errorDiv = document.getElementById('turnstile-error');
+    if (btnReintentar) btnReintentar.style.display = 'none';
+    if (errorDiv) errorDiv.style.display = 'none';
 };
+
+window.onTurnstileError = function(errorCode) {
+    console.warn('⚠️ Turnstile error:', errorCode);
+    turnstileToken = null;
+    
+    const btnReintentar = document.getElementById('btn-reintentar-turnstile');
+    const errorDiv = document.getElementById('turnstile-error');
+    if (btnReintentar) btnReintentar.style.display = 'flex';
+    if (errorDiv) errorDiv.style.display = 'flex';
+};
+
+window.onTurnstileExpired = function() {
+    console.warn('⏰ Turnstile expirado');
+    turnstileToken = null;
+    
+    const btnReintentar = document.getElementById('btn-reintentar-turnstile');
+    const errorDiv = document.getElementById('turnstile-error');
+    if (btnReintentar) btnReintentar.style.display = 'flex';
+    if (errorDiv) {
+        errorDiv.style.display = 'flex';
+        const span = errorDiv.querySelector('span');
+        if (span) span.textContent = 'La verificación expiró. Pulsa "Reintentar".';
+    }
+};
+
+function reintentarTurnstile() {
+    console.log('🔄 Reintentando Turnstile...');
+    
+    const btnReintentar = document.getElementById('btn-reintentar-turnstile');
+    const errorDiv = document.getElementById('turnstile-error');
+    const turnstileContainer = document.getElementById('turnstile-widget');
+    
+    if (!turnstileContainer) {
+        console.error('❌ No se encontró el contenedor de Turnstile');
+        return;
+    }
+    
+    if (btnReintentar) {
+        btnReintentar.classList.add('spinning');
+        btnReintentar.disabled = true;
+    }
+    if (errorDiv) errorDiv.style.display = 'none';
+    
+    turnstileToken = null;
+    
+    if (window.turnstile) {
+        try {
+            if (turnstileWidgetId !== null) {
+                window.turnstile.reset(turnstileWidgetId);
+                console.log('✅ Turnstile reseteado');
+            } else {
+                turnstileWidgetId = window.turnstile.render(turnstileContainer, {
+                    sitekey: '0x4AAAAAAFQbg2Ktk40L17gg',
+                    callback: 'onTurnstileSuccess',
+                    'error-callback': 'onTurnstileError',
+                    'expired-callback': 'onTurnstileExpired',
+                    size: 'flexible'
+                });
+                console.log('✅ Turnstile re-renderizado');
+            }
+        } catch (error) {
+            console.error('❌ Error al resetear Turnstile:', error);
+            recargarScriptTurnstile();
+        }
+    } else {
+        console.warn('⚠️ Turnstile no está cargado, recargando script...');
+        recargarScriptTurnstile();
+    }
+    
+    setTimeout(() => {
+        if (btnReintentar) {
+            btnReintentar.classList.remove('spinning');
+            btnReintentar.disabled = false;
+        }
+    }, 1500);
+}
+
+function recargarScriptTurnstile() {
+    const scripts = document.querySelectorAll('script[src*="challenges.cloudflare.com/turnstile"]');
+    scripts.forEach(s => s.remove());
+    
+    const nuevoScript = document.createElement('script');
+    nuevoScript.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad&render=explicit';
+    nuevoScript.async = true;
+    nuevoScript.defer = true;
+    document.head.appendChild(nuevoScript);
+    
+    window.onTurnstileLoad = function() {
+        console.log('✅ Script de Turnstile recargado');
+        const turnstileContainer = document.getElementById('turnstile-widget');
+        if (turnstileContainer && window.turnstile) {
+            turnstileWidgetId = window.turnstile.render(turnstileContainer, {
+                sitekey: '0x4AAAAAAFQbg2Ktk40L17gg',
+                callback: 'onTurnstileSuccess',
+                'error-callback': 'onTurnstileError',
+                'expired-callback': 'onTurnstileExpired',
+                size: 'flexible'
+            });
+        }
+    };
+}
 
 // ============================================
 // POLÍTICAS DE SEGURIDAD POR ROL
@@ -527,6 +634,16 @@ function obtenerProductoPorId(id, datos) {
     return null;
 }
 
+function obtenerProductoPorNombre(nombre) {
+    if (!datosGlobales || !datosGlobales.productos) return null;
+    for (const categoria of ['hombre', 'mujer', 'telas', 'objetos']) {
+        const productos = datosGlobales.productos[categoria] || [];
+        const encontrado = productos.find(p => p.nombre === nombre);
+        if (encontrado) return encontrado;
+    }
+    return null;
+}
+
 // ============================================
 // 6. RENDERIZADO DE PRODUCTOS
 // ============================================
@@ -803,20 +920,68 @@ window.abrirLightbox = abrirLightbox;
 window.cerrarLightbox = cerrarLightbox;
 
 // ============================================
-// 9. SISTEMA DE VARIANTES (TALLAS DINÁMICAS)
+// 9. HELPERS PARA TALLAS DEL PRODUCTO ACTUAL
 // ============================================
+function obtenerTallasDelProductoActual() {
+    const producto = obtenerProductoPorNombre(productoPedidoActual);
+    if (!producto) return [];
+    return producto.tallasDisponibles || [];
+}
 
+function obtenerTipoTallasDelProductoActual() {
+    const producto = obtenerProductoPorNombre(productoPedidoActual);
+    if (!producto) return 'alfabeticas';
+    return producto.tipoTallas || 'alfabeticas';
+}
+
+// ============================================
+// 10. SISTEMA DE VARIANTES (TALLAS DINÁMICAS)
+// ============================================
 function crearVarianteHTML(talla = '', cantidad = 1) {
     varianteIdCounter++;
     const id = varianteIdCounter;
+    
+    const tallasDisponibles = obtenerTallasDelProductoActual();
+    const tipoTallas = obtenerTipoTallasDelProductoActual();
+    
+    // Si el producto no tiene tallas, mostrar mensaje
+    if (tipoTallas === 'sin_tallas' || tallasDisponibles.length === 0) {
+        return `
+            <div class="variante-item variante-sin-tallas" data-variante-id="${id}">
+                <div class="variante-sin-tallas-info">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                    <span>Este producto no maneja tallas. Solo indica la cantidad.</span>
+                </div>
+                <div class="variante-cantidad-wrapper" style="flex: 0 0 140px;">
+                    <button type="button" class="variante-btn-restar" onclick="cambiarCantidadVariante(${id}, -1)">−</button>
+                    <input type="number" 
+                           class="variante-cantidad" 
+                           value="${cantidad}" 
+                           min="1" 
+                           max="999"
+                           oninput="actualizarValidacionVariantes()">
+                    <button type="button" class="variante-btn-sumar" onclick="cambiarCantidadVariante(${id}, 1)">+</button>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Generar las opciones del select
+    let opcionesHTML = '<option value="">-- Selecciona talla --</option>';
+    tallasDisponibles.forEach(t => {
+        const seleccionado = (t === talla) ? 'selected' : '';
+        opcionesHTML += `<option value="${t}" ${seleccionado}>${t}</option>`;
+    });
+    
     return `
         <div class="variante-item" data-variante-id="${id}">
-            <input type="text" 
-                   class="variante-talla" 
-                   placeholder="Talla (Ej: M)" 
-                   value="${talla}"
-                   maxlength="10"
-                   oninput="actualizarValidacionVariantes()">
+            <select class="variante-talla-select" onchange="actualizarValidacionVariantes()">
+                ${opcionesHTML}
+            </select>
             <div class="variante-cantidad-wrapper">
                 <button type="button" class="variante-btn-restar" onclick="cambiarCantidadVariante(${id}, -1)">−</button>
                 <input type="number" 
@@ -844,7 +1009,7 @@ function añadirVariante(talla = '', cantidad = 1) {
     actualizarValidacionVariantes();
     const items = lista.querySelectorAll('.variante-item');
     const ultimo = items[items.length - 1];
-    ultimo?.querySelector('.variante-talla')?.focus();
+    ultimo?.querySelector('.variante-talla-select')?.focus();
 }
 
 function eliminarVariante(id) {
@@ -890,8 +1055,11 @@ function actualizarValidacionVariantes() {
     let tallasValidas = 0;
     
     items.forEach(item => {
-        const talla = item.querySelector('.variante-talla')?.value.trim() || '';
+        const tallaSelect = item.querySelector('.variante-talla-select');
+        const esSinTallas = item.classList.contains('variante-sin-tallas');
+        const talla = esSinTallas ? 'UNICA' : (tallaSelect?.value.trim() || '');
         const cantidad = parseInt(item.querySelector('.variante-cantidad')?.value) || 0;
+        
         if (talla && cantidad > 0) {
             totalAsignado += cantidad;
             tallasValidas++;
@@ -914,7 +1082,7 @@ function actualizarValidacionVariantes() {
     
     if (tallasValidas === 0) {
         elValidacion.classList.add('pendiente');
-        elMensaje.textContent = '👉 Empieza escribiendo una talla';
+        elMensaje.textContent = '👉 Selecciona una talla y pon la cantidad';
     } else if (totalAsignado < cantidadTotal) {
         elValidacion.classList.add('pendiente');
         const faltan = cantidadTotal - totalAsignado;
@@ -943,7 +1111,7 @@ function inicializarVariantes() {
 }
 
 // ============================================
-// 10. SOLICITAR PEDIDO (AMPLIADO)
+// 11. SOLICITAR PEDIDO (AMPLIADO)
 // ============================================
 function solicitarPedido(producto) {
     const modalPedido = document.getElementById('modal-pedido');
@@ -1023,8 +1191,11 @@ async function enviarPedidoPor(via) {
     let cantidadAsignada = 0;
 
     variantesItems.forEach(item => {
-        const talla = item.querySelector('.variante-talla')?.value.trim() || '';
+        const esSinTallas = item.classList.contains('variante-sin-tallas');
+        const tallaSelect = item.querySelector('.variante-talla-select');
+        const talla = esSinTallas ? 'UNICA' : (tallaSelect?.value.trim() || '');
         const cantidad = parseInt(item.querySelector('.variante-cantidad')?.value) || 0;
+        
         if (talla && cantidad > 0) {
             variantes.push({ talla: talla.toUpperCase(), cantidad });
             cantidadAsignada += cantidad;
@@ -1064,6 +1235,18 @@ async function enviarPedidoPor(via) {
         return;
     }
 
+    // Validar que todas las variantes tengan talla seleccionada
+    const variantesSinTalla = !document.querySelector('.variante-sin-tallas') &&
+        Array.from(variantesItems).some(item => {
+            const sel = item.querySelector('.variante-talla-select');
+            return sel && !sel.value;
+        });
+
+    if (variantesSinTalla) {
+        mostrarNotificacion('Selecciona una talla en todas las variantes', 'error');
+        return;
+    }
+
     if (cantidadAsignada !== cantidadTotal) {
         mostrarNotificacion(
             `Las tallas suman ${cantidadAsignada} pero pediste ${cantidadTotal} piezas. Ajusta las cantidades.`,
@@ -1074,7 +1257,9 @@ async function enviarPedidoPor(via) {
     }
 
     // Construir texto de variantes
-    const variantesTexto = variantes.map(v => `${v.cantidad}x talla ${v.talla}`).join(', ');
+    const variantesTexto = variantes.map(v => 
+        v.talla === 'UNICA' ? `${v.cantidad}x` : `${v.cantidad}x talla ${v.talla}`
+    ).join(', ');
 
     // Datos del pedido
     const pedidoData = {
@@ -1163,7 +1348,7 @@ async function enviarPedidoPor(via) {
 }
 
 // ============================================
-// 10.1 MODAL DE AYUDA PARA PEDIDOS
+// 11.1 MODAL DE AYUDA PARA PEDIDOS
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
     const btnAyuda = document.getElementById('btn-ayuda-pedido');
@@ -1190,7 +1375,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ============================================
-// 11. PANEL DE ADMINISTRACIÓN
+// 12. PANEL DE ADMINISTRACIÓN
 // ============================================
 const adminPanel = document.getElementById('admin-panel');
 const adminCerrar = document.getElementById('admin-cerrar');
@@ -1278,6 +1463,16 @@ function renderizarAdminProductos() {
             const enOferta = producto.enOferta || false;
             const id = producto.id || producto._id || 'sin-id';
             const descripcion = producto.descripcion || 'Sin descripción';
+            
+            // Info de tallas
+            let tallasInfo = '';
+            if (producto.tipoTallas === 'sin_tallas') {
+                tallasInfo = '<span style="font-size:0.7rem;color:var(--color-gris);">Sin tallas</span>';
+            } else if (producto.tallasDisponibles && producto.tallasDisponibles.length > 0) {
+                tallasInfo = `<span style="font-size:0.7rem;color:var(--color-gris);">Tallas: ${producto.tallasDisponibles.join(', ')}</span>`;
+            } else {
+                tallasInfo = '<span style="font-size:0.7rem;color:#C0392B;">Sin tallas configuradas</span>';
+            }
 
             html += `
                 <div class="admin-producto-item" data-id="${id}" data-categoria="${categoria}">
@@ -1287,6 +1482,7 @@ function renderizarAdminProductos() {
                             <span class="nombre">${producto.nombre}</span>
                             <span class="descripcion">${descripcion.substring(0, 60)}${descripcion.length > 60 ? '...' : ''}</span>
                             <span class="id-producto">ID: ${id}</span>
+                            ${tallasInfo}
                         </div>
                         <span class="precio">${producto.precio.toFixed(2)} CUP</span>
                         <span class="categoria-tag">${categoriaNombres[categoria]}</span>
@@ -1401,6 +1597,81 @@ async function eliminarProductoAdmin(id) {
     }
 }
 
+// ============================================
+// 12.1 SISTEMA DE TALLAS EN ADMIN
+// ============================================
+function cambiarTipoTallas(tipo) {
+    const alfabeticas = document.getElementById('tallas-alfabeticas');
+    const numericas = document.getElementById('tallas-numericas');
+    const sinTallas = document.getElementById('tallas-sin');
+    
+    if (!alfabeticas || !numericas || !sinTallas) return;
+    
+    alfabeticas.style.display = 'none';
+    numericas.style.display = 'none';
+    sinTallas.style.display = 'none';
+    
+    document.querySelectorAll('.talla-checkbox').forEach(cb => cb.checked = false);
+    
+    if (tipo === 'alfabeticas') {
+        alfabeticas.style.display = 'flex';
+    } else if (tipo === 'numericas') {
+        numericas.style.display = 'flex';
+    } else {
+        sinTallas.style.display = 'flex';
+    }
+}
+
+function cargarTallasProducto(producto) {
+    document.querySelectorAll('input[name="tipo-tallas"]').forEach(r => r.checked = false);
+    document.querySelectorAll('.talla-checkbox').forEach(cb => cb.checked = false);
+    
+    const tipoTallas = producto.tipoTallas || 'alfabeticas';
+    const tallasDisponibles = producto.tallasDisponibles || [];
+    
+    const radioTipo = document.querySelector(`input[name="tipo-tallas"][value="${tipoTallas}"]`);
+    if (radioTipo) radioTipo.checked = true;
+    
+    cambiarTipoTallas(tipoTallas);
+    
+    if (tipoTallas !== 'sin_tallas') {
+        document.querySelectorAll('.talla-checkbox').forEach(cb => {
+            if (tallasDisponibles.includes(cb.value)) {
+                cb.checked = true;
+            }
+        });
+    }
+}
+
+function obtenerTallasSeleccionadas() {
+    const tipoTallas = document.querySelector('input[name="tipo-tallas"]:checked')?.value || 'alfabeticas';
+    
+    if (tipoTallas === 'sin_tallas') {
+        return {
+            tipoTallas: 'sin_tallas',
+            tallasDisponibles: []
+        };
+    }
+    
+    const tallas = [];
+    document.querySelectorAll('.talla-checkbox:checked').forEach(cb => {
+        tallas.push(cb.value);
+    });
+    
+    return {
+        tipoTallas: tipoTallas,
+        tallasDisponibles: tallas
+    };
+}
+
+function resetearTallasForm() {
+    document.querySelectorAll('input[name="tipo-tallas"]').forEach(r => r.checked = false);
+    const radioDefault = document.querySelector('input[name="tipo-tallas"][value="alfabeticas"]');
+    if (radioDefault) radioDefault.checked = true;
+    document.querySelectorAll('.talla-checkbox').forEach(cb => cb.checked = false);
+    cambiarTipoTallas('alfabeticas');
+}
+
 function editarProductoAdmin(id) {
     modoEdicion = id;
     const producto = obtenerProductoPorId(id, adminDatos);
@@ -1423,6 +1694,9 @@ function editarProductoAdmin(id) {
             break;
         }
     }
+
+    // 🔥 CARGAR TALLAS DEL PRODUCTO
+    cargarTallasProducto(producto);
 
     const preview = document.getElementById('drop-zone-preview');
     const content = document.getElementById('drop-zone-content');
@@ -1459,13 +1733,29 @@ document.getElementById('producto-form')?.addEventListener('submit', async funct
         return;
     }
 
+    // 🔥 VALIDAR TALLAS
+    const { tipoTallas, tallasDisponibles } = obtenerTallasSeleccionadas();
+    
+    if (tipoTallas !== 'sin_tallas' && tallasDisponibles.length === 0) {
+        mostrarNotificacion('Selecciona al menos una talla o marca "Sin tallas"', 'error');
+        return;
+    }
+
     if (!imagen) imagen = 'assets/img/placeholder.webp';
 
     const session = getSession();
     if (!session) { mostrarNotificacion('No hay sesión activa', 'error'); return; }
 
     try {
-        const productoData = { nombre, precio, imagen, categoria, descripcion };
+        const productoData = { 
+            nombre, 
+            precio, 
+            imagen, 
+            categoria, 
+            descripcion,
+            tipoTallas: tipoTallas,
+            tallasDisponibles: tallasDisponibles
+        };
         if (idEditable && !modoEdicion) {
             productoData.id = idEditable;
         }
@@ -1500,6 +1790,7 @@ document.getElementById('producto-form')?.addEventListener('submit', async funct
         modoEdicion = null;
         formProducto.className = 'form-oculto';
         this.reset();
+        resetearTallasForm();
 
         const preview = document.getElementById('drop-zone-preview');
         const content = document.getElementById('drop-zone-content');
@@ -1537,6 +1828,7 @@ btnCancelarForm?.addEventListener('click', function() {
     formProducto.className = 'form-oculto';
     modoEdicion = null;
     document.getElementById('producto-form').reset();
+    resetearTallasForm();
 
     const preview = document.getElementById('drop-zone-preview');
     const content = document.getElementById('drop-zone-content');
@@ -1551,6 +1843,7 @@ btnNuevoProducto?.addEventListener('click', function() {
     modoEdicion = null;
     document.getElementById('producto-form').reset();
     document.getElementById('prod-id').value = '';
+    resetearTallasForm();
 
     const preview = document.getElementById('drop-zone-preview');
     const content = document.getElementById('drop-zone-content');
@@ -1569,7 +1862,7 @@ adminCerrar?.addEventListener('click', cerrarAdmin);
 adminOverlay?.addEventListener('click', cerrarAdmin);
 
 // ============================================
-// 12. GESTIÓN DE PEDIDOS EN EL PANEL ADMIN
+// 13. GESTIÓN DE PEDIDOS EN EL PANEL ADMIN
 // ============================================
 async function cargarPedidosAdmin() {
     const container = document.getElementById('lista-pedidos-admin');
@@ -1660,13 +1953,14 @@ function renderizarPedidosAdmin() {
             minute: '2-digit'
         });
 
-        // Compatibilidad con pedidos antiguos (con talla única) y nuevos (con variantes)
         let tallasHTML = '';
         if (pedido.variantes && pedido.variantes.length > 0) {
             tallasHTML = `
                 <div class="pedido-dato" style="grid-column: 1 / -1;">
                     <strong>Tallas:</strong>
-                    <span>${pedido.variantes.map(v => `${v.cantidad}x talla ${v.talla}`).join(' · ')}</span>
+                    <span>${pedido.variantes.map(v => 
+                        v.talla === 'UNICA' ? `${v.cantidad}x` : `${v.cantidad}x talla ${v.talla}`
+                    ).join(' · ')}</span>
                 </div>
             `;
         } else if (pedido.talla) {
@@ -1849,7 +2143,7 @@ function filtrarPedidosAdmin(termino) {
 }
 
 // ============================================
-// 13. GESTIÓN DE OFERTAS
+// 14. GESTIÓN DE OFERTAS
 // ============================================
 async function cargarOfertasAdmin() {
     const container = document.getElementById('lista-ofertas-admin');
@@ -2074,7 +2368,7 @@ async function quitarOferta(productoId) {
 }
 
 // ============================================
-// 14. GESTIÓN DE USUARIOS
+// 15. GESTIÓN DE USUARIOS
 // ============================================
 async function renderizarUsuariosAdmin() {
     const container = document.getElementById('admin-usuarios-lista');
@@ -2246,7 +2540,7 @@ document.getElementById('btn-nuevo-usuario')?.addEventListener('click', function
 });
 
 // ============================================
-// 15. FILTROS DE BÚSQUEDA
+// 16. FILTROS DE BÚSQUEDA
 // ============================================
 function filtrarProductosAdmin(termino) {
     const items = document.querySelectorAll('#admin-productos-lista .admin-producto-item');
@@ -2276,7 +2570,7 @@ function filtrarUsuariosAdmin(termino) {
 }
 
 // ============================================
-// 16. MODAL GENÉRICO
+// 17. MODAL GENÉRICO
 // ============================================
 function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit }) {
     const modal = document.getElementById('modal-generico');
@@ -2359,7 +2653,7 @@ function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit }) {
 }
 
 // ============================================
-// 17. MODAL DE BIENVENIDA
+// 18. MODAL DE BIENVENIDA
 // ============================================
 function mostrarModalBienvenida() {
     const modal = document.getElementById('modal-bienvenida');
@@ -2410,7 +2704,7 @@ document.getElementById('modal-bienvenida-cerrar')?.addEventListener('click', ce
 document.getElementById('modal-bienvenida-overlay')?.addEventListener('click', cerrarModalBienvenida);
 
 // ============================================
-// 18. LOGIN/LOGOUT
+// 19. LOGIN/LOGOUT
 // ============================================
 const btnAcceder = document.getElementById('btn-acceder');
 const btnCerrarSesion = document.getElementById('btn-cerrar-sesion');
@@ -2514,7 +2808,7 @@ loginCerrar?.addEventListener('click', cerrarLogin);
 loginOverlay?.addEventListener('click', cerrarLogin);
 
 // ============================================
-// 19. FORZAR CIERRE DE SESIÓN
+// 20. FORZAR CIERRE DE SESIÓN
 // ============================================
 document.getElementById('forzar-cierre-link')?.addEventListener('click', function(e) {
     e.preventDefault();
@@ -2564,7 +2858,7 @@ document.getElementById('forzar-cierre-link')?.addEventListener('click', functio
 });
 
 // ============================================
-// 20. OJITO PARA CONTRASEÑA
+// 21. OJITO PARA CONTRASEÑA
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.toggle-password').forEach(button => {
@@ -2579,7 +2873,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ============================================
-// 21. DROP ZONE PARA IMÁGENES
+// 22. DROP ZONE PARA IMÁGENES
 // ============================================
 function inicializarDropZone() {
     const dropZone = document.getElementById('drop-zone');
@@ -2638,7 +2932,7 @@ function manejarArchivoImagen(file, preview, hiddenInput, content) {
 }
 
 // ============================================
-// 22. LISTENERS DEL SISTEMA DE VARIANTES
+// 23. LISTENERS DEL SISTEMA DE VARIANTES Y TURNSTILE
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
     // Botón sumar cantidad total
@@ -2649,10 +2943,16 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Botón añadir variante
     document.getElementById('btn-añadir-variante')?.addEventListener('click', () => añadirVariante());
+    
+    // Botón de reintento de Turnstile
+    const btnReintentar = document.getElementById('btn-reintentar-turnstile');
+    if (btnReintentar) {
+        btnReintentar.addEventListener('click', reintentarTurnstile);
+    }
 });
 
 // ============================================
-// 23. INICIO
+// 24. INICIO
 // ============================================
 async function iniciar() {
     console.log('🚀 Cargando productos...');
@@ -2694,7 +2994,7 @@ document.addEventListener('DOMContentLoaded', iniciar);
 document.addEventListener('DOMContentLoaded', inicializarDropZone);
 
 // ============================================
-// 24. EXPOSICIÓN GLOBAL
+// 25. EXPOSICIÓN GLOBAL
 // ============================================
 window.confirmar = confirmar;
 window.guardarOferta = guardarOferta;
@@ -2735,9 +3035,13 @@ window.cambiarCantidadVariante = cambiarCantidadVariante;
 window.cambiarCantidadTotal = cambiarCantidadTotal;
 window.actualizarValidacionVariantes = actualizarValidacionVariantes;
 window.inicializarVariantes = inicializarVariantes;
+window.reintentarTurnstile = reintentarTurnstile;
+window.cambiarTipoTallas = cambiarTipoTallas;
+window.cargarTallasProducto = cargarTallasProducto;
+window.obtenerTallasSeleccionadas = obtenerTallasSeleccionadas;
 
 // ============================================
-// 25. MENÚ HAMBURGUESA
+// 26. MENÚ HAMBURGUESA
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
     const hamburguesa = document.getElementById('menu-hamburguesa');

@@ -1,6 +1,6 @@
 // ============================================
 // WORKER - TEXTILES MADRUGA API
-// Versión 5.1 - Sistema de variantes
+// Versión 5.2 - Sistema de tallas por producto
 // ============================================
 
 // ============================================
@@ -89,10 +89,12 @@ async function enviarGmailNotificacion(env, pedido) {
     try {
         const asunto = `🛒 Nuevo pedido ${pedido.id} - ${pedido.producto}`;
         
-        // Construir string de tallas (compatible con variantes y talla única)
+        // Construir string de tallas
         let tallasTexto = '';
         if (pedido.variantes && pedido.variantes.length > 0) {
-            tallasTexto = pedido.variantes.map(v => `${v.cantidad}x talla ${v.talla}`).join(', ');
+            tallasTexto = pedido.variantes.map(v => 
+                v.talla === 'UNICA' ? `${v.cantidad}x` : `${v.cantidad}x talla ${v.talla}`
+            ).join(', ');
         } else if (pedido.talla) {
             tallasTexto = pedido.talla;
         }
@@ -149,7 +151,7 @@ async function enviarGmailNotificacion(env, pedido) {
         console.log('📧 Destinatario:', env.GMAIL_USER);
         
         // NOTA: Cloudflare Workers no soporta SMTP directo.
-        // Aquí se podría integrar con EmailJS, Resend, Brevo, etc.
+        // Aquí se puede integrar con EmailJS, Resend, Brevo, etc.
         // Por ahora, el pedido se guarda en KV y se ve en el panel admin.
         
         return true;
@@ -434,7 +436,7 @@ export default {
                     status: 'ok',
                     message: 'API de Textiles Madruga funcionando',
                     db: 'kv',
-                    version: '5.1',
+                    version: '5.2',
                     features: [
                         'IDs alfanuméricos',
                         'Ofertas avanzadas',
@@ -442,7 +444,7 @@ export default {
                         'Timeout de sesión',
                         'Logout vía sendBeacon',
                         'Sistema de pedidos con variantes',
-                        'Tallas dinámicas'
+                        'Tallas por producto'
                     ],
                     timestamp: new Date().toISOString()
                 }), { headers: { 'Content-Type': 'application/json' } }), request);
@@ -495,8 +497,8 @@ export default {
                     referencia: String(body.referencia || '').substring(0, 200),
                     municipio: String(body.municipio || '').substring(0, 100),
                     cantidad: cantidadTotal,
-                    variantes: variantes,                                    // ← NUEVO: array de {talla, cantidad}
-                    tallasTexto: String(body.tallasTexto || '').substring(0, 300),  // ← NUEVO: string legible
+                    variantes: variantes,
+                    tallasTexto: String(body.tallasTexto || '').substring(0, 300),
                     notas: String(body.notas || '').substring(0, 500),
                     metodoPago: body.metodoPago || 'efectivo',
                     contactoPreferido: body.contactoPreferido || 'whatsapp',
@@ -633,7 +635,9 @@ export default {
                 await registrarAuditoria(env, user, esActualizacion ? 'UPDATE_PRODUCT' : 'CREATE_PRODUCT', { 
                     id: idFinal, 
                     nombre: body.nombre, 
-                    categoria: body.categoria 
+                    categoria: body.categoria,
+                    tipoTallas: body.tipoTallas,
+                    tallasDisponibles: body.tallasDisponibles
                 });
 
                 return addCors(new Response(JSON.stringify({
@@ -675,7 +679,12 @@ export default {
 
                 catalogo[claveReal] = { ...catalogo[claveReal], ...body };
                 await guardarCatalogo(env, catalogo);
-                await registrarAuditoria(env, user, 'UPDATE_PRODUCT', { id: productId, claveReal });
+                await registrarAuditoria(env, user, 'UPDATE_PRODUCT', { 
+                    id: productId, 
+                    claveReal,
+                    tipoTallas: body.tipoTallas,
+                    tallasDisponibles: body.tallasDisponibles
+                });
 
                 return addCors(new Response(JSON.stringify({
                     success: true,

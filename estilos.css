@@ -2215,7 +2215,7 @@ body.admin-abierto .nav {
     display: flex;
     gap: 10px;
     margin-bottom: 15px;
-    align-items: stretch;
+    align-items: center;
     flex-wrap: nowrap;
     width: 100%;
 }
@@ -2230,8 +2230,9 @@ body.admin-abierto .nav {
     font-family: var(--font-sans);
     background: white;
     transition: border-color 0.3s ease;
-    height: 42px;
+    height: 44px;
     box-sizing: border-box;
+    line-height: normal;
 }
 
 .admin-buscador input:focus {
@@ -2241,14 +2242,46 @@ body.admin-abierto .nav {
 }
 
 .admin-buscador button {
-    padding: 0 20px;
-    height: 42px;
+    padding: 0 22px;
+    height: 44px;
     white-space: nowrap;
     flex-shrink: 0;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
+    border: none;
+    border-radius: 50px;
+    font-family: var(--font-sans);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    letter-spacing: 0.2px;
+    line-height: 1;
+    vertical-align: middle;
+}
+
+.admin-buscador button.btn-admin.btn-primario {
+    background: var(--color-naranja);
+    color: white;
+}
+
+.admin-buscador button.btn-admin.btn-primario:hover {
+    background: var(--color-negro);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(232, 122, 32, 0.25);
+}
+
+.admin-buscador button.btn-admin.btn-secundario {
+    background: #EDE8E1;
+    color: var(--color-negro);
+}
+
+.admin-buscador button.btn-admin.btn-secundario:hover {
+    background: #D4A574;
+    color: white;
+    transform: translateY(-2px);
 }
 
 @media (max-width: 768px) {
@@ -4293,6 +4326,31 @@ section[id] {
     box-shadow: 0 0 0 3px rgba(232, 122, 32, 0.08);
 }
 
+.variante-item .variante-talla-select {
+    flex: 1;
+    padding: 8px 12px;
+    border: 2px solid #EDE8E1;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-family: var(--font-sans);
+    background: white;
+    transition: border-color 0.3s ease;
+    min-width: 0;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B6B6B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+}
+
+.variante-item .variante-talla-select:focus {
+    border-color: var(--color-naranja);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(232, 122, 32, 0.08);
+}
+
 .variante-item .variante-cantidad-wrapper {
     display: flex;
     align-items: center;
@@ -4369,6 +4427,30 @@ section[id] {
     background: #C0392B;
     color: white;
     transform: scale(1.05);
+}
+
+/* Variante sin tallas */
+.variante-sin-tallas {
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.variante-sin-tallas-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: #FFF8E1;
+    border-left: 3px solid #f39c12;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    color: #856404;
+    line-height: 1.4;
+}
+
+.variante-sin-tallas-info svg {
+    flex-shrink: 0;
+    color: #f39c12;
 }
 
 /* Botón añadir variante */
@@ -4478,7 +4560,8 @@ section[id] {
         flex-wrap: wrap;
     }
     
-    .variante-item .variante-talla {
+    .variante-item .variante-talla,
+    .variante-item .variante-talla-select {
         flex: 1 1 100%;
     }
     
@@ -4512,6 +4595,186 @@ section[id] {
     .form-row-2 {
         grid-template-columns: 1fr;
     }
+}
+
+/* ============================================ */
+/* SELECTOR DE TALLAS EN EL PANEL ADMIN         */
+/* ============================================ */
+.form-help {
+    font-size: 0.75rem;
+    color: var(--color-gris);
+    font-style: italic;
+    margin: 0 0 10px 0;
+    line-height: 1.3;
+}
+
+.tipo-tallas-group {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+}
+
+.tipo-talla-opcion {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: white;
+    border: 1.5px solid #EDE8E1;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--color-gris);
+    font-family: var(--font-sans);
+    user-select: none;
+    position: relative;
+}
+
+.tipo-talla-opcion:hover {
+    border-color: var(--color-naranja);
+    background: #FFF9F4;
+    color: var(--color-negro);
+}
+
+.tipo-talla-opcion input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+    width: 0;
+    height: 0;
+}
+
+.tipo-talla-opcion .radio-punto {
+    width: 14px;
+    height: 14px;
+    border: 2px solid #D0C8BE;
+    border-radius: 50%;
+    display: inline-block;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.tipo-talla-opcion .radio-punto::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    width: 6px;
+    height: 6px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.2s ease;
+}
+
+.tipo-talla-opcion:has(input[type="radio"]:checked) {
+    background: var(--color-naranja);
+    border-color: var(--color-naranja);
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(232, 122, 32, 0.25);
+}
+
+.tipo-talla-opcion:has(input[type="radio"]:checked) .radio-punto {
+    border-color: white;
+    background: var(--color-naranja);
+}
+
+.tipo-talla-opcion:has(input[type="radio"]:checked) .radio-punto::after {
+    transform: translate(-50%, -50%) scale(1);
+}
+
+/* Checkboxes de tallas */
+.tallas-checkboxes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px;
+    background: #FAF8F5;
+    border-radius: 12px;
+    border: 1.5px solid #EDE8E1;
+}
+
+.talla-check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 48px;
+    height: 40px;
+    padding: 0 14px;
+    background: white;
+    border: 2px solid #EDE8E1;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-gris);
+    font-family: var(--font-sans);
+    user-select: none;
+    position: relative;
+}
+
+.talla-check:hover {
+    border-color: var(--color-naranja);
+    background: #FFF9F4;
+    color: var(--color-negro);
+    transform: translateY(-2px);
+}
+
+.talla-check input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+    width: 0;
+    height: 0;
+}
+
+.talla-check:has(input[type="checkbox"]:checked) {
+    background: var(--color-naranja);
+    border-color: var(--color-naranja);
+    color: white;
+    box-shadow: 0 2px 8px rgba(232, 122, 32, 0.25);
+}
+
+.talla-check:has(input[type="checkbox"]:checked)::after {
+    content: '✓';
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 18px;
+    height: 18px;
+    background: #27ae60;
+    color: white;
+    border-radius: 50%;
+    font-size: 0.7rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid white;
+}
+
+.tallas-sin {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 14px;
+    background: #FFF8E1;
+    border-left: 3px solid #f39c12;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    color: #856404;
+    line-height: 1.4;
+}
+
+.tallas-sin svg {
+    flex-shrink: 0;
+    color: #f39c12;
 }
 
 /* ============================================ */
