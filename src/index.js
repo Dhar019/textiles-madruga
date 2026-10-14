@@ -1,6 +1,6 @@
 // ============================================
 // WORKER - TEXTILES MADRUGA API
-// Versión 4.5 - Sistema de pedidos multi-canal
+// Versión 4.6 - Sistema de pedidos + EmailJS
 // ============================================
 
 // ============================================
@@ -353,14 +353,15 @@ export default {
                     status: 'ok',
                     message: 'API de Textiles Madruga funcionando',
                     db: 'kv',
-                    version: '4.5',
+                    version: '4.6',
                     features: [
                         'IDs alfanuméricos',
                         'Ofertas avanzadas',
                         'DELETE robusto',
                         'Timeout de sesión',
                         'Logout vía sendBeacon',
-                        'Sistema de pedidos multi-canal'
+                        'Sistema de pedidos multi-canal',
+                        'EmailJS integrado'
                     ],
                     timestamp: new Date().toISOString()
                 }), { headers: { 'Content-Type': 'application/json' } }), request);
@@ -391,13 +392,13 @@ export default {
                     contacto: String(body.contacto).substring(0, 100),
                     cantidad: parseInt(body.cantidad) || 1,
                     notas: String(body.notas || '').substring(0, 500),
-                    via: body.via || 'solo_aqui', // whatsapp, email, telegram, solo_aqui
-                    estado: 'pendiente', // pendiente, atendido, completado, cancelado
+                    via: body.via || 'solo_aqui',
+                    estado: 'pendiente',
                     fecha: new Date().toISOString(),
                     ip: ip
                 };
                 
-                pedidos.unshift(nuevoPedido); // Añadir al inicio
+                pedidos.unshift(nuevoPedido);
                 await guardarPedidos(env, pedidos);
                 
                 console.log('📦 Nuevo pedido:', idPedido, '-', body.nombre, 'via', body.via);

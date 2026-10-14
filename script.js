@@ -1,17 +1,34 @@
 // ============================================
 // SCRIPT.JS - Textiles Madruga
-// Versión 4.5 - Precios en CUP + Pedidos multi-canal
+// Versión 4.6 - EmailJS + Pedidos en admin
 // ============================================
 
 const API_URL = 'https://textiles-madruga-api.eldani000219.workers.dev/api';
 const SESSION_KEY = 'tm_session';
 
-// Datos del negocio (cámbialos cuando quieras)
+// ============================================
+// CONFIGURACIÓN DEL NEGOCIO
+// ============================================
 const NEGOCIO = {
     whatsapp: '+5354108544',
     email: 'textilesmadruga@gmail.com',
     telegram: ''
 };
+
+// ============================================
+// CONFIGURACIÓN DE EMAILJS
+// ============================================
+const EMAILJS = {
+    publicKey: '9PrX2qLveoQE-eYq7',
+    serviceId: 'service_fb39axc',
+    templateId: 'template_ucz90qr'
+};
+
+// Inicializar EmailJS
+if (typeof emailjs !== 'undefined') {
+    emailjs.init(EMAILJS.publicKey);
+    console.log('✅ EmailJS inicializado');
+}
 
 // ============================================
 // MODAL DE CONFIRMACIÓN PROPIO
@@ -124,6 +141,8 @@ let temporizadorAviso = null;
 let tiempoOculto = null;
 let verificadorSesion = null;
 let productoPedidoActual = '';
+let pedidosGlobales = [];
+let filtroPedidoActual = 'todos';
 
 // ============================================
 // 1. AUTENTICACIÓN
@@ -788,7 +807,7 @@ window.abrirLightbox = abrirLightbox;
 window.cerrarLightbox = cerrarLightbox;
 
 // ============================================
-// 10. SOLICITAR PEDIDO (MULTI-CANAL)
+// 10. SOLICITAR PEDIDO (MULTI-CANAL CON EMAILJS)
 // ============================================
 function solicitarPedido(producto) {
     const modalPedido = document.getElementById('modal-pedido');
@@ -815,7 +834,6 @@ function solicitarPedido(producto) {
     document.getElementById('modal-pedido-cerrar').onclick = cerrar;
     document.getElementById('modal-pedido-overlay').onclick = cerrar;
 
-    // Prevenir el submit por defecto (Enter en los campos)
     document.getElementById('modal-pedido-form').onsubmit = (e) => {
         e.preventDefault();
     };
@@ -834,7 +852,7 @@ async function enviarPedidoPor(via) {
         return;
     }
     if (!contacto) {
-        mostrarNotificacion('Por favor, escribe tu teléfono o email', 'error');
+        mostrarNotificacion('Por favor, escribe tu teléfono o Gmail', 'error');
         document.getElementById('pedido-contacto').focus();
         return;
     }
@@ -865,13 +883,38 @@ async function enviarPedidoPor(via) {
             console.warn('⚠️ No se pudo guardar el pedido en el servidor');
         } else {
             const data = await respuesta.json();
-            console.log('✅ Pedido guardado:', data.id);
+            console.log('✅ Pedido guardado en el servidor:', data.id);
         }
     } catch (error) {
         console.warn('⚠️ Error al guardar pedido:', error);
     }
 
-    // 2. Abrir la vía elegida
+    // 2. Enviar Gmail vía EmailJS (si es la vía elegida)
+    if (via === 'email' && typeof emailjs !== 'undefined') {
+        try {
+            const templateParams = {
+                producto: productoPedidoActual,
+                nombre_cliente: nombre,
+                contacto: contacto,
+                cantidad: cantidad,
+                notas: notas || 'Sin notas',
+                via: 'Gmail',
+                fecha: new Date().toLocaleString('es-CU', { 
+                    dateStyle: 'full', 
+                    timeStyle: 'short' 
+                })
+            };
+            
+            await emailjs.send(EMAILJS.serviceId, EMAILJS.templateId, templateParams);
+            console.log('✅ Gmail enviado al negocio vía EmailJS');
+            mostrarNotificacion('¡Pedido enviado! Recibirás respuesta por Gmail.', 'success');
+        } catch (error) {
+            console.error('❌ Error al enviar Gmail:', error);
+            mostrarNotificacion('Pedido guardado, pero hubo un error al enviar el Gmail.', 'warning');
+        }
+    }
+
+    // 3. Abrir la vía elegida
     const mensaje = `¡Hola! Quiero hacer un pedido:\n\n` +
         `📦 Producto: ${productoPedidoActual}\n` +
         `👤 Nombre: ${nombre}\n` +
@@ -891,22 +934,20 @@ async function enviarPedidoPor(via) {
         window.open(url, '_blank');
         mostrarNotificacion('Pedido enviado. Se abrirá WhatsApp.', 'success');
     } else if (via === 'email') {
-        const asunto = encodeURIComponent(`Pedido: ${productoPedidoActual}`);
-        const url = `mailto:${NEGOCIO.email}?subject=${asunto}&body=${mensajeEncoded}`;
-        window.location.href = url;
-        mostrarNotificacion('Pedido enviado. Se abrirá tu correo.', 'success');
+        // Gmail ya se envió vía EmailJS
+        console.log('✅ Gmail ya enviado vía EmailJS');
     } else {
         mostrarNotificacion('¡Pedido enviado! Te contactaremos pronto.', 'success');
     }
 
-    // 3. Cerrar el modal
+    // 4. Cerrar el modal
     setTimeout(() => {
         const modalPedido = document.getElementById('modal-pedido');
         modalPedido.className = 'login-oculto';
         document.body.style.overflow = 'auto';
         document.getElementById('modal-pedido-form').reset();
         productoPedidoActual = '';
-    }, 1500);
+    }, 2000);
 }
 
 // ============================================
@@ -973,6 +1014,7 @@ function abrirAdmin() {
     cargarAdminProductos();
     reiniciarTemporizadorInactividad();
     iniciarVerificadorSesion();
+    cargarPedidosAdmin();
 }
 
 function cerrarAdmin() {
@@ -1003,6 +1045,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (tabName === 'ofertas') cargarOfertasAdmin();
             else if (tabName === 'seguridad') renderizarUsuariosAdmin();
             else if (tabName === 'productos') renderizarAdminProductos();
+            else if (tabName === 'pedidos') cargarPedidosAdmin();
         });
     });
 });
@@ -1310,7 +1353,233 @@ adminCerrar?.addEventListener('click', cerrarAdmin);
 adminOverlay?.addEventListener('click', cerrarAdmin);
 
 // ============================================
-// 12. GESTIÓN DE OFERTAS CON TIPOS AVANZADOS
+// 12. GESTIÓN DE PEDIDOS EN EL PANEL ADMIN
+// ============================================
+async function cargarPedidosAdmin() {
+    const container = document.getElementById('lista-pedidos-admin');
+    if (!container) return;
+
+    container.innerHTML = '<p style="text-align:center;padding:40px;color:var(--color-gris);">Cargando pedidos...</p>';
+
+    try {
+        const session = getSession();
+        if (!session || !session.token) {
+            container.innerHTML = '<p style="text-align:center;padding:40px;color:var(--color-gris);">No hay sesión activa.</p>';
+            return;
+        }
+
+        const respuesta = await fetch(`${API_URL}/pedidos`, {
+            headers: { 'Authorization': `Bearer ${session.token}` }
+        });
+
+        if (!respuesta.ok) throw new Error('Error al cargar pedidos');
+
+        const data = await respuesta.json();
+        pedidosGlobales = data.pedidos || [];
+
+        actualizarBadgePedidos();
+        renderizarPedidosAdmin();
+    } catch (error) {
+        console.error('Error al cargar pedidos:', error);
+        container.innerHTML = '<p style="text-align:center;padding:40px;color:var(--color-gris);">Error al cargar pedidos.</p>';
+    }
+}
+
+function actualizarBadgePedidos() {
+    const badge = document.getElementById('pedidos-badge');
+    if (!badge) return;
+
+    const pendientes = pedidosGlobales.filter(p => p.estado === 'pendiente').length;
+    
+    if (pendientes > 0) {
+        badge.textContent = pendientes;
+        badge.style.display = 'inline-block';
+    } else {
+        badge.style.display = 'none';
+    }
+}
+
+function renderizarPedidosAdmin() {
+    const container = document.getElementById('lista-pedidos-admin');
+    if (!container) return;
+
+    // Filtrar por estado
+    let pedidosFiltrados = pedidosGlobales;
+    if (filtroPedidoActual !== 'todos') {
+        pedidosFiltrados = pedidosGlobales.filter(p => p.estado === filtroPedidoActual);
+    }
+
+    if (pedidosFiltrados.length === 0) {
+        container.innerHTML = `
+            <div class="pedidos-vacio">
+                <span class="icono">📭</span>
+                <p>No hay pedidos ${filtroPedidoActual !== 'todos' ? `en estado "${filtroPedidoActual}"` : 'todavía'}.</p>
+            </div>
+        `;
+        return;
+    }
+
+    const viaTexto = {
+        'whatsapp': { icono: '📱', nombre: 'WhatsApp' },
+        'email': { icono: '✉️', nombre: 'Gmail' },
+        'solo_aqui': { icono: '📝', nombre: 'Solo aquí' },
+        'telegram': { icono: '💬', nombre: 'Telegram' }
+    };
+
+    const estadoTexto = {
+        'pendiente': 'Pendiente',
+        'atendido': 'Atendido',
+        'completado': 'Completado',
+        'cancelado': 'Cancelado'
+    };
+
+    let html = '';
+    pedidosFiltrados.forEach(pedido => {
+        const via = viaTexto[pedido.via] || { icono: '❓', nombre: pedido.via };
+        const fecha = new Date(pedido.fecha);
+        const fechaFormateada = fecha.toLocaleString('es-CU', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
+        html += `
+            <div class="pedido-item estado-${pedido.estado}" data-id="${pedido.id}">
+                <div class="pedido-header">
+                    <div class="pedido-info-principal">
+                        <span class="pedido-id">${pedido.id}</span>
+                        <h3 class="pedido-producto">${pedido.producto}</h3>
+                    </div>
+                    <div class="pedido-badges">
+                        <span class="badge-estado ${pedido.estado}">${estadoTexto[pedido.estado] || pedido.estado}</span>
+                        <span class="badge-via ${pedido.via}">${via.icono} ${via.nombre}</span>
+                    </div>
+                </div>
+                
+                <div class="pedido-datos">
+                    <div class="pedido-dato">
+                        <strong>Cliente:</strong>
+                        <span>${pedido.nombre}</span>
+                    </div>
+                    <div class="pedido-dato">
+                        <strong>Contacto:</strong>
+                        <span>${pedido.contacto}</span>
+                    </div>
+                    <div class="pedido-dato">
+                        <strong>Cantidad:</strong>
+                        <span>${pedido.cantidad}</span>
+                    </div>
+                    <div class="pedido-dato">
+                        <strong>Fecha:</strong>
+                        <span>${fechaFormateada}</span>
+                    </div>
+                </div>
+                
+                ${pedido.notas ? `<div class="pedido-notas">📝 ${pedido.notas}</div>` : ''}
+                
+                <div class="pedido-acciones">
+                    ${pedido.estado === 'pendiente' ? `
+                        <button class="btn-pedido btn-atender" onclick="cambiarEstadoPedido('${pedido.id}', 'atendido')">📞 Marcar atendido</button>
+                    ` : ''}
+                    ${pedido.estado === 'atendido' ? `
+                        <button class="btn-pedido btn-completar" onclick="cambiarEstadoPedido('${pedido.id}', 'completado')">✅ Completar</button>
+                    ` : ''}
+                    ${pedido.estado !== 'cancelado' && pedido.estado !== 'completado' ? `
+                        <button class="btn-pedido btn-cancelar" onclick="cambiarEstadoPedido('${pedido.id}', 'cancelado')">✕ Cancelar</button>
+                    ` : ''}
+                    ${pedido.estado === 'completado' ? `
+                        <button class="btn-pedido btn-atender" onclick="cambiarEstadoPedido('${pedido.id}', 'pendiente')">↺ Reabrir</button>
+                    ` : ''}
+                    <button class="btn-pedido btn-eliminar" onclick="eliminarPedidoAdmin('${pedido.id}')">🗑 Eliminar</button>
+                </div>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
+
+function filtrarPorEstado(estado) {
+    filtroPedidoActual = estado;
+    
+    document.querySelectorAll('.filtro-pedido').forEach(btn => {
+        btn.classList.remove('activo');
+        if (btn.dataset.filtro === estado) {
+            btn.classList.add('activo');
+        }
+    });
+
+    renderizarPedidosAdmin();
+}
+
+async function cambiarEstadoPedido(pedidoId, nuevoEstado) {
+    try {
+        const session = getSession();
+        const respuesta = await fetch(`${API_URL}/pedidos/${pedidoId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.token}`
+            },
+            body: JSON.stringify({ estado: nuevoEstado })
+        });
+
+        if (!respuesta.ok) throw new Error('Error al cambiar estado');
+
+        mostrarNotificacion(`Pedido marcado como ${nuevoEstado}`, 'success');
+        await cargarPedidosAdmin();
+    } catch (error) {
+        console.error('Error al cambiar estado:', error);
+        mostrarNotificacion('Error al cambiar estado del pedido', 'error');
+    }
+}
+
+async function eliminarPedidoAdmin(pedidoId) {
+    const confirmado = await confirmar({
+        titulo: 'Eliminar pedido',
+        mensaje: '¿Seguro que quieres eliminar este pedido? Esta acción no se puede deshacer.',
+        tipo: 'peligro',
+        textoAceptar: 'Eliminar',
+        textoCancelar: 'Cancelar'
+    });
+
+    if (!confirmado) return;
+
+    try {
+        const session = getSession();
+        const respuesta = await fetch(`${API_URL}/pedidos/${pedidoId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${session.token}` }
+        });
+
+        if (!respuesta.ok) throw new Error('Error al eliminar');
+
+        mostrarNotificacion('Pedido eliminado', 'success');
+        await cargarPedidosAdmin();
+    } catch (error) {
+        console.error('Error al eliminar pedido:', error);
+        mostrarNotificacion('Error al eliminar pedido', 'error');
+    }
+}
+
+function filtrarPedidosAdmin(termino) {
+    const items = document.querySelectorAll('#lista-pedidos-admin .pedido-item');
+    termino = termino.toLowerCase().trim();
+    
+    items.forEach(item => {
+        const nombre = item.querySelector('.pedido-dato:nth-child(1) span')?.textContent.toLowerCase() || '';
+        const contacto = item.querySelector('.pedido-dato:nth-child(2) span')?.textContent.toLowerCase() || '';
+        const producto = item.querySelector('.pedido-producto')?.textContent.toLowerCase() || '';
+        
+        const coincide = nombre.includes(termino) || contacto.includes(termino) || producto.includes(termino);
+        item.style.display = coincide ? 'block' : 'none';
+    });
+}
+
+// ============================================
+// 13. GESTIÓN DE OFERTAS
 // ============================================
 async function cargarOfertasAdmin() {
     const container = document.getElementById('lista-ofertas-admin');
@@ -1569,7 +1838,7 @@ async function quitarOferta(productoId) {
 }
 
 // ============================================
-// 13. GESTIÓN DE USUARIOS
+// 14. GESTIÓN DE USUARIOS
 // ============================================
 async function renderizarUsuariosAdmin() {
     const container = document.getElementById('admin-usuarios-lista');
@@ -1692,7 +1961,7 @@ document.getElementById('btn-nuevo-usuario')?.addEventListener('click', function
         campos: [
             { id: 'username', label: 'Usuario', type: 'text', placeholder: 'Nombre de usuario', required: true },
             { id: 'password', label: 'Contraseña', type: 'password', placeholder: 'Mínimo 6 caracteres', required: true },
-            { id: 'email', label: 'Email', type: 'email', placeholder: 'usuario@ejemplo.com' },
+            { id: 'email', label: 'Gmail', type: 'email', placeholder: 'usuario@gmail.com' },
             { id: 'role', label: 'Rol', type: 'select', opciones: [
                 { value: 'user', label: 'Usuario' },
                 { value: 'admin', label: 'Administrador' }
@@ -1741,7 +2010,7 @@ document.getElementById('btn-nuevo-usuario')?.addEventListener('click', function
 });
 
 // ============================================
-// 14. FILTROS DE BÚSQUEDA
+// 15. FILTROS DE BÚSQUEDA
 // ============================================
 function filtrarProductosAdmin(termino) {
     const items = document.querySelectorAll('#admin-productos-lista .admin-producto-item');
@@ -1771,7 +2040,7 @@ function filtrarUsuariosAdmin(termino) {
 }
 
 // ============================================
-// 15. MODAL GENÉRICO (CON OJITO EN PASSWORD)
+// 16. MODAL GENÉRICO
 // ============================================
 function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit }) {
     const modal = document.getElementById('modal-generico');
@@ -1853,7 +2122,7 @@ function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit }) {
 }
 
 // ============================================
-// 16. MODAL DE BIENVENIDA
+// 17. MODAL DE BIENVENIDA
 // ============================================
 function mostrarModalBienvenida() {
     const modal = document.getElementById('modal-bienvenida');
@@ -1879,7 +2148,7 @@ document.getElementById('modal-bienvenida-crear')?.addEventListener('click', fun
         campos: [
             { id: 'username', label: 'Usuario', type: 'text', placeholder: 'Tu nombre de usuario', required: true },
             { id: 'password', label: 'Contraseña', type: 'password', placeholder: 'Mínimo 6 caracteres', required: true },
-            { id: 'email', label: 'Email', type: 'email', placeholder: 'tucorreo@ejemplo.com', required: true }
+            { id: 'email', label: 'Gmail', type: 'email', placeholder: 'tucorreo@gmail.com', required: true }
         ],
         onSubmit: async (datos) => {
             const result = await registerUser(datos.username, datos.password, datos.email, datos.username);
@@ -1903,7 +2172,7 @@ document.getElementById('modal-bienvenida-cerrar')?.addEventListener('click', ce
 document.getElementById('modal-bienvenida-overlay')?.addEventListener('click', cerrarModalBienvenida);
 
 // ============================================
-// 17. LOGIN/LOGOUT
+// 18. LOGIN/LOGOUT
 // ============================================
 const btnAcceder = document.getElementById('btn-acceder');
 const btnCerrarSesion = document.getElementById('btn-cerrar-sesion');
@@ -1988,7 +2257,7 @@ document.getElementById('login-registro-link')?.addEventListener('click', functi
         campos: [
             { id: 'username', label: 'Usuario', type: 'text', placeholder: 'Tu nombre de usuario', required: true },
             { id: 'password', label: 'Contraseña', type: 'password', placeholder: 'Mínimo 6 caracteres', required: true },
-            { id: 'email', label: 'Email', type: 'email', placeholder: 'tucorreo@ejemplo.com', required: true }
+            { id: 'email', label: 'Gmail', type: 'email', placeholder: 'tucorreo@gmail.com', required: true }
         ],
         onSubmit: async (datos) => {
             const result = await registerUser(datos.username, datos.password, datos.email, datos.username);
@@ -2007,7 +2276,7 @@ loginCerrar?.addEventListener('click', cerrarLogin);
 loginOverlay?.addEventListener('click', cerrarLogin);
 
 // ============================================
-// 18. FORZAR CIERRE DE SESIÓN (CON MODAL PROPIO)
+// 19. FORZAR CIERRE DE SESIÓN
 // ============================================
 document.getElementById('forzar-cierre-link')?.addEventListener('click', function(e) {
     e.preventDefault();
@@ -2057,7 +2326,7 @@ document.getElementById('forzar-cierre-link')?.addEventListener('click', functio
 });
 
 // ============================================
-// 19. OJITO PARA CONTRASEÑA (LOGIN PRINCIPAL)
+// 20. OJITO PARA CONTRASEÑA
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.toggle-password').forEach(button => {
@@ -2072,7 +2341,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ============================================
-// 20. DROP ZONE PARA IMÁGENES
+// 21. DROP ZONE PARA IMÁGENES
 // ============================================
 function inicializarDropZone() {
     const dropZone = document.getElementById('drop-zone');
@@ -2131,7 +2400,7 @@ function manejarArchivoImagen(file, preview, hiddenInput, content) {
 }
 
 // ============================================
-// 21. INICIO
+// 22. INICIO
 // ============================================
 async function iniciar() {
     console.log('🚀 Cargando productos...');
@@ -2173,7 +2442,7 @@ document.addEventListener('DOMContentLoaded', iniciar);
 document.addEventListener('DOMContentLoaded', inicializarDropZone);
 
 // ============================================
-// 22. EXPOSICIÓN GLOBAL
+// 23. EXPOSICIÓN GLOBAL
 // ============================================
 window.confirmar = confirmar;
 window.guardarOferta = guardarOferta;
@@ -2197,13 +2466,18 @@ window.quitarOferta = quitarOferta;
 window.filtrarProductosAdmin = filtrarProductosAdmin;
 window.filtrarOfertasAdmin = filtrarOfertasAdmin;
 window.filtrarUsuariosAdmin = filtrarUsuariosAdmin;
+window.filtrarPedidosAdmin = filtrarPedidosAdmin;
+window.filtrarPorEstado = filtrarPorEstado;
+window.cambiarEstadoPedido = cambiarEstadoPedido;
+window.eliminarPedidoAdmin = eliminarPedidoAdmin;
+window.cargarPedidosAdmin = cargarPedidosAdmin;
 window.abrirModalGenerico = abrirModalGenerico;
 window.mostrarModalBienvenida = mostrarModalBienvenida;
 window.cerrarModalBienvenida = cerrarModalBienvenida;
 window.eliminarUsuario = eliminarUsuario;
 
 // ============================================
-// 23. MENÚ HAMBURGUESA
+// 24. MENÚ HAMBURGUESA
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
     const hamburguesa = document.getElementById('menu-hamburguesa');
