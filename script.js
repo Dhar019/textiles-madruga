@@ -1,13 +1,13 @@
 // ============================================
 // SCRIPT.JS - Textiles Madruga
-// Versión 5.2 - Sistema de tallas por producto
+// Versión 5.4 - Sistema completo
 // ============================================
 
 const API_URL = 'https://textiles-madruga-api.eldani000219.workers.dev/api';
 const SESSION_KEY = 'tm_session';
 
 // ============================================
-// CONFIGURACIÓN DEL NEGOCIO
+// 1. CONFIGURACIÓN DEL NEGOCIO
 // ============================================
 const NEGOCIO = {
     whatsapp: '+5354108544',
@@ -16,7 +16,24 @@ const NEGOCIO = {
 };
 
 // ============================================
-// HELPER: Scroll al top de un modal
+// 2. ESTADO GLOBAL
+// ============================================
+let datosGlobales = null;
+let adminDatos = null;
+let modoEdicion = null;
+let temporizadorInactividad = null;
+let temporizadorAviso = null;
+let tiempoOculto = null;
+let verificadorSesion = null;
+let productoPedidoActual = '';
+let pedidosGlobales = [];
+let filtroPedidoActual = 'todos';
+let varianteIdCounter = 0;
+let turnstileToken = null;
+let turnstileWidgetId = null;
+
+// ============================================
+// 3. HELPERS GENERALES
 // ============================================
 function scrollModalAlTop(modalElement) {
     if (!modalElement) return;
@@ -24,82 +41,16 @@ function scrollModalAlTop(modalElement) {
     if (contenido) {
         contenido.scrollTop = 0;
     }
+    const form = modalElement.querySelector('.login-form, .admin-tab-content');
+    if (form) {
+        form.scrollTop = 0;
+    }
     document.body.scrollTop = 0;
 }
 
 // ============================================
-// MODAL DE CONFIRMACIÓN PROPIO
+// 4. TURNSTILE (con reintento)
 // ============================================
-function confirmar(opciones) {
-    return new Promise((resolve) => {
-        if (typeof opciones === 'string') {
-            opciones = { mensaje: opciones };
-        }
-        
-        const {
-            titulo = '¿Estás seguro?',
-            mensaje = 'Esta acción no se puede deshacer.',
-            tipo = 'info',
-            textoAceptar = 'Aceptar',
-            textoCancelar = 'Cancelar'
-        } = opciones;
-
-        const modal = document.getElementById('modal-confirmar');
-        const overlay = document.getElementById('confirmar-overlay');
-        const btnAceptar = document.getElementById('confirmar-aceptar');
-        const btnCancelar = document.getElementById('confirmar-cancelar');
-        const icono = document.getElementById('confirmar-icono');
-        const tituloEl = document.getElementById('confirmar-titulo');
-        const mensajeEl = document.getElementById('confirmar-mensaje');
-
-        tituloEl.textContent = titulo;
-        mensajeEl.textContent = mensaje;
-        btnAceptar.textContent = textoAceptar;
-        btnCancelar.textContent = textoCancelar;
-
-        icono.className = 'confirmar-icono';
-        if (tipo === 'peligro') {
-            icono.classList.add('peligro');
-            btnAceptar.className = 'confirmar-btn confirmar-btn-aceptar peligro';
-        } else if (tipo === 'exito') {
-            icono.classList.add('exito');
-            btnAceptar.className = 'confirmar-btn confirmar-btn-aceptar';
-        } else {
-            btnAceptar.className = 'confirmar-btn confirmar-btn-aceptar';
-        }
-
-        modal.className = 'confirmar-visible';
-        document.body.style.overflow = 'hidden';
-
-        const cerrar = (resultado) => {
-            modal.className = 'confirmar-oculto';
-            document.body.style.overflow = 'auto';
-            btnAceptar.onclick = null;
-            btnCancelar.onclick = null;
-            overlay.onclick = null;
-            resolve(resultado);
-        };
-
-        btnAceptar.onclick = () => cerrar(true);
-        btnCancelar.onclick = () => cerrar(false);
-        overlay.onclick = () => cerrar(false);
-
-        const escapeHandler = (e) => {
-            if (e.key === 'Escape') {
-                document.removeEventListener('keydown', escapeHandler);
-                cerrar(false);
-            }
-        };
-        document.addEventListener('keydown', escapeHandler);
-    });
-}
-
-// ============================================
-// TURNSTILE - Con soporte de reintento
-// ============================================
-let turnstileToken = null;
-let turnstileWidgetId = null;
-
 window.onTurnstileSuccess = function(token) {
     turnstileToken = token;
     console.log('✅ Turnstile token recibido');
@@ -212,7 +163,74 @@ function recargarScriptTurnstile() {
 }
 
 // ============================================
-// POLÍTICAS DE SEGURIDAD POR ROL
+// 5. MODAL DE CONFIRMACIÓN PROPIO
+// ============================================
+function confirmar(opciones) {
+    return new Promise((resolve) => {
+        if (typeof opciones === 'string') {
+            opciones = { mensaje: opciones };
+        }
+        
+        const {
+            titulo = '¿Estás seguro?',
+            mensaje = 'Esta acción no se puede deshacer.',
+            tipo = 'info',
+            textoAceptar = 'Aceptar',
+            textoCancelar = 'Cancelar'
+        } = opciones;
+
+        const modal = document.getElementById('modal-confirmar');
+        const overlay = document.getElementById('confirmar-overlay');
+        const btnAceptar = document.getElementById('confirmar-aceptar');
+        const btnCancelar = document.getElementById('confirmar-cancelar');
+        const icono = document.getElementById('confirmar-icono');
+        const tituloEl = document.getElementById('confirmar-titulo');
+        const mensajeEl = document.getElementById('confirmar-mensaje');
+
+        tituloEl.textContent = titulo;
+        mensajeEl.textContent = mensaje;
+        btnAceptar.textContent = textoAceptar;
+        btnCancelar.textContent = textoCancelar;
+
+        icono.className = 'confirmar-icono';
+        if (tipo === 'peligro') {
+            icono.classList.add('peligro');
+            btnAceptar.className = 'confirmar-btn confirmar-btn-aceptar peligro';
+        } else if (tipo === 'exito') {
+            icono.classList.add('exito');
+            btnAceptar.className = 'confirmar-btn confirmar-btn-aceptar';
+        } else {
+            btnAceptar.className = 'confirmar-btn confirmar-btn-aceptar';
+        }
+
+        modal.className = 'confirmar-visible';
+        document.body.style.overflow = 'hidden';
+
+        const cerrar = (resultado) => {
+            modal.className = 'confirmar-oculto';
+            document.body.style.overflow = 'auto';
+            btnAceptar.onclick = null;
+            btnCancelar.onclick = null;
+            overlay.onclick = null;
+            resolve(resultado);
+        };
+
+        btnAceptar.onclick = () => cerrar(true);
+        btnCancelar.onclick = () => cerrar(false);
+        overlay.onclick = () => cerrar(false);
+
+        const escapeHandler = (e) => {
+            if (e.key === 'Escape') {
+                document.removeEventListener('keydown', escapeHandler);
+                cerrar(false);
+            }
+        };
+        document.addEventListener('keydown', escapeHandler);
+    });
+}
+
+// ============================================
+// 6. POLÍTICAS DE SEGURIDAD
 // ============================================
 const POLITICAS_SEGURIDAD = {
     cliente: {
@@ -237,20 +255,8 @@ function obtenerPoliticaSeguridad() {
     return POLITICAS_SEGURIDAD.cliente;
 }
 
-let datosGlobales = null;
-let adminDatos = null;
-let modoEdicion = null;
-let temporizadorInactividad = null;
-let temporizadorAviso = null;
-let tiempoOculto = null;
-let verificadorSesion = null;
-let productoPedidoActual = '';
-let pedidosGlobales = [];
-let filtroPedidoActual = 'todos';
-let varianteIdCounter = 0;
-
 // ============================================
-// 1. AUTENTICACIÓN
+// 7. AUTENTICACIÓN
 // ============================================
 function getSession() {
     const session = localStorage.getItem(SESSION_KEY);
@@ -407,7 +413,7 @@ function protegerAdmin() {
 }
 
 // ============================================
-// 2. VERIFICACIÓN PERIÓDICA DE SESIÓN
+// 8. VERIFICACIÓN PERIÓDICA DE SESIÓN
 // ============================================
 function iniciarVerificadorSesion() {
     detenerVerificadorSesion();
@@ -439,7 +445,7 @@ function detenerVerificadorSesion() {
 }
 
 // ============================================
-// 3. SEGURIDAD: CIERRE AUTOMÁTICO POR INACTIVIDAD
+// 9. SEGURIDAD: INACTIVIDAD
 // ============================================
 function reiniciarTemporizadorInactividad() {
     if (!isLoggedIn()) return;
@@ -559,7 +565,7 @@ window.addEventListener('beforeunload', () => {
 });
 
 // ============================================
-// 4. NOTIFICACIONES
+// 10. NOTIFICACIONES
 // ============================================
 function mostrarNotificacion(mensaje, tipo = 'info') {
     const existente = document.querySelector('.notificacion');
@@ -578,7 +584,7 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
 }
 
 // ============================================
-// 5. CARGA DE PRODUCTOS
+// 11. CARGA DE PRODUCTOS
 // ============================================
 async function cargarProductos() {
     try {
@@ -645,7 +651,22 @@ function obtenerProductoPorNombre(nombre) {
 }
 
 // ============================================
-// 6. RENDERIZADO DE PRODUCTOS
+// 12. HELPERS PARA TALLAS
+// ============================================
+function obtenerTallasDelProductoActual() {
+    const producto = obtenerProductoPorNombre(productoPedidoActual);
+    if (!producto) return [];
+    return producto.tallasDisponibles || [];
+}
+
+function obtenerTipoTallasDelProductoActual() {
+    const producto = obtenerProductoPorNombre(productoPedidoActual);
+    if (!producto) return 'alfabeticas';
+    return producto.tipoTallas || 'alfabeticas';
+}
+
+// ============================================
+// 13. RENDERIZADO DE PRODUCTOS
 // ============================================
 function renderizarOfertas(ofertasIds, datos) {
     const contenedor = document.querySelector('#ofertas-ropa .grid-productos');
@@ -689,8 +710,8 @@ function renderizarOfertas(ofertasIds, datos) {
                 descripcionOferta = 'Lleva 3, paga 2';
                 break;
             case 'personalizado':
-                badge = promocion || 'OFERTA';
-                descripcionOferta = promocion;
+                badge = descuento > 0 ? `-${descuento}%` : 'OFERTA';
+                descripcionOferta = promocion || 'Oferta especial';
                 break;
         }
 
@@ -746,7 +767,7 @@ function renderizarProductosConModal(productos, contenedorSelector, datos) {
                 case 'descuento': badge = `-${descuento}%`; break;
                 case '2x1': badge = '2x1'; break;
                 case '3x2': badge = '3x2'; break;
-                case 'personalizado': badge = promocion || 'OFERTA'; break;
+                case 'personalizado': badge = descuento > 0 ? `-${descuento}%` : 'OFERTA'; break;
             }
         }
 
@@ -784,7 +805,7 @@ function renderizarProductosConModal(productos, contenedorSelector, datos) {
 }
 
 // ============================================
-// 7. MODAL DE DETALLE
+// 14. MODAL DE DETALLE
 // ============================================
 const modal = document.getElementById('modal-detalle');
 const modalBody = document.getElementById('modal-body');
@@ -833,7 +854,15 @@ function abrirModal(producto, datos) {
                 etiquetaOferta = 'Lleva 3, paga 2';
                 break;
             case 'personalizado':
-                etiquetaOferta = promocionActual;
+                const descuentoTexto = descuentoActual > 0 ? `${descuentoActual}% de descuento` : '';
+                const promocionTexto = promocionActual || '';
+                if (descuentoTexto && promocionTexto) {
+                    etiquetaOferta = `${descuentoTexto} + ${promocionTexto}`;
+                } else if (descuentoTexto) {
+                    etiquetaOferta = descuentoTexto;
+                } else {
+                    etiquetaOferta = promocionTexto || 'Oferta especial';
+                }
                 break;
         }
     }
@@ -879,7 +908,7 @@ modalOverlay?.addEventListener('click', cerrarModal);
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrarModal(); });
 
 // ============================================
-// 8. LIGHTBOX DE IMAGEN
+// 15. LIGHTBOX DE IMAGEN
 // ============================================
 const lightbox = document.getElementById('lightbox');
 const lightboxImg = document.getElementById('lightbox-img');
@@ -920,22 +949,7 @@ window.abrirLightbox = abrirLightbox;
 window.cerrarLightbox = cerrarLightbox;
 
 // ============================================
-// 9. HELPERS PARA TALLAS DEL PRODUCTO ACTUAL
-// ============================================
-function obtenerTallasDelProductoActual() {
-    const producto = obtenerProductoPorNombre(productoPedidoActual);
-    if (!producto) return [];
-    return producto.tallasDisponibles || [];
-}
-
-function obtenerTipoTallasDelProductoActual() {
-    const producto = obtenerProductoPorNombre(productoPedidoActual);
-    if (!producto) return 'alfabeticas';
-    return producto.tipoTallas || 'alfabeticas';
-}
-
-// ============================================
-// 10. SISTEMA DE VARIANTES (TALLAS DINÁMICAS)
+// 16. SISTEMA DE VARIANTES (TALLAS DINÁMICAS)
 // ============================================
 function crearVarianteHTML(talla = '', cantidad = 1) {
     varianteIdCounter++;
@@ -944,7 +958,6 @@ function crearVarianteHTML(talla = '', cantidad = 1) {
     const tallasDisponibles = obtenerTallasDelProductoActual();
     const tipoTallas = obtenerTipoTallasDelProductoActual();
     
-    // Si el producto no tiene tallas, mostrar mensaje
     if (tipoTallas === 'sin_tallas' || tallasDisponibles.length === 0) {
         return `
             <div class="variante-item variante-sin-tallas" data-variante-id="${id}">
@@ -970,7 +983,6 @@ function crearVarianteHTML(talla = '', cantidad = 1) {
         `;
     }
     
-    // Generar las opciones del select
     let opcionesHTML = '<option value="">-- Selecciona talla --</option>';
     tallasDisponibles.forEach(t => {
         const seleccionado = (t === talla) ? 'selected' : '';
@@ -1111,7 +1123,7 @@ function inicializarVariantes() {
 }
 
 // ============================================
-// 11. SOLICITAR PEDIDO (AMPLIADO)
+// 17. SOLICITAR PEDIDO
 // ============================================
 function solicitarPedido(producto) {
     const modalPedido = document.getElementById('modal-pedido');
@@ -1127,16 +1139,19 @@ function solicitarPedido(producto) {
     document.getElementById('modal-pedido-producto').textContent = `Producto: ${producto}`;
     modalPedido.className = 'login-visible';
     document.body.style.overflow = 'hidden';
-    scrollModalAlTop(modalPedido);
     
-    // Inicializar sistema de variantes
+    const formPedido = document.getElementById('modal-pedido-form');
+    if (formPedido) formPedido.scrollTop = 0;
+    document.body.scrollTop = 0;
+    
     inicializarVariantes();
 
     const cerrar = () => {
         modalPedido.className = 'login-oculto';
         document.body.style.overflow = 'auto';
-        document.getElementById('modal-pedido-form').reset();
+        if (formPedido) formPedido.reset();
         productoPedidoActual = '';
+        if (formPedido) formPedido.scrollTop = 0;
         setTimeout(() => scrollModalAlTop(modalPedido), 50);
     };
 
@@ -1173,7 +1188,6 @@ async function enviarPedidoPor(via) {
         return el ? el.value : fallback;
     };
 
-    // Recoger datos del cliente
     const nombre = safeGet('pedido-nombre');
     const telefono = safeGet('pedido-telefono');
     const email = safeGet('pedido-email');
@@ -1204,7 +1218,7 @@ async function enviarPedidoPor(via) {
 
     const cantidadTotal = parseInt(document.getElementById('cantidad-total')?.value) || 1;
 
-    // Validaciones básicas
+    // Validaciones
     if (!nombre) {
         mostrarNotificacion('Por favor, escribe tu nombre', 'error');
         document.getElementById('pedido-nombre')?.focus();
@@ -1228,14 +1242,12 @@ async function enviarPedidoPor(via) {
         }
     }
 
-    // Validación de variantes
     if (variantes.length === 0) {
         mostrarNotificacion('Debes asignar al menos una talla', 'error');
         document.getElementById('lista-variantes')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
     }
 
-    // Validar que todas las variantes tengan talla seleccionada
     const variantesSinTalla = !document.querySelector('.variante-sin-tallas') &&
         Array.from(variantesItems).some(item => {
             const sel = item.querySelector('.variante-talla-select');
@@ -1256,12 +1268,10 @@ async function enviarPedidoPor(via) {
         return;
     }
 
-    // Construir texto de variantes
     const variantesTexto = variantes.map(v => 
         v.talla === 'UNICA' ? `${v.cantidad}x` : `${v.cantidad}x talla ${v.talla}`
     ).join(', ');
 
-    // Datos del pedido
     const pedidoData = {
         producto: productoPedidoActual,
         nombre,
@@ -1280,7 +1290,7 @@ async function enviarPedidoPor(via) {
         via
     };
 
-    // 1. Guardar en el Worker
+    // Guardar en el Worker
     try {
         const respuesta = await fetch(`${API_URL}/pedidos`, {
             method: 'POST',
@@ -1298,7 +1308,7 @@ async function enviarPedidoPor(via) {
         console.warn('⚠️ Error al guardar pedido:', error);
     }
 
-    // 2. Mensaje
+    // Mensaje
     const mensaje = `¡Hola! Quiero hacer un pedido:\n\n` +
         `📦 Producto: ${productoPedidoActual}\n` +
         `👤 Nombre: ${nombre}\n` +
@@ -1319,7 +1329,7 @@ async function enviarPedidoPor(via) {
 
     const mensajeEncoded = encodeURIComponent(mensaje);
 
-    // 3. Abrir vía
+    // Abrir vía
     if (via === 'whatsapp') {
         const esMovil = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         const url = esMovil 
@@ -1334,21 +1344,23 @@ async function enviarPedidoPor(via) {
         mostrarNotificacion('¡Pedido enviado! Te contactaremos pronto.', 'success');
     }
 
-    // 4. Cerrar modal
+    // Cerrar modal
     setTimeout(() => {
         const modalPedido = document.getElementById('modal-pedido');
+        const formPedido = document.getElementById('modal-pedido-form');
         if (modalPedido) {
             modalPedido.className = 'login-oculto';
+            if (formPedido) formPedido.scrollTop = 0;
             scrollModalAlTop(modalPedido);
         }
         document.body.style.overflow = 'auto';
-        document.getElementById('modal-pedido-form')?.reset();
+        if (formPedido) formPedido.reset();
         productoPedidoActual = '';
     }, 2000);
 }
 
 // ============================================
-// 11.1 MODAL DE AYUDA PARA PEDIDOS
+// 18. MODAL DE AYUDA PARA PEDIDOS
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
     const btnAyuda = document.getElementById('btn-ayuda-pedido');
@@ -1375,7 +1387,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ============================================
-// 12. PANEL DE ADMINISTRACIÓN
+// 19. PANEL DE ADMINISTRACIÓN
 // ============================================
 const adminPanel = document.getElementById('admin-panel');
 const adminCerrar = document.getElementById('admin-cerrar');
@@ -1433,6 +1445,7 @@ function cargarAdminProductos() {
     renderizarUsuariosAdmin();
 }
 
+// --- Tabs del admin ---
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.admin-tab').forEach(tab => {
         tab.addEventListener('click', function() {
@@ -1464,7 +1477,6 @@ function renderizarAdminProductos() {
             const id = producto.id || producto._id || 'sin-id';
             const descripcion = producto.descripcion || 'Sin descripción';
             
-            // Info de tallas
             let tallasInfo = '';
             if (producto.tipoTallas === 'sin_tallas') {
                 tallasInfo = '<span style="font-size:0.7rem;color:var(--color-gris);">Sin tallas</span>';
@@ -1597,9 +1609,7 @@ async function eliminarProductoAdmin(id) {
     }
 }
 
-// ============================================
-// 12.1 SISTEMA DE TALLAS EN ADMIN
-// ============================================
+// --- Sistema de tallas en admin ---
 function cambiarTipoTallas(tipo) {
     const alfabeticas = document.getElementById('tallas-alfabeticas');
     const numericas = document.getElementById('tallas-numericas');
@@ -1695,7 +1705,6 @@ function editarProductoAdmin(id) {
         }
     }
 
-    // 🔥 CARGAR TALLAS DEL PRODUCTO
     cargarTallasProducto(producto);
 
     const preview = document.getElementById('drop-zone-preview');
@@ -1733,7 +1742,6 @@ document.getElementById('producto-form')?.addEventListener('submit', async funct
         return;
     }
 
-    // 🔥 VALIDAR TALLAS
     const { tipoTallas, tallasDisponibles } = obtenerTallasSeleccionadas();
     
     if (tipoTallas !== 'sin_tallas' && tallasDisponibles.length === 0) {
@@ -1862,7 +1870,7 @@ adminCerrar?.addEventListener('click', cerrarAdmin);
 adminOverlay?.addEventListener('click', cerrarAdmin);
 
 // ============================================
-// 13. GESTIÓN DE PEDIDOS EN EL PANEL ADMIN
+// 20. GESTIÓN DE PEDIDOS EN EL PANEL ADMIN
 // ============================================
 async function cargarPedidosAdmin() {
     const container = document.getElementById('lista-pedidos-admin');
@@ -2143,7 +2151,7 @@ function filtrarPedidosAdmin(termino) {
 }
 
 // ============================================
-// 14. GESTIÓN DE OFERTAS
+// 21. GESTIÓN DE OFERTAS
 // ============================================
 async function cargarOfertasAdmin() {
     const container = document.getElementById('lista-ofertas-admin');
@@ -2202,7 +2210,7 @@ async function cargarOfertasAdmin() {
                                 <option value="descuento" ${tipoOferta === 'descuento' ? 'selected' : ''}>Descuento</option>
                                 <option value="2x1" ${tipoOferta === '2x1' ? 'selected' : ''}>Lleva 2, paga 1</option>
                                 <option value="3x2" ${tipoOferta === '3x2' ? 'selected' : ''}>Lleva 3, paga 2</option>
-                                <option value="personalizado" ${tipoOferta === 'personalizado' ? 'selected' : ''}>Personalizado</option>
+                                <option value="personalizado" ${tipoOferta === 'personalizado' ? 'selected' : ''}>Personalizado (descuento + texto)</option>
                             </select>
                         </div>
                         
@@ -2221,7 +2229,7 @@ async function cargarOfertasAdmin() {
                             <input type="text" 
                                    id="promocion-${id}" 
                                    value="${promocion}" 
-                                   placeholder="Ej: 2x1, Envío gratis"
+                                   placeholder="Ej: Envío gratis, Regalo sorpresa..."
                                    onkeydown="if(event.key==='Enter'){event.preventDefault();guardarOferta('${id}');}">
                         </div>
                         
@@ -2262,27 +2270,32 @@ function toggleDescuentoInput(id) {
         descuentoEl.disabled = false;
         descuentoEl.style.opacity = '1';
         descuentoEl.style.cursor = 'text';
+        descuentoEl.placeholder = 'Ej: 15';
         promocionEl.disabled = true;
         promocionEl.style.opacity = '0.4';
         promocionEl.style.cursor = 'not-allowed';
         promocionEl.value = '';
+        promocionEl.placeholder = 'No aplica para descuento simple';
     } else if (tipo === 'personalizado') {
-        descuentoEl.disabled = true;
-        descuentoEl.style.opacity = '0.4';
-        descuentoEl.style.cursor = 'not-allowed';
-        descuentoEl.value = 0;
+        descuentoEl.disabled = false;
+        descuentoEl.style.opacity = '1';
+        descuentoEl.style.cursor = 'text';
+        descuentoEl.placeholder = 'Ej: 20';
         promocionEl.disabled = false;
         promocionEl.style.opacity = '1';
         promocionEl.style.cursor = 'text';
+        promocionEl.placeholder = 'Ej: Envío gratis, Regalo sorpresa...';
     } else {
         descuentoEl.disabled = true;
         descuentoEl.style.opacity = '0.4';
         descuentoEl.style.cursor = 'not-allowed';
         descuentoEl.value = 0;
+        descuentoEl.placeholder = 'No aplica';
         promocionEl.disabled = true;
         promocionEl.style.opacity = '0.4';
         promocionEl.style.cursor = 'not-allowed';
         promocionEl.value = '';
+        promocionEl.placeholder = 'No aplica';
     }
 }
 
@@ -2296,9 +2309,15 @@ async function guardarOferta(id) {
         return;
     }
     
-    if (tipoOferta === 'personalizado' && !promocion) {
-        mostrarNotificacion('Escribe un texto para la promoción personalizada', 'error');
-        return;
+    if (tipoOferta === 'personalizado') {
+        if (descuento <= 0 || descuento > 100) {
+            mostrarNotificacion('El descuento debe estar entre 1 y 100', 'error');
+            return;
+        }
+        if (!promocion) {
+            mostrarNotificacion('Escribe un texto para la promoción personalizada', 'error');
+            return;
+        }
     }
     
     try {
@@ -2368,7 +2387,7 @@ async function quitarOferta(productoId) {
 }
 
 // ============================================
-// 15. GESTIÓN DE USUARIOS
+// 22. GESTIÓN DE USUARIOS
 // ============================================
 async function renderizarUsuariosAdmin() {
     const container = document.getElementById('admin-usuarios-lista');
@@ -2540,7 +2559,7 @@ document.getElementById('btn-nuevo-usuario')?.addEventListener('click', function
 });
 
 // ============================================
-// 16. FILTROS DE BÚSQUEDA
+// 23. FILTROS DE BÚSQUEDA
 // ============================================
 function filtrarProductosAdmin(termino) {
     const items = document.querySelectorAll('#admin-productos-lista .admin-producto-item');
@@ -2570,7 +2589,7 @@ function filtrarUsuariosAdmin(termino) {
 }
 
 // ============================================
-// 17. MODAL GENÉRICO
+// 24. MODAL GENÉRICO
 // ============================================
 function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit }) {
     const modal = document.getElementById('modal-generico');
@@ -2653,7 +2672,7 @@ function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit }) {
 }
 
 // ============================================
-// 18. MODAL DE BIENVENIDA
+// 25. MODAL DE BIENVENIDA
 // ============================================
 function mostrarModalBienvenida() {
     const modal = document.getElementById('modal-bienvenida');
@@ -2704,7 +2723,7 @@ document.getElementById('modal-bienvenida-cerrar')?.addEventListener('click', ce
 document.getElementById('modal-bienvenida-overlay')?.addEventListener('click', cerrarModalBienvenida);
 
 // ============================================
-// 19. LOGIN/LOGOUT
+// 26. LOGIN/LOGOUT
 // ============================================
 const btnAcceder = document.getElementById('btn-acceder');
 const btnCerrarSesion = document.getElementById('btn-cerrar-sesion');
@@ -2808,7 +2827,7 @@ loginCerrar?.addEventListener('click', cerrarLogin);
 loginOverlay?.addEventListener('click', cerrarLogin);
 
 // ============================================
-// 20. FORZAR CIERRE DE SESIÓN
+// 27. FORZAR CIERRE DE SESIÓN
 // ============================================
 document.getElementById('forzar-cierre-link')?.addEventListener('click', function(e) {
     e.preventDefault();
@@ -2858,7 +2877,7 @@ document.getElementById('forzar-cierre-link')?.addEventListener('click', functio
 });
 
 // ============================================
-// 21. OJITO PARA CONTRASEÑA
+// 28. OJITO PARA CONTRASEÑA
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.toggle-password').forEach(button => {
@@ -2873,7 +2892,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ============================================
-// 22. DROP ZONE PARA IMÁGENES
+// 29. DROP ZONE PARA IMÁGENES
 // ============================================
 function inicializarDropZone() {
     const dropZone = document.getElementById('drop-zone');
@@ -2932,16 +2951,12 @@ function manejarArchivoImagen(file, preview, hiddenInput, content) {
 }
 
 // ============================================
-// 23. LISTENERS DEL SISTEMA DE VARIANTES Y TURNSTILE
+// 30. LISTENERS GENERALES (DOMContentLoaded)
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
-    // Botón sumar cantidad total
+    // Botones del modal de pedido
     document.getElementById('cantidad-total-sumar')?.addEventListener('click', () => cambiarCantidadTotal(1));
-    
-    // Botón restar cantidad total
     document.getElementById('cantidad-total-restar')?.addEventListener('click', () => cambiarCantidadTotal(-1));
-    
-    // Botón añadir variante
     document.getElementById('btn-añadir-variante')?.addEventListener('click', () => añadirVariante());
     
     // Botón de reintento de Turnstile
@@ -2949,10 +2964,27 @@ document.addEventListener('DOMContentLoaded', function() {
     if (btnReintentar) {
         btnReintentar.addEventListener('click', reintentarTurnstile);
     }
+    
+    // Inicializar sistema de tallas en el admin
+    console.log('🎯 Inicializando sistema de tallas...');
+    
+    const tipoTallasRadios = document.querySelectorAll('input[name="tipo-tallas"]');
+    const tallasAlfabeticas = document.getElementById('tallas-alfabeticas');
+    const tallasNumericas = document.getElementById('tallas-numericas');
+    const tallasSin = document.getElementById('tallas-sin');
+    
+    console.log('Radios de tipo de tallas:', tipoTallasRadios.length);
+    console.log('Contenedor alfabéticas:', tallasAlfabeticas ? 'OK' : 'FALTA');
+    console.log('Contenedor numéricas:', tallasNumericas ? 'OK' : 'FALTA');
+    console.log('Contenedor sin tallas:', tallasSin ? 'OK' : 'FALTA');
+    
+    if (tipoTallasRadios.length > 0) {
+        cambiarTipoTallas('alfabeticas');
+    }
 });
 
 // ============================================
-// 24. INICIO
+// 31. INICIO
 // ============================================
 async function iniciar() {
     console.log('🚀 Cargando productos...');
@@ -2994,7 +3026,7 @@ document.addEventListener('DOMContentLoaded', iniciar);
 document.addEventListener('DOMContentLoaded', inicializarDropZone);
 
 // ============================================
-// 25. EXPOSICIÓN GLOBAL
+// 32. EXPOSICIÓN GLOBAL
 // ============================================
 window.confirmar = confirmar;
 window.guardarOferta = guardarOferta;
@@ -3041,7 +3073,7 @@ window.cargarTallasProducto = cargarTallasProducto;
 window.obtenerTallasSeleccionadas = obtenerTallasSeleccionadas;
 
 // ============================================
-// 26. MENÚ HAMBURGUESA
+// 33. MENÚ HAMBURGUESA
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
     const hamburguesa = document.getElementById('menu-hamburguesa');
