@@ -4242,20 +4242,157 @@ body.admin-abierto .nav {
     .producto-hint { font-size: 0.65rem; }
 
     .bienvenida-contenido {
-        max-height: 90vh;
-        overflow-y: auto;
+        flex-direction: column;
+        width: 95%;
+        max-width: 95%;
+        max-height: 92vh;
+        overflow: hidden;
+        border-radius: 20px;
     }
 
-    .bienvenida-info { padding: 20px 18px; }
-    .bienvenida-beneficios { gap: 8px; }
-    .bienvenida-beneficio { padding: 8px; }
+    .bienvenida-decoracion {
+        width: 100%;
+        height: 80px;
+        flex-shrink: 0;
+    }
 
-    /* Buscador del admin en móvil */
+    .bienvenida-logo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 0 15px;
+    }
+
+    .bienvenida-logo-img {
+        height: 40px;
+        margin-bottom: 0;
+    }
+
+    .bienvenida-logo-textiles,
+    .bienvenida-logo-madruga {
+        display: inline;
+        font-size: 0.9rem;
+        letter-spacing: 2px;
+    }
+
+    .bienvenida-info {
+        padding: 16px 16px 12px 16px;
+        overflow-y: auto;
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .bienvenida-cerrar {
+        top: 8px;
+        right: 10px;
+        width: 32px;
+        height: 32px;
+    }
+
+    .bienvenida-cerrar svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .bienvenida-header {
+        margin-bottom: 0;
+    }
+
+    .bienvenida-icono {
+        font-size: 1.6rem;
+        margin-bottom: 4px;
+    }
+
+    .bienvenida-icono svg {
+        width: 28px;
+        height: 28px;
+    }
+
+    .bienvenida-titulo {
+        font-size: 1.1rem;
+        line-height: 1.2;
+        margin-bottom: 4px;
+    }
+
+    .bienvenida-subtitulo {
+        font-size: 0.8rem;
+    }
+
+    .aviso-navegador {
+        font-size: 0.72rem;
+        padding: 8px 12px;
+        margin-bottom: 4px;
+        border-radius: 8px;
+        gap: 8px;
+    }
+
+    .aviso-navegador svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .bienvenida-beneficios {
+        grid-template-columns: 1fr;
+        gap: 6px;
+        margin-bottom: 0;
+        flex: 0 0 auto;
+    }
+
+    .bienvenida-beneficio {
+        padding: 8px 10px;
+        gap: 8px;
+        border-radius: 8px;
+    }
+
+    .beneficio-icono {
+        width: 24px;
+        height: 24px;
+    }
+
+    .beneficio-icono svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .bienvenida-beneficio strong {
+        font-size: 0.75rem;
+        margin-bottom: 1px;
+    }
+
+    .bienvenida-beneficio p {
+        font-size: 0.65rem;
+        display: none;
+    }
+
+    .bienvenida-acciones {
+        gap: 6px;
+        margin-bottom: 0;
+        flex-shrink: 0;
+    }
+
+    .bienvenida-btn-primario {
+        padding: 10px 16px;
+        font-size: 0.8rem;
+    }
+
+    .bienvenida-btn-secundario {
+        padding: 8px 16px;
+        font-size: 0.75rem;
+    }
+
+    .bienvenida-nota {
+        font-size: 0.6rem;
+        margin-top: 4px;
+    }
+
     .admin-buscador { flex-wrap: wrap; }
     .admin-buscador input { flex: 1 1 100%; }
     .admin-buscador button { flex: 1 1 calc(50% - 5px); }
 
-    /* Cards de categorías con imágenes */
     .grid-categorias {
         grid-template-columns: 1fr 1fr;
         gap: 20px;
@@ -4326,7 +4463,6 @@ body.admin-abierto .nav {
 
     .subcategoria-card-imagen p { font-size: 0.8rem; }
 
-    /* X más grande en móvil */
     .login-cerrar {
         top: 10px !important;
         right: 12px !important;
@@ -4339,7 +4475,6 @@ body.admin-abierto .nav {
         height: 20px !important;
     }
 
-    /* Pedidos en móvil */
     .pedido-header {
         flex-direction: column;
         align-items: flex-start;
@@ -4361,7 +4496,6 @@ body.admin-abierto .nav {
         padding: 6px 10px;
     }
 
-    /* Variantes en móvil */
     .variante-item { flex-wrap: wrap; }
     .variante-item .variante-talla,
     .variante-item .variante-talla-select { flex: 1 1 100%; }
@@ -4372,7 +4506,6 @@ body.admin-abierto .nav {
     }
     .cantidad-total-wrapper { justify-content: center; }
 
-    /* Modal de pedido en móvil */
     .modal-pedido-contenido {
         padding: 20px 16px;
         max-width: 95%;
@@ -4381,7 +4514,6 @@ body.admin-abierto .nav {
     .pedido-seccion { padding: 12px 14px; }
     .form-row-2 { grid-template-columns: 1fr; }
 
-    /* Modal de ayuda en móvil */
     .modal-ayuda-contenido {
         max-width: 95%;
         padding: 24px 20px;
@@ -4392,14 +4524,12 @@ body.admin-abierto .nav {
     .ayuda-opcion-header h3 { font-size: 1rem; }
     .ayuda-ventajas ul li { font-size: 0.8rem; }
 
-    /* Modal de producto en móvil */
     .modal-contenido { padding: 20px; width: 95%; }
     .modal-producto { flex-direction: column; }
     .modal-producto-imagen img { max-height: 250px; }
     .modal-producto-info h2 { font-size: 1.5rem; }
     .modal-producto-info .precio { font-size: 1.4rem; }
 
-    /* Lightbox en móvil */
     .lightbox-contenido { padding: 10px; }
     .lightbox-contenido img {
         max-width: 100%;
@@ -4417,7 +4547,6 @@ body.admin-abierto .nav {
     }
     .lightbox-cerrar svg { width: 18px; height: 18px; }
 
-    /* Panel admin en móvil - TABS COMPACTAS */
     .admin-contenido {
         width: 100% !important;
         max-width: 100% !important;
@@ -4485,12 +4614,11 @@ body.admin-abierto .nav {
 /* ============================================ */
 @media (max-width: 480px) {
     .grid-productos { grid-template-columns: 1fr; }
-    .grid-categorias { grid-template-columns: 1fr; }
+    .grid-categorias { grid-template-columns: 1fr 1fr; }
     .logo-hero { max-width: 120px; }
     .hero-slogan { font-size: 1rem; }
     .letra-madruga { font-size: 2.8rem; }
 
-    /* Login modal en móvil pequeño */
     .login-contenido { max-width: 92%; }
     #login-modal .login-header { padding: 28px 20px 16px 20px; }
     #login-modal .login-form { padding: 0 20px 16px 20px; }
@@ -4530,20 +4658,53 @@ body.admin-abierto .nav {
     .producto-hint { font-size: 0.6rem; }
 
     .bienvenida-contenido {
-        max-height: 95vh;
+        width: 98%;
+        max-width: 98%;
+        max-height: 96vh;
         border-radius: 16px;
     }
-    .bienvenida-decoracion { height: 100px; }
-    .bienvenida-titulo { font-size: 1.1rem; }
-    .bienvenida-icono svg { width: 32px; height: 32px; }
-    .bienvenida-acciones { gap: 8px; }
-    .bienvenida-btn-primario,
-    .bienvenida-btn-secundario {
-        padding: 10px 16px;
+
+    .bienvenida-decoracion {
+        height: 70px;
+    }
+
+    .bienvenida-logo-img {
+        height: 32px;
+    }
+
+    .bienvenida-logo-textiles,
+    .bienvenida-logo-madruga {
         font-size: 0.8rem;
     }
 
-    /* Modal de confirmación */
+    .bienvenida-info {
+        padding: 12px 12px 10px 12px;
+        gap: 8px;
+    }
+
+    .bienvenida-titulo {
+        font-size: 1rem;
+    }
+
+    .bienvenida-icono svg {
+        width: 24px;
+        height: 24px;
+    }
+
+    .bienvenida-beneficios {
+        gap: 4px;
+    }
+
+    .bienvenida-beneficio {
+        padding: 6px 8px;
+    }
+
+    .bienvenida-btn-primario,
+    .bienvenida-btn-secundario {
+        padding: 8px 14px;
+        font-size: 0.75rem;
+    }
+
     .confirmar-contenido {
         padding: 24px 20px 20px;
         max-width: 92%;
@@ -4555,13 +4716,11 @@ body.admin-abierto .nav {
         font-size: 0.85rem;
     }
 
-    /* Radios en móvil */
     .radio-option {
         padding: 7px 12px;
         font-size: 0.8rem;
     }
 
-    /* Admin tabs en móvil muy pequeño */
     .admin-tab {
         padding: 7px 12px !important;
         font-size: 0.72rem !important;
@@ -4573,7 +4732,6 @@ body.admin-abierto .nav {
         height: 20px !important;
     }
 
-    /* Buscador del admin en móvil pequeño */
     .admin-buscador {
         flex-direction: column;
         align-items: stretch;
