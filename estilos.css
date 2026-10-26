@@ -4229,48 +4229,60 @@ body.admin-abierto .nav {
 
         /* --- HERO MÓVIL --- */
         .hero {
-            min-height: 100vh;
+            min-height: 100vh; /* Ocupa toda la pantalla */
             min-height: 100dvh;
-            padding: 0;
+            padding: 60px 0; /* Un poco de espacio arriba y abajo */
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, rgba(0,0,0,0.85) 100%, rgba(0,0,0,0.5) 110%);
+            /* Fondo original con la imagen */
+            background: 
+                linear-gradient(135deg, rgba(0,0,0,0.85) 100%, rgba(0,0,0,0.5) 110%),
+                url('assets/img/banner-tm.webp');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
+            position: relative;
+            overflow: hidden;
         }
 
         .hero::before {
-            right: 50%;
-            transform: translateX(50%);
-            width: 150%;
-            height: 100%;
-            background-size: contain;
-            background-position: center;
-            opacity: 0.4;
-            display: block;
+            display: none;
         }
 
         .hero-content {
             width: 100%;
-            padding: 20px;
+            padding: 0 20px;
+            position: relative;
             z-index: 1;
         }
 
+        .hero-text {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        /* Texto del hero */
         .letra-textiles {
-            font-size: 1.3rem;
-            letter-spacing: 5px;
+            font-size: 1.2rem;
+            letter-spacing: 6px;
+            margin-bottom: 5px;
         }
 
         .letra-madruga {
             font-size: 3.5rem;
-            margin-bottom: 15px;
+            line-height: 1.1;
+            margin-bottom: 20px;
         }
 
         .logo-hero {
             max-width: 180px;
-            margin-bottom: 15px;
+            height: auto;
+            margin-bottom: 20px;
+            mix-blend-mode: screen;
+            filter: brightness(1.2);
         }
 
         .hero-slogan {
@@ -4280,7 +4292,7 @@ body.admin-abierto .nav {
         }
 
         .btn-primary {
-            padding: 14px 32px;
+            padding: 14px 35px;
             font-size: 1rem;
         }
 }
