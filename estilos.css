@@ -4122,53 +4122,121 @@ body.admin-abierto .nav {
 /* 32. RESPONSIVE - TABLET (<= 768px)           */
 /* ============================================ */
 @media (max-width: 768px) {
+    /* --- HEADER MÓVIL --- */
     .header {
-        position: sticky !important;
-        top: 0 !important;
-        z-index: 9999 !important;
+        padding: 8px 0 !important;
     }
 
     .header .container {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        gap: 5px;
+        gap: 4px;
         flex-wrap: nowrap;
+        padding: 0 10px;
     }
 
+    /* Logo: solo la imagen, ocultamos el texto para ahorrar espacio */
     .logo {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 2px;
         flex-shrink: 1;
         min-width: 0;
+        gap: 0;
     }
 
     .logo-header {
-        height: 30px;
-        margin-bottom: 2px;
+        height: 32px;
+        margin: 0;
     }
 
     .logo-textiles,
     .logo-madruga {
-        font-size: 0.8rem;
-        line-height: 1;
-    }
-    .logo-madruga {
-        margin-top: -2px;
+        display: none; /* Ocultamos el texto en móvil */
     }
 
-    .logo-hero { max-width: 140px; }
+    /* Botones de acción */
+    .header-actions {
+        gap: 4px;
+        justify-content: flex-end;
+        flex-shrink: 0;
+    }
 
+    /* Botón de recargar más pequeño */
+    .btn-recargar {
+        width: 32px !important;
+        height: 32px !important;
+        border-width: 1px !important;
+    }
+    .btn-recargar svg {
+        width: 14px !important;
+        height: 14px !important;
+    }
+
+    /* Botón de acceder más compacto */
+    .btn-acceder,
+    .btn-cerrar-sesion {
+        font-size: 0.65rem !important;
+        padding: 6px 12px !important;
+        border-radius: 50px !important;
+    }
+
+    /* Menú hamburguesa */
+    .menu-hamburguesa {
+        display: flex !important;
+        padding: 4px;
+    }
+    .menu-hamburguesa .barra {
+        width: 22px;
+        height: 2.5px;
+    }
+
+    /* --- HERO MÓVIL --- */
+    .hero {
+        min-height: 70vh; /* Reducimos la altura en móvil */
+        padding: 40px 0;
+        background: linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 100%), 
+                    url('assets/img/banner-tm.webp');
+        background-size: cover;
+        background-position: center;
+    }
+
+    /* Quitamos la imagen flotante que se ve mal en móvil */
     .hero::before {
-        right: 5vh;
-        width: 120%;
-        opacity: 0.4;
+        display: none;
     }
 
-    .hero-slogan { font-size: 1.2rem; }
-    .letra-madruga { font-size: 3.5rem; }
+    .hero-content {
+        padding: 0 15px;
+    }
+
+    /* Texto del hero */
+    .letra-textiles {
+        font-size: 1.2rem;
+        letter-spacing: 4px;
+    }
+
+    .letra-madruga {
+        font-size: 3rem; /* Más pequeño */
+        margin-bottom: 10px;
+    }
+
+    .logo-hero {
+        max-width: 180px; /* Imagen del logo más pequeña */
+        margin-bottom: 10px;
+    }
+
+    .hero-slogan {
+        font-size: 1rem;
+        letter-spacing: 1px;
+        margin-bottom: 20px;
+    }
+
+    /* Botón "Explorar colección" más proporcionado */
+    .btn-primary {
+        padding: 12px 28px;
+        font-size: 0.9rem;
+    }
+
+    /* --- RESTO DE SECCIONES EN MÓVIL --- */
     .section-title { font-size: 2.2rem; }
     .grid-productos { grid-template-columns: 1fr 1fr; }
     .grid-categorias { grid-template-columns: 1fr 1fr; }
@@ -4201,26 +4269,6 @@ body.admin-abierto .nav {
     
     .oferta-card-edicion .campo { flex: 1 1 auto; }
     .oferta-card-edicion .btn-admin { width: 100%; }
-
-    .header-actions { gap: 4px; }
-
-    .btn-acceder,
-    .btn-cerrar-sesion {
-        font-size: 0.6rem !important;
-        padding: 4px 8px !important;
-        white-space: nowrap;
-    }
-
-    .menu-hamburguesa {
-        display: flex !important;
-        margin-left: 2px;
-        padding: 6px 4px;
-    }
-
-    .menu-hamburguesa .barra {
-        width: 24px;
-        height: 2.5px;
-    }
 
     .nav {
         width: 80% !important;
@@ -4615,9 +4663,9 @@ body.admin-abierto .nav {
 @media (max-width: 480px) {
     .grid-productos { grid-template-columns: 1fr; }
     .grid-categorias { grid-template-columns: 1fr 1fr; }
-    .logo-hero { max-width: 120px; }
-    .hero-slogan { font-size: 1rem; }
-    .letra-madruga { font-size: 2.8rem; }
+    .logo-hero { max-width: 140px; }
+    .hero-slogan { font-size: 0.9rem; }
+    .letra-madruga { font-size: 2.5rem; }
 
     .login-contenido { max-width: 92%; }
     #login-modal .login-header { padding: 28px 20px 16px 20px; }
@@ -4807,7 +4855,7 @@ body.admin-abierto .nav {
 }
 
 /* ============================================ */
-/* BOTÓN DE RECARGAR PRODUCTOS                  */
+/* 35. BOTÓN DE RECARGAR PRODUCTOS              */
 /* ============================================ */
 .btn-recargar {
     display: inline-flex;
