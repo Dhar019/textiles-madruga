@@ -4121,127 +4121,155 @@ body.admin-abierto .nav {
 /* ============================================ */
 /* 32. RESPONSIVE - TABLET (<= 768px)           */
 /* ============================================ */
-@media (max-width: 768px) {
-    /* --- HEADER MÓVIL --- */
-    .header {
-        position: sticky !important;
-        top: 0 !important;
-        z-index: 9999 !important;
-        padding: 10px 0 !important;
-    }
+    @media (max-width: 768px) {
+        /* --- HEADER MÓVIL --- */
+        .header {
+            position: sticky !important;
+            top: 0 !important;
+            z-index: 9999 !important;
+            padding: 10px 0 !important;
+            background-color: var(--color-negro) !important; /* Asegurar fondo negro */
+        }
 
-    .header .container {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 8px;
-        flex-wrap: nowrap;
-        padding: 0 15px;
-    }
+        .header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: nowrap;
+            padding: 0 12px;
+        }
 
-    /* Logo más grande y con fondo blanco para que resalte */
-    .logo {
-        flex-shrink: 1;
-        min-width: 0;
-        gap: 0;
-    }
+        /* --- LOGO --- */
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            flex-shrink: 0;
+            background: transparent;
+        }
 
-    .logo-header {
-        height: 45px !important;
-        width: auto;
-        background-color: var(--color-blanco);
-        padding: 4px 8px;
-        border-radius: 8px;
-        object-fit: contain;
-    }
+        .logo-header {
+            height: 36px; /* Un poco más pequeño */
+            width: auto;
+            object-fit: contain;
+            background: transparent !important;
+            border-radius: 0;
+            mix-blend-mode: screen; /* Truco: elimina el fondo blanco de la imagen si lo tiene */
+        }
 
-    .logo-textiles,
-    .logo-madruga {
-        display: none;
-    }
+        .logo-textiles,
+        .logo-madruga {
+            display: none;
+        }
 
-    /* Botones de acción */
-    .header-actions {
-        gap: 8px;
-        justify-content: flex-end;
-        flex-shrink: 0;
-    }
+        /* --- ACCIONES (Botones) --- */
+        .header-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 6px;
+            flex-shrink: 0;
+        }
 
-    /* Botón de recargar */
-    .btn-recargar {
-        width: 36px !important;
-        height: 36px !important;
-        border-width: 1.5px !important;
-    }
-    .btn-recargar svg {
-        width: 16px !important;
-        height: 16px !important;
-    }
+        /* Botón de recargar (Círculo sutil) */
+        .btn-recargar {
+            width: 32px !important;
+            height: 32px !important;
+            background: transparent !important;
+            border: 1.5px solid rgba(255, 255, 255, 0.3) !important;
+            color: var(--color-blanco) !important;
+            border-radius: 50% !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 !important;
+            transition: all 0.3s ease;
+        }
 
-    /* Botón de acceder */
-    .btn-acceder,
-    .btn-cerrar-sesion {
-        font-size: 0.7rem !important;
-        padding: 6px 14px !important;
-        border-radius: 50px !important;
-    }
+        .btn-recargar:hover {
+            background: var(--color-naranja) !important;
+            border-color: var(--color-naranja) !important;
+        }
 
-    /* Menú hamburguesa */
-    .menu-hamburguesa {
-        display: flex !important;
-        padding: 4px;
-    }
-    .menu-hamburguesa .barra {
-        width: 24px;
-        height: 2.5px;
-    }
+        .btn-recargar svg {
+            width: 14px !important;
+            height: 14px !important;
+        }
 
-    /* --- HERO MÓVIL --- */
-    .hero {
-        min-height: 100vh;
-        min-height: 100dvh;
-        padding: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(135deg, rgba(0,0,0,0.85) 100%, rgba(0,0,0,0.5) 110%),
-                    url('assets/img/banner-tm.webp');
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        margin-bottom: 0;
-    }
+        /* Botón de acceder */
+        .btn-acceder,
+        .btn-cerrar-sesion {
+            font-size: 0.65rem !important;
+            padding: 5px 12px !important;
+            border-radius: 50px !important;
+            white-space: nowrap !important;
+            background: var(--color-negro) !important;
+            color: var(--color-blanco) !important;
+            border: 1.5px solid #e79a60 !important;
+        }
 
-    .hero::before {
-        display: none;
-    }
+        .btn-acceder.activo {
+            background: transparent !important;
+            border-color: var(--color-naranja) !important;
+        }
 
-    .hero-content {
-        width: 100%;
-        padding: 20px;
-        margin: 0;
-    }
+        /* Menú hamburguesa */
+        .menu-hamburguesa {
+            display: flex !important;
+            padding: 4px;
+            margin-left: 2px;
+        }
 
-    /* Texto del hero */
-    .letra-textiles {
-        font-size: 1.3rem;
-        letter-spacing: 5px;
-    }
+        .menu-hamburguesa .barra {
+            width: 22px;
+            height: 2.5px;
+            background-color: var(--color-blanco);
+        }
 
-    .letra-madruga {
-        font-size: 3.5rem;
-        margin-bottom: 15px;
-    }
+        /* --- HERO MÓVIL --- */
+        .hero {
+            min-height: 100vh;
+            min-height: 100dvh;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(0,0,0,0.85) 100%, rgba(0,0,0,0.5) 110%),
+                        url('assets/img/banner-tm.webp');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
 
-    .logo-hero {
-        max-width: 200px;
-        margin-bottom: 15px;
-    }
+        .hero::before {
+            display: none;
+        }
 
-    .hero-slogan {
-        font-size: 1.1rem;
-        letter-spacing: 1px;
-        margin-bottom: 30px;
+        .hero-content {
+            width: 100%;
+            padding: 20px;
+        }
+
+        .letra-textiles {
+            font-size: 1.3rem;
+            letter-spacing: 5px;
+        }
+
+        .letra-madruga {
+            font-size: 3.5rem;
+            margin-bottom: 15px;
+        }
+
+        .logo-hero {
+            max-width: 200px;
+            margin-bottom: 15px;
+        }
+
+        .hero-slogan {
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+        }
     }
 
     .btn-primary {
