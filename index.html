@@ -15,7 +15,8 @@
         connect-src 'self' https://textiles-madruga-api.eldani000219.workers.dev https://challenges.cloudflare.com https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com data:;
         style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
         font-src 'self' https://fonts.gstatic.com data:;
-        img-src 'self' data: blob:;
+        img-src * data: blob: 'self';
+        media-src 'self' data: blob:;
     ">
 
     <!-- Google Fonts -->
