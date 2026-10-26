@@ -4805,3 +4805,53 @@ body.admin-abierto .nav {
         padding: 10px 12px;
     }
 }
+
+/* ============================================ */
+/* BOTÓN DE RECARGAR PRODUCTOS                  */
+/* ============================================ */
+.btn-recargar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: transparent;
+    color: var(--color-blanco);
+    border: 1.5px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.btn-recargar:hover {
+    background: var(--color-naranja);
+    border-color: var(--color-naranja);
+    transform: rotate(180deg);
+}
+
+.btn-recargar:active {
+    transform: rotate(180deg) scale(0.9);
+}
+
+.btn-recargar svg {
+    display: block;
+    width: 18px;
+    height: 18px;
+}
+
+.btn-recargar.recargando svg {
+    animation: spin 1s linear infinite;
+}
+
+/* En móvil, un poco más pequeño */
+@media (max-width: 768px) {
+    .btn-recargar {
+        width: 32px;
+        height: 32px;
+    }
+    .btn-recargar svg {
+        width: 14px;
+        height: 14px;
+    }
+}

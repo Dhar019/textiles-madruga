@@ -2902,6 +2902,55 @@ document.addEventListener('DOMContentLoaded', iniciar);
 document.addEventListener('DOMContentLoaded', inicializarDropZone);
 
 // ============================================
+// RECARGAR PRODUCTOS
+// ============================================
+async function recargarProductos() {
+    const btn = document.getElementById('btn-recargar');
+    if (!btn) return;
+
+    // Añadir clase de "recargando" para la animación
+    btn.classList.add('recargando');
+    btn.disabled = true;
+
+    try {
+        // Forzar la recarga sin caché
+        const datos = await cargarProductos();
+
+        if (datos) {
+            datosGlobales = datos;
+            adminDatos = JSON.parse(JSON.stringify(datos));
+
+            // Volver a renderizar todo
+            renderizarOfertas(datos.ofertas, datos);
+            renderizarProductosConModal(datos.productos.hombre, '#ropa-hombre .grid-productos', datos);
+            renderizarProductosConModal(datos.productos.mujer, '#ropa-mujer .grid-productos', datos);
+            renderizarProductosConModal(datos.productos.telas, '#telas .grid-productos', datos);
+            renderizarProductosConModal(datos.productos.objetos, '#otros .grid-productos', datos);
+
+            mostrarNotificacion('Productos actualizados', 'success');
+            console.log('✅ Productos recargados manualmente');
+        } else {
+            mostrarNotificacion('No se pudieron recargar los productos', 'error');
+        }
+    } catch (error) {
+        console.error('Error al recargar:', error);
+        mostrarNotificacion('Error al recargar productos', 'error');
+    } finally {
+        // Quitar la animación y rehabilitar el botón
+        setTimeout(() => {
+            btn.classList.remove('recargando');
+            btn.disabled = false;
+        }, 500);
+    }
+}
+
+// Escuchar el clic del botón
+document.getElementById('btn-recargar')?.addEventListener('click', recargarProductos);
+
+// Exponer globalmente
+window.recargarProductos = recargarProductos;
+
+// ============================================
 // 31. EXPOSICIÓN GLOBAL
 // ============================================
 window.confirmar = confirmar;
