@@ -1,6 +1,6 @@
 // ============================================
 // SCRIPT.JS - Textiles Madruga
-// Versión 5.5 - SIN Turnstile
+// Versión 5.6 - Resiliencia y Reintentos
 // ============================================
 
 const API_URL = 'https://textiles-madruga-api.eldani000219.workers.dev/api';
@@ -468,14 +468,25 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
 }
 
 // ============================================
-// 10. CARGA DE PRODUCTOS
+// 10. CARGA DE PRODUCTOS CON REINTENTOS
 // ============================================
-async function cargarProductos() {
+async function cargarProductos(intentos = 3) {
+    console.log(`🔄 Cargando productos... (Intento ${4 - intentos}/3)`);
+    
+    // Mostrar un estado de carga en los grids (solo si es la primera vez)
+    if (intentos === 3) {
+        document.querySelectorAll('.grid-productos').forEach(grid => {
+            if (grid.children.length === 0) {
+                grid.innerHTML = '<p style="text-align:center;padding:40px;color:var(--color-gris);">Cargando productos...</p>';
+            }
+        });
+    }
+
     try {
         const respuesta = await fetch(`${API_URL}/productos`, {
             method: 'GET',
             mode: 'cors',
-            cache: 'no-cache'
+            cache: 'no-store' // Forzar a no usar caché
         });
         
         if (!respuesta.ok) throw new Error(`Error HTTP: ${respuesta.status}`);
@@ -496,9 +507,29 @@ async function cargarProductos() {
 
         localStorage.setItem('productos_data', JSON.stringify(datos));
         return datos;
+
     } catch (error) {
-        console.warn('⚠️ Error al cargar desde servidor:', error.message);
-        return cargarProductosLocal();
+        console.warn(`⚠️ Error al cargar (Intento ${4 - intentos}):`, error.message);
+        
+        // Si aún quedan intentos, esperar y reintentar
+        if (intentos > 1) {
+            const espera = (4 - intentos) * 1000; // 1s, 2s, 3s...
+            console.log(`⏳ Reintentando en ${espera/1000} segundos...`);
+            await new Promise(resolve => setTimeout(resolve, espera));
+            return cargarProductos(intentos - 1);
+        }
+        
+        // Si se agotaron los intentos, intentar cargar desde caché local
+        console.error('❌ No se pudo conectar después de varios intentos. Usando caché local.');
+        const datosLocales = cargarProductosLocal();
+        
+        if (datosLocales) {
+            mostrarNotificacion('Usando datos guardados. Algunos productos pueden no estar actualizados.', 'warning');
+        } else {
+            mostrarNotificacion('No se pudieron cargar los productos. Comprueba tu conexión.', 'error');
+        }
+        
+        return datosLocales;
     }
 }
 
@@ -2865,7 +2896,12 @@ document.addEventListener('DOMContentLoaded', function() {
 async function iniciar() {
     console.log('🚀 Cargando productos...');
 
-    localStorage.removeItem('productos_data');
+    // Mostrar estado de carga en los grids vacíos
+    document.querySelectorAll('.grid-productos').forEach(grid => {
+        if (grid.children.length === 0) {
+            grid.innerHTML = '<p style="text-align:center;padding:40px;color:var(--color-gris);">Cargando productos...</p>';
+        }
+    });
 
     let datos = null;
     try {
@@ -2900,55 +2936,6 @@ async function iniciar() {
 
 document.addEventListener('DOMContentLoaded', iniciar);
 document.addEventListener('DOMContentLoaded', inicializarDropZone);
-
-// ============================================
-// RECARGAR PRODUCTOS
-// ============================================
-async function recargarProductos() {
-    const btn = document.getElementById('btn-recargar');
-    if (!btn) return;
-
-    // Añadir clase de "recargando" para la animación
-    btn.classList.add('recargando');
-    btn.disabled = true;
-
-    try {
-        // Forzar la recarga sin caché
-        const datos = await cargarProductos();
-
-        if (datos) {
-            datosGlobales = datos;
-            adminDatos = JSON.parse(JSON.stringify(datos));
-
-            // Volver a renderizar todo
-            renderizarOfertas(datos.ofertas, datos);
-            renderizarProductosConModal(datos.productos.hombre, '#ropa-hombre .grid-productos', datos);
-            renderizarProductosConModal(datos.productos.mujer, '#ropa-mujer .grid-productos', datos);
-            renderizarProductosConModal(datos.productos.telas, '#telas .grid-productos', datos);
-            renderizarProductosConModal(datos.productos.objetos, '#otros .grid-productos', datos);
-
-            mostrarNotificacion('Productos actualizados', 'success');
-            console.log('✅ Productos recargados manualmente');
-        } else {
-            mostrarNotificacion('No se pudieron recargar los productos', 'error');
-        }
-    } catch (error) {
-        console.error('Error al recargar:', error);
-        mostrarNotificacion('Error al recargar productos', 'error');
-    } finally {
-        // Quitar la animación y rehabilitar el botón
-        setTimeout(() => {
-            btn.classList.remove('recargando');
-            btn.disabled = false;
-        }, 500);
-    }
-}
-
-// Escuchar el clic del botón
-document.getElementById('btn-recargar')?.addEventListener('click', recargarProductos);
-
-// Exponer globalmente
-window.recargarProductos = recargarProductos;
 
 // ============================================
 // 31. EXPOSICIÓN GLOBAL
@@ -2997,7 +2984,45 @@ window.cargarTallasProducto = cargarTallasProducto;
 window.obtenerTallasSeleccionadas = obtenerTallasSeleccionadas;
 
 // ============================================
-// 32. MENÚ HAMBURGUESA
+// 32. BOTÓN DE RECARGAR
+// ============================================
+async function recargarProductos() {
+    const btn = document.getElementById('btn-recargar');
+    if (!btn) return;
+
+    btn.classList.add('recargando');
+    btn.disabled = true;
+
+    try {
+        const datos = await cargarProductos();
+        if (datos) {
+            datosGlobales = datos;
+            adminDatos = JSON.parse(JSON.stringify(datos));
+
+            renderizarOfertas(datos.ofertas, datos);
+            renderizarProductosConModal(datos.productos.hombre, '#ropa-hombre .grid-productos', datos);
+            renderizarProductosConModal(datos.productos.mujer, '#ropa-mujer .grid-productos', datos);
+            renderizarProductosConModal(datos.productos.telas, '#telas .grid-productos', datos);
+            renderizarProductosConModal(datos.productos.objetos, '#otros .grid-productos', datos);
+
+            mostrarNotificacion('Productos actualizados', 'success');
+        }
+    } catch (error) {
+        console.error('Error al recargar:', error);
+        mostrarNotificacion('Error al recargar productos', 'error');
+    } finally {
+        setTimeout(() => {
+            btn.classList.remove('recargando');
+            btn.disabled = false;
+        }, 500);
+    }
+}
+
+document.getElementById('btn-recargar')?.addEventListener('click', recargarProductos);
+window.recargarProductos = recargarProductos;
+
+// ============================================
+// 33. MENÚ HAMBURGUESA
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
     const hamburguesa = document.getElementById('menu-hamburguesa');
