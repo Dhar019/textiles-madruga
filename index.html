@@ -5,6 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Textiles Madruga | Catálogo de Confecciones</title>
 
+    <!-- ============================================ -->
+    <!-- CONTENT SECURITY POLICY (CSP) - CORREGIDA    -->
+    <!-- ============================================ -->
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://cdn.jsdelivr.net;
+        frame-src 'self' https://challenges.cloudflare.com;
+        connect-src 'self' https://textiles-madruga-api.eldani000219.workers.dev https://challenges.cloudflare.com https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com data:;
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+        font-src 'self' https://fonts.gstatic.com data:;
+        img-src 'self' data: blob:;
+    ">
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -364,14 +377,11 @@
                                     </select>
                                 </div>
 
-                                <!-- ============================================ -->
-                                <!-- TALLAS DISPONIBLES (NUEVO) -->
-                                <!-- ============================================ -->
+                                <!-- TALLAS DISPONIBLES -->
                                 <div class="form-group form-group-full">
                                     <label>Tallas disponibles</label>
                                     <p class="form-help">Selecciona qué tallas tendrá este producto. El cliente solo podrá elegir entre estas.</p>
                                     
-                                    <!-- Tipo de tallas -->
                                     <div class="tipo-tallas-group">
                                         <label class="tipo-talla-opcion">
                                             <input type="radio" name="tipo-tallas" value="alfabeticas" checked onchange="cambiarTipoTallas('alfabeticas')">
@@ -390,7 +400,6 @@
                                         </label>
                                     </div>
                                     
-                                    <!-- Checkboxes de tallas alfabéticas -->
                                     <div id="tallas-alfabeticas" class="tallas-checkboxes">
                                         <label class="talla-check"><input type="checkbox" value="XS" class="talla-checkbox"><span>XS</span></label>
                                         <label class="talla-check"><input type="checkbox" value="S" class="talla-checkbox"><span>S</span></label>
@@ -400,7 +409,6 @@
                                         <label class="talla-check"><input type="checkbox" value="XXL" class="talla-checkbox"><span>XXL</span></label>
                                     </div>
                                     
-                                    <!-- Checkboxes de tallas numéricas -->
                                     <div id="tallas-numericas" class="tallas-checkboxes" style="display: none;">
                                         <label class="talla-check"><input type="checkbox" value="28" class="talla-checkbox"><span>28</span></label>
                                         <label class="talla-check"><input type="checkbox" value="30" class="talla-checkbox"><span>30</span></label>
@@ -413,7 +421,6 @@
                                         <label class="talla-check"><input type="checkbox" value="44" class="talla-checkbox"><span>44</span></label>
                                     </div>
                                     
-                                    <!-- Mensaje cuando no hay tallas -->
                                     <div id="tallas-sin" class="tallas-sin" style="display: none;">
                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                             <circle cx="12" cy="12" r="10"/>
