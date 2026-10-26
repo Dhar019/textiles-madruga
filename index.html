@@ -6,17 +6,15 @@
     <title>Textiles Madruga | Catálogo de Confecciones</title>
 
     <!-- ============================================ -->
-    <!-- CONTENT SECURITY POLICY (CSP) - CORREGIDA    -->
+    <!-- CONTENT SECURITY POLICY (SIN TURNSTILE)      -->
     <!-- ============================================ -->
     <meta http-equiv="Content-Security-Policy" content="
         default-src 'self';
-        script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://cdn.jsdelivr.net;
-        frame-src 'self' https://challenges.cloudflare.com;
-        connect-src 'self' https://textiles-madruga-api.eldani000219.workers.dev https://challenges.cloudflare.com https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com data:;
+        script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net;
+        connect-src 'self' https://textiles-madruga-api.eldani000219.workers.dev;
         style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
         font-src 'self' https://fonts.gstatic.com data:;
         img-src * data: blob: 'self';
-        media-src 'self' data: blob:;
     ">
 
     <!-- Google Fonts -->
@@ -26,9 +24,6 @@
 
     <!-- Estilos -->
     <link rel="stylesheet" href="estilos.css">
-
-    <!-- Turnstile -->
-    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 
     <!-- EmailJS -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
@@ -563,37 +558,6 @@
                             <circle cx="12" cy="12" r="3"/>
                         </svg>
                     </button>
-                </div>
-                
-                <!-- Turnstile con contenedor y botón de reintento -->
-                <div id="turnstile-wrapper">
-                    <div class="cf-turnstile" 
-                        id="turnstile-widget"
-                        data-sitekey="0x4AAAAAAFQbg2Ktk40L17gg" 
-                        data-callback="onTurnstileSuccess"
-                        data-error-callback="onTurnstileError"
-                        data-expired-callback="onTurnstileExpired"
-                        data-size="flexible">
-                    </div>
-                    <button type="button" 
-                            id="btn-reintentar-turnstile" 
-                            class="btn-reintentar-turnstile" 
-                            style="display: none;">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="23 4 23 10 17 10"/>
-                            <polyline points="1 20 1 14 7 14"/>
-                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
-                        </svg>
-                        Reintentar verificación
-                    </button>
-                    <div id="turnstile-error" class="turnstile-error" style="display: none;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="10"/>
-                            <line x1="12" y1="8" x2="12" y2="12"/>
-                            <line x1="12" y1="16" x2="12.01" y2="16"/>
-                        </svg>
-                        <span>La verificación falló. Pulsa "Reintentar".</span>
-                    </div>
                 </div>
                 
                 <button type="submit" class="btn-admin btn-primario btn-login">Acceder</button>

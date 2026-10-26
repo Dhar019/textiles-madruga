@@ -1,6 +1,6 @@
 // ============================================
 // SCRIPT.JS - Textiles Madruga
-// Versión 5.4 - Sistema completo
+// Versión 5.5 - SIN Turnstile
 // ============================================
 
 const API_URL = 'https://textiles-madruga-api.eldani000219.workers.dev/api';
@@ -29,8 +29,6 @@ let productoPedidoActual = '';
 let pedidosGlobales = [];
 let filtroPedidoActual = 'todos';
 let varianteIdCounter = 0;
-let turnstileToken = null;
-let turnstileWidgetId = null;
 
 // ============================================
 // 3. HELPERS GENERALES
@@ -49,121 +47,7 @@ function scrollModalAlTop(modalElement) {
 }
 
 // ============================================
-// 4. TURNSTILE (con reintento)
-// ============================================
-window.onTurnstileSuccess = function(token) {
-    turnstileToken = token;
-    console.log('✅ Turnstile token recibido');
-    
-    const btnReintentar = document.getElementById('btn-reintentar-turnstile');
-    const errorDiv = document.getElementById('turnstile-error');
-    if (btnReintentar) btnReintentar.style.display = 'none';
-    if (errorDiv) errorDiv.style.display = 'none';
-};
-
-window.onTurnstileError = function(errorCode) {
-    console.warn('⚠️ Turnstile error:', errorCode);
-    turnstileToken = null;
-    
-    const btnReintentar = document.getElementById('btn-reintentar-turnstile');
-    const errorDiv = document.getElementById('turnstile-error');
-    if (btnReintentar) btnReintentar.style.display = 'flex';
-    if (errorDiv) errorDiv.style.display = 'flex';
-};
-
-window.onTurnstileExpired = function() {
-    console.warn('⏰ Turnstile expirado');
-    turnstileToken = null;
-    
-    const btnReintentar = document.getElementById('btn-reintentar-turnstile');
-    const errorDiv = document.getElementById('turnstile-error');
-    if (btnReintentar) btnReintentar.style.display = 'flex';
-    if (errorDiv) {
-        errorDiv.style.display = 'flex';
-        const span = errorDiv.querySelector('span');
-        if (span) span.textContent = 'La verificación expiró. Pulsa "Reintentar".';
-    }
-};
-
-function reintentarTurnstile() {
-    console.log('🔄 Reintentando Turnstile...');
-    
-    const btnReintentar = document.getElementById('btn-reintentar-turnstile');
-    const errorDiv = document.getElementById('turnstile-error');
-    const turnstileContainer = document.getElementById('turnstile-widget');
-    
-    if (!turnstileContainer) {
-        console.error('❌ No se encontró el contenedor de Turnstile');
-        return;
-    }
-    
-    if (btnReintentar) {
-        btnReintentar.classList.add('spinning');
-        btnReintentar.disabled = true;
-    }
-    if (errorDiv) errorDiv.style.display = 'none';
-    
-    turnstileToken = null;
-    
-    if (window.turnstile) {
-        try {
-            if (turnstileWidgetId !== null) {
-                window.turnstile.reset(turnstileWidgetId);
-                console.log('✅ Turnstile reseteado');
-            } else {
-                turnstileWidgetId = window.turnstile.render(turnstileContainer, {
-                    sitekey: '0x4AAAAAAFQbg2Ktk40L17gg',
-                    callback: 'onTurnstileSuccess',
-                    'error-callback': 'onTurnstileError',
-                    'expired-callback': 'onTurnstileExpired',
-                    size: 'flexible'
-                });
-                console.log('✅ Turnstile re-renderizado');
-            }
-        } catch (error) {
-            console.error('❌ Error al resetear Turnstile:', error);
-            recargarScriptTurnstile();
-        }
-    } else {
-        console.warn('⚠️ Turnstile no está cargado, recargando script...');
-        recargarScriptTurnstile();
-    }
-    
-    setTimeout(() => {
-        if (btnReintentar) {
-            btnReintentar.classList.remove('spinning');
-            btnReintentar.disabled = false;
-        }
-    }, 1500);
-}
-
-function recargarScriptTurnstile() {
-    const scripts = document.querySelectorAll('script[src*="challenges.cloudflare.com/turnstile"]');
-    scripts.forEach(s => s.remove());
-    
-    const nuevoScript = document.createElement('script');
-    nuevoScript.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad&render=explicit';
-    nuevoScript.async = true;
-    nuevoScript.defer = true;
-    document.head.appendChild(nuevoScript);
-    
-    window.onTurnstileLoad = function() {
-        console.log('✅ Script de Turnstile recargado');
-        const turnstileContainer = document.getElementById('turnstile-widget');
-        if (turnstileContainer && window.turnstile) {
-            turnstileWidgetId = window.turnstile.render(turnstileContainer, {
-                sitekey: '0x4AAAAAAFQbg2Ktk40L17gg',
-                callback: 'onTurnstileSuccess',
-                'error-callback': 'onTurnstileError',
-                'expired-callback': 'onTurnstileExpired',
-                size: 'flexible'
-            });
-        }
-    };
-}
-
-// ============================================
-// 5. MODAL DE CONFIRMACIÓN PROPIO
+// 4. MODAL DE CONFIRMACIÓN PROPIO
 // ============================================
 function confirmar(opciones) {
     return new Promise((resolve) => {
@@ -230,7 +114,7 @@ function confirmar(opciones) {
 }
 
 // ============================================
-// 6. POLÍTICAS DE SEGURIDAD
+// 5. POLÍTICAS DE SEGURIDAD
 // ============================================
 const POLITICAS_SEGURIDAD = {
     cliente: {
@@ -256,7 +140,7 @@ function obtenerPoliticaSeguridad() {
 }
 
 // ============================================
-// 7. AUTENTICACIÓN
+// 6. AUTENTICACIÓN
 // ============================================
 function getSession() {
     const session = localStorage.getItem(SESSION_KEY);
@@ -341,7 +225,7 @@ async function login(username, password) {
         const respuesta = await fetch(`${API_URL}/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password, turnstileToken: turnstileToken || '' })
+            body: JSON.stringify({ username, password })
         });
 
         if (respuesta.status === 409) {
@@ -413,7 +297,7 @@ function protegerAdmin() {
 }
 
 // ============================================
-// 8. VERIFICACIÓN PERIÓDICA DE SESIÓN
+// 7. VERIFICACIÓN PERIÓDICA DE SESIÓN
 // ============================================
 function iniciarVerificadorSesion() {
     detenerVerificadorSesion();
@@ -445,7 +329,7 @@ function detenerVerificadorSesion() {
 }
 
 // ============================================
-// 9. SEGURIDAD: INACTIVIDAD
+// 8. SEGURIDAD: INACTIVIDAD
 // ============================================
 function reiniciarTemporizadorInactividad() {
     if (!isLoggedIn()) return;
@@ -565,7 +449,7 @@ window.addEventListener('beforeunload', () => {
 });
 
 // ============================================
-// 10. NOTIFICACIONES
+// 9. NOTIFICACIONES
 // ============================================
 function mostrarNotificacion(mensaje, tipo = 'info') {
     const existente = document.querySelector('.notificacion');
@@ -584,7 +468,7 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
 }
 
 // ============================================
-// 11. CARGA DE PRODUCTOS
+// 10. CARGA DE PRODUCTOS
 // ============================================
 async function cargarProductos() {
     try {
@@ -651,7 +535,7 @@ function obtenerProductoPorNombre(nombre) {
 }
 
 // ============================================
-// 12. HELPERS PARA TALLAS
+// 11. HELPERS PARA TALLAS
 // ============================================
 function obtenerTallasDelProductoActual() {
     const producto = obtenerProductoPorNombre(productoPedidoActual);
@@ -666,7 +550,7 @@ function obtenerTipoTallasDelProductoActual() {
 }
 
 // ============================================
-// 13. RENDERIZADO DE PRODUCTOS
+// 12. RENDERIZADO DE PRODUCTOS
 // ============================================
 function renderizarOfertas(ofertasIds, datos) {
     const contenedor = document.querySelector('#ofertas-ropa .grid-productos');
@@ -805,7 +689,7 @@ function renderizarProductosConModal(productos, contenedorSelector, datos) {
 }
 
 // ============================================
-// 14. MODAL DE DETALLE
+// 13. MODAL DE DETALLE
 // ============================================
 const modal = document.getElementById('modal-detalle');
 const modalBody = document.getElementById('modal-body');
@@ -908,7 +792,7 @@ modalOverlay?.addEventListener('click', cerrarModal);
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrarModal(); });
 
 // ============================================
-// 15. LIGHTBOX DE IMAGEN
+// 14. LIGHTBOX DE IMAGEN
 // ============================================
 const lightbox = document.getElementById('lightbox');
 const lightboxImg = document.getElementById('lightbox-img');
@@ -949,7 +833,7 @@ window.abrirLightbox = abrirLightbox;
 window.cerrarLightbox = cerrarLightbox;
 
 // ============================================
-// 16. SISTEMA DE VARIANTES (TALLAS DINÁMICAS)
+// 15. SISTEMA DE VARIANTES (TALLAS DINÁMICAS)
 // ============================================
 function crearVarianteHTML(talla = '', cantidad = 1) {
     varianteIdCounter++;
@@ -1123,7 +1007,7 @@ function inicializarVariantes() {
 }
 
 // ============================================
-// 17. SOLICITAR PEDIDO
+// 16. SOLICITAR PEDIDO
 // ============================================
 function solicitarPedido(producto) {
     const modalPedido = document.getElementById('modal-pedido');
@@ -1137,22 +1021,12 @@ function solicitarPedido(producto) {
 
     productoPedidoActual = producto;
     document.getElementById('modal-pedido-producto').textContent = `Producto: ${producto}`;
+    modalPedido.className = 'login-visible';
+    document.body.style.overflow = 'hidden';
     
     const formPedido = document.getElementById('modal-pedido-form');
     if (formPedido) formPedido.scrollTop = 0;
-    const contenedorPedido = modalPedido.querySelector('.login-contenido');
-    if (contenedorPedido) contenedorPedido.scrollTop = 0;
-    
     document.body.scrollTop = 0;
-    document.documentElement.scrollTop = 0;
-    
-    modalPedido.className = 'login-visible';
-    document.body.style.overflow = 'hidden';
-
-    setTimeout(() => {
-        if (formPedido) formPedido.scrollTop = 0;
-        if (contenedorPedido) contenedorPedido.scrollTop = 0;
-    }, 50);
     
     inicializarVariantes();
 
@@ -1162,9 +1036,7 @@ function solicitarPedido(producto) {
         if (formPedido) formPedido.reset();
         productoPedidoActual = '';
         if (formPedido) formPedido.scrollTop = 0;
-        if (contenedorPedido) contenedorPedido.scrollTop = 0;
-        document.body.scrollTop = 0;
-        document.documentElement.scrollTop = 0;
+        setTimeout(() => scrollModalAlTop(modalPedido), 50);
     };
 
     document.getElementById('modal-pedido-cerrar').onclick = cerrar;
@@ -1372,7 +1244,7 @@ async function enviarPedidoPor(via) {
 }
 
 // ============================================
-// 18. MODAL DE AYUDA PARA PEDIDOS
+// 17. MODAL DE AYUDA PARA PEDIDOS
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
     const btnAyuda = document.getElementById('btn-ayuda-pedido');
@@ -1399,7 +1271,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ============================================
-// 19. PANEL DE ADMINISTRACIÓN
+// 18. PANEL DE ADMINISTRACIÓN
 // ============================================
 const adminPanel = document.getElementById('admin-panel');
 const adminCerrar = document.getElementById('admin-cerrar');
@@ -1882,7 +1754,7 @@ adminCerrar?.addEventListener('click', cerrarAdmin);
 adminOverlay?.addEventListener('click', cerrarAdmin);
 
 // ============================================
-// 20. GESTIÓN DE PEDIDOS EN EL PANEL ADMIN
+// 19. GESTIÓN DE PEDIDOS EN EL PANEL ADMIN
 // ============================================
 async function cargarPedidosAdmin() {
     const container = document.getElementById('lista-pedidos-admin');
@@ -2163,7 +2035,7 @@ function filtrarPedidosAdmin(termino) {
 }
 
 // ============================================
-// 21. GESTIÓN DE OFERTAS
+// 20. GESTIÓN DE OFERTAS
 // ============================================
 async function cargarOfertasAdmin() {
     const container = document.getElementById('lista-ofertas-admin');
@@ -2399,7 +2271,7 @@ async function quitarOferta(productoId) {
 }
 
 // ============================================
-// 22. GESTIÓN DE USUARIOS
+// 21. GESTIÓN DE USUARIOS
 // ============================================
 async function renderizarUsuariosAdmin() {
     const container = document.getElementById('admin-usuarios-lista');
@@ -2571,7 +2443,7 @@ document.getElementById('btn-nuevo-usuario')?.addEventListener('click', function
 });
 
 // ============================================
-// 23. FILTROS DE BÚSQUEDA
+// 22. FILTROS DE BÚSQUEDA
 // ============================================
 function filtrarProductosAdmin(termino) {
     const items = document.querySelectorAll('#admin-productos-lista .admin-producto-item');
@@ -2601,7 +2473,7 @@ function filtrarUsuariosAdmin(termino) {
 }
 
 // ============================================
-// 24. MODAL GENÉRICO
+// 23. MODAL GENÉRICO
 // ============================================
 function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit }) {
     const modal = document.getElementById('modal-generico');
@@ -2684,7 +2556,7 @@ function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit }) {
 }
 
 // ============================================
-// 25. MODAL DE BIENVENIDA
+// 24. MODAL DE BIENVENIDA
 // ============================================
 function mostrarModalBienvenida() {
     const modal = document.getElementById('modal-bienvenida');
@@ -2735,7 +2607,7 @@ document.getElementById('modal-bienvenida-cerrar')?.addEventListener('click', ce
 document.getElementById('modal-bienvenida-overlay')?.addEventListener('click', cerrarModalBienvenida);
 
 // ============================================
-// 26. LOGIN/LOGOUT
+// 25. LOGIN/LOGOUT
 // ============================================
 const btnAcceder = document.getElementById('btn-acceder');
 const btnCerrarSesion = document.getElementById('btn-cerrar-sesion');
@@ -2839,7 +2711,7 @@ loginCerrar?.addEventListener('click', cerrarLogin);
 loginOverlay?.addEventListener('click', cerrarLogin);
 
 // ============================================
-// 27. FORZAR CIERRE DE SESIÓN
+// 26. FORZAR CIERRE DE SESIÓN
 // ============================================
 document.getElementById('forzar-cierre-link')?.addEventListener('click', function(e) {
     e.preventDefault();
@@ -2889,7 +2761,7 @@ document.getElementById('forzar-cierre-link')?.addEventListener('click', functio
 });
 
 // ============================================
-// 28. OJITO PARA CONTRASEÑA
+// 27. OJITO PARA CONTRASEÑA
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.toggle-password').forEach(button => {
@@ -2904,7 +2776,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ============================================
-// 29. DROP ZONE PARA IMÁGENES
+// 28. DROP ZONE PARA IMÁGENES
 // ============================================
 function inicializarDropZone() {
     const dropZone = document.getElementById('drop-zone');
@@ -2963,21 +2835,13 @@ function manejarArchivoImagen(file, preview, hiddenInput, content) {
 }
 
 // ============================================
-// 30. LISTENERS GENERALES (DOMContentLoaded)
+// 29. LISTENERS GENERALES
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
-    // Botones del modal de pedido
     document.getElementById('cantidad-total-sumar')?.addEventListener('click', () => cambiarCantidadTotal(1));
     document.getElementById('cantidad-total-restar')?.addEventListener('click', () => cambiarCantidadTotal(-1));
     document.getElementById('btn-añadir-variante')?.addEventListener('click', () => añadirVariante());
     
-    // Botón de reintento de Turnstile
-    const btnReintentar = document.getElementById('btn-reintentar-turnstile');
-    if (btnReintentar) {
-        btnReintentar.addEventListener('click', reintentarTurnstile);
-    }
-    
-    // Inicializar sistema de tallas en el admin
     console.log('🎯 Inicializando sistema de tallas...');
     
     const tipoTallasRadios = document.querySelectorAll('input[name="tipo-tallas"]');
@@ -2996,7 +2860,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ============================================
-// 31. INICIO
+// 30. INICIO
 // ============================================
 async function iniciar() {
     console.log('🚀 Cargando productos...');
@@ -3038,7 +2902,7 @@ document.addEventListener('DOMContentLoaded', iniciar);
 document.addEventListener('DOMContentLoaded', inicializarDropZone);
 
 // ============================================
-// 32. EXPOSICIÓN GLOBAL
+// 31. EXPOSICIÓN GLOBAL
 // ============================================
 window.confirmar = confirmar;
 window.guardarOferta = guardarOferta;
@@ -3079,13 +2943,12 @@ window.cambiarCantidadVariante = cambiarCantidadVariante;
 window.cambiarCantidadTotal = cambiarCantidadTotal;
 window.actualizarValidacionVariantes = actualizarValidacionVariantes;
 window.inicializarVariantes = inicializarVariantes;
-window.reintentarTurnstile = reintentarTurnstile;
 window.cambiarTipoTallas = cambiarTipoTallas;
 window.cargarTallasProducto = cargarTallasProducto;
 window.obtenerTallasSeleccionadas = obtenerTallasSeleccionadas;
 
 // ============================================
-// 33. MENÚ HAMBURGUESA
+// 32. MENÚ HAMBURGUESA
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
     const hamburguesa = document.getElementById('menu-hamburguesa');

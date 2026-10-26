@@ -1,6 +1,6 @@
 // ============================================
 // WORKER - TEXTILES MADRUGA API
-// Versión 5.2 - Sistema de tallas por producto
+// Versión 5.3 - SIN Turnstile
 // ============================================
 
 // ============================================
@@ -89,7 +89,6 @@ async function enviarGmailNotificacion(env, pedido) {
     try {
         const asunto = `🛒 Nuevo pedido ${pedido.id} - ${pedido.producto}`;
         
-        // Construir string de tallas
         let tallasTexto = '';
         if (pedido.variantes && pedido.variantes.length > 0) {
             tallasTexto = pedido.variantes.map(v => 
@@ -149,10 +148,6 @@ async function enviarGmailNotificacion(env, pedido) {
         console.log('📧 Enviando Gmail para pedido:', pedido.id);
         console.log('📧 Asunto:', asunto);
         console.log('📧 Destinatario:', env.GMAIL_USER);
-        
-        // NOTA: Cloudflare Workers no soporta SMTP directo.
-        // Aquí se puede integrar con EmailJS, Resend, Brevo, etc.
-        // Por ahora, el pedido se guarda en KV y se ve en el panel admin.
         
         return true;
     } catch (error) {
@@ -359,34 +354,6 @@ async function resetearRateLimit(env, ip) {
 }
 
 // ============================================
-// TURNSTILE
-// ============================================
-async function verificarTurnstile(token, ip, env) {
-    if (!token) return false;
-    if (!env.TURNSTILE_SECRET_KEY) {
-        console.warn('⚠️ TURNSTILE_SECRET_KEY no configurada, saltando verificación');
-        return true;
-    }
-
-    try {
-        const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                secret: env.TURNSTILE_SECRET_KEY,
-                response: token,
-                remoteip: ip
-            })
-        });
-        const data = await response.json();
-        return data.success === true;
-    } catch (error) {
-        console.error('Turnstile verification failed:', error);
-        return false;
-    }
-}
-
-// ============================================
 // AUDITORÍA
 // ============================================
 async function registrarAuditoria(env, user, action, details = {}) {
@@ -436,7 +403,7 @@ export default {
                     status: 'ok',
                     message: 'API de Textiles Madruga funcionando',
                     db: 'kv',
-                    version: '5.2',
+                    version: '5.3',
                     features: [
                         'IDs alfanuméricos',
                         'Ofertas avanzadas',
@@ -444,7 +411,8 @@ export default {
                         'Timeout de sesión',
                         'Logout vía sendBeacon',
                         'Sistema de pedidos con variantes',
-                        'Tallas por producto'
+                        'Tallas por producto',
+                        'SIN Turnstile'
                     ],
                     timestamp: new Date().toISOString()
                 }), { headers: { 'Content-Type': 'application/json' } }), request);
@@ -464,7 +432,6 @@ export default {
                     }), { status: 400, headers: { 'Content-Type': 'application/json' } }), request);
                 }
                 
-                // Validar variantes
                 let variantes = [];
                 if (Array.isArray(body.variantes) && body.variantes.length > 0) {
                     variantes = body.variantes.map(v => ({
@@ -476,7 +443,6 @@ export default {
                 const cantidadTotal = parseInt(body.cantidad) || 1;
                 const cantidadAsignada = variantes.reduce((sum, v) => sum + v.cantidad, 0);
                 
-                // Validar que las variantes sumen la cantidad total (si hay variantes)
                 if (variantes.length > 0 && cantidadAsignada !== cantidadTotal) {
                     return addCors(new Response(JSON.stringify({ 
                         error: `Las tallas suman ${cantidadAsignada} pero el total es ${cantidadTotal}. Ajusta las cantidades.`
@@ -513,7 +479,6 @@ export default {
                 
                 console.log('📦 Nuevo pedido:', idPedido, '-', body.nombre, '-', variantes.length, 'variantes');
                 
-                // Intentar enviar notificación por Gmail
                 if (body.via === 'email') {
                     try {
                         await enviarGmailNotificacion(env, nuevoPedido);
@@ -844,25 +809,15 @@ export default {
                     }), { status: 429, headers: { 'Content-Type': 'application/json' } }), request);
                 }
 
-                let username, password, turnstileToken;
+                let username, password;
                 
                 if (method === 'POST') {
                     const body = await request.json();
                     username = body.username;
                     password = body.password;
-                    turnstileToken = body.turnstileToken;
                 } else {
                     username = url.searchParams.get('username');
                     password = url.searchParams.get('password');
-                    turnstileToken = url.searchParams.get('turnstileToken');
-                }
-
-                if (env.TURNSTILE_SECRET_KEY && turnstileToken) {
-                    const turnstileOk = await verificarTurnstile(turnstileToken, ip, env);
-                    if (!turnstileOk) {
-                        return addCors(new Response(JSON.stringify({ error: 'Verificación de seguridad fallida' }),
-                            { status: 400, headers: { 'Content-Type': 'application/json' } }), request);
-                    }
                 }
 
                 const usuarios = await leerUsuarios(env);
