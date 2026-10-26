@@ -4237,7 +4237,7 @@ body.admin-abierto .nav {
             justify-content: center;
             background: linear-gradient(135deg, rgba(0,0,0,0.85) 100%, rgba(0,0,0,0.5) 110%),
                         url('assets/img/banner-tm.webp');
-            background-size: cover;
+            background-size: contain;
             background-position: center;
             background-repeat: no-repeat;
         }
