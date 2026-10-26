@@ -4235,12 +4235,13 @@ body.admin-abierto .nav {
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, rgba(0,0,0,0.5) 100%, rgba(0,0,0,0.5) 110%),
+            /* Mantenemos el gradiente original pero más sutil para móvil */
+            background: linear-gradient(135deg, rgba(0,0,0,0.7) 100%, rgba(0,0,0,0.3) 110%),
                         url('assets/img/banner-tm.webp');
-            background-size: contain;
-            background-position: left;
+            background-size: cover;
+            background-position: center;
             background-repeat: no-repeat;
-        }
+    }
 
         .hero::before {
             display: none;
