@@ -4235,21 +4235,27 @@ body.admin-abierto .nav {
             display: flex;
             align-items: center;
             justify-content: center;
-            /* Mantenemos el gradiente original pero más sutil para móvil */
-            background: linear-gradient(135deg, rgba(0,0,0,0.7) 100%, rgba(0,0,0,0.3) 110%),
-                        url('assets/img/banner-tm.webp');
+            background: linear-gradient(135deg, rgba(0,0,0,0.85) 100%, rgba(0,0,0,0.5) 110%);
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-    }
+        }
 
         .hero::before {
-            display: none;
+            right: 50%;
+            transform: translateX(50%);
+            width: 150%;
+            height: 100%;
+            background-size: contain;
+            background-position: center;
+            opacity: 0.4;
+            display: block;
         }
 
         .hero-content {
             width: 100%;
             padding: 20px;
+            z-index: 1;
         }
 
         .letra-textiles {
@@ -4263,20 +4269,21 @@ body.admin-abierto .nav {
         }
 
         .logo-hero {
-            max-width: 200px;
+            max-width: 180px;
             margin-bottom: 15px;
         }
 
         .hero-slogan {
             font-size: 1.1rem;
+            letter-spacing: 1px;
             margin-bottom: 30px;
         }
-    }
 
-    .btn-primary {
-        padding: 14px 32px;
-        font-size: 1rem;
-    }
+        .btn-primary {
+            padding: 14px 32px;
+            font-size: 1rem;
+        }
+}
 
     /* --- RESTO DE SECCIONES --- */
     .header-actions { gap: 4px; }
