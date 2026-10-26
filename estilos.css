@@ -4820,26 +4820,30 @@ body.admin-abierto .nav {
     border: 1.5px solid rgba(255, 255, 255, 0.3);
     border-radius: 50%;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
     flex-shrink: 0;
 }
 
+/* Hover: solo cambia el color, NO gira */
 .btn-recargar:hover {
     background: var(--color-naranja);
     border-color: var(--color-naranja);
-    transform: rotate(180deg);
+    color: var(--color-blanco);
 }
 
+/* Active: un pequeño efecto de pulsación */
 .btn-recargar:active {
-    transform: rotate(180deg) scale(0.9);
+    transform: scale(0.9);
 }
 
 .btn-recargar svg {
     display: block;
     width: 18px;
     height: 18px;
+    transition: transform 0.3s ease;
 }
 
+/* Solo gira cuando se está recargando */
 .btn-recargar.recargando svg {
     animation: spin 1s linear infinite;
 }
