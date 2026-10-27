@@ -156,6 +156,7 @@
     padding: 8px 5px;
     z-index: 200;
     flex-shrink: 0;
+    order: 3;
 }
 
 .menu-hamburguesa .barra {
@@ -289,4 +290,34 @@
 .contacto {
     padding: 80px 0;
     background-color: var(--color-crema);
+}
+
+.btn-recargar {
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    border: 1.5px solid rgba(255, 255, 255, 0.3);
+    color: var(--color-blanco);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    order: 2;
+}
+
+.btn-recargar:hover {
+    background: var(--color-naranja);
+    border-color: var(--color-naranja);
+}
+
+.btn-recargar.spinning svg {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }

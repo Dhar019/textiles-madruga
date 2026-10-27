@@ -1,4 +1,19 @@
 /* ============================================ */
 /* ESTILOS ESPECÍFICOS DE PÁGINAS               */
 /* ============================================ */
-/* (Reservado para futuros estilos específicos) */
+
+/* ============================================ */
+/* SECCIÓN: PERSONALIZADOS                      */
+/* ============================================ */
+.personalizados .section-title {
+    color: var(--color-naranja); /* Título en naranja */
+}
+
+.personalizados .section-subtitle {
+    color: var(--color-crema); /* Subtítulo en crema para contraste */
+}
+
+/* Los textos dentro de las tarjetas ya se ven bien, pero por si acaso: */
+.personalizado-card p {
+    color: var(--color-crema);
+}

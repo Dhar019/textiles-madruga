@@ -1010,12 +1010,26 @@ function solicitarPedido(producto) {
 
     productoPedidoActual = producto;
     document.getElementById('modal-pedido-producto').textContent = `Producto: ${producto}`;
+    
+    // Obtener el contenedor que realmente tiene el scroll
+    const formPedido = document.getElementById('modal-pedido-form');
+    const contenedorPedido = modalPedido.querySelector('.login-contenido');
+    
+    // FORZAR SCROLL AL INICIO (antes de mostrar el modal)
+    if (formPedido) formPedido.scrollTop = 0;
+    if (contenedorPedido) contenedorPedido.scrollTop = 0;
+    document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
+    
+    // Mostrar el modal después de resetear el scroll
     modalPedido.className = 'login-visible';
     document.body.style.overflow = 'hidden';
     
-    const formPedido = document.getElementById('modal-pedido-form');
-    if (formPedido) formPedido.scrollTop = 0;
-    document.body.scrollTop = 0;
+    // Un pequeño timeout para asegurar que el scroll se resetea DESPUÉS de que el modal se muestre
+    setTimeout(() => {
+        if (formPedido) formPedido.scrollTop = 0;
+        if (contenedorPedido) contenedorPedido.scrollTop = 0;
+    }, 50);
     
     inicializarVariantes();
 
@@ -1025,7 +1039,9 @@ function solicitarPedido(producto) {
         if (formPedido) formPedido.reset();
         productoPedidoActual = '';
         if (formPedido) formPedido.scrollTop = 0;
-        setTimeout(() => scrollModalAlTop(modalPedido), 50);
+        if (contenedorPedido) contenedorPedido.scrollTop = 0;
+        document.body.scrollTop = 0;
+        document.documentElement.scrollTop = 0;
     };
 
     document.getElementById('modal-pedido-cerrar').onclick = cerrar;
@@ -2961,3 +2977,38 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+async function recargarProductos() {
+    const btn = document.getElementById('btn-recargar');
+    if (!btn) return;
+
+    btn.classList.add('spinning');
+    btn.disabled = true;
+
+    try {
+        const datos = await cargarProductos();
+        if (datos) {
+            datosGlobales = datos;
+            adminDatos = JSON.parse(JSON.stringify(datos));
+
+            renderizarOfertas(datos.ofertas, datos);
+            renderizarProductosConModal(datos.productos.hombre, '#ropa-hombre .grid-productos', datos);
+            renderizarProductosConModal(datos.productos.mujer, '#ropa-mujer .grid-productos', datos);
+            renderizarProductosConModal(datos.productos.telas, '#telas .grid-productos', datos);
+            renderizarProductosConModal(datos.productos.objetos, '#otros .grid-productos', datos);
+
+            mostrarNotificacion('Productos actualizados correctamente', 'success');
+        }
+    } catch (error) {
+        console.error('Error al recargar:', error);
+        mostrarNotificacion('Error al recargar productos', 'error');
+    } finally {
+        setTimeout(() => {
+            btn.classList.remove('spinning');
+            btn.disabled = false;
+        }, 500);
+    }
+}
+
+document.getElementById('btn-recargar')?.addEventListener('click', recargarProductos);
+window.recargarProductos = recargarProductos;
