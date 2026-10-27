@@ -1,6 +1,6 @@
 // ============================================
 // SCRIPT.JS - Textiles Madruga
-// Versión 6.0 - Refactorizado y optimizado
+// Versión 6.1 - Fix scroll bloqueado
 // ============================================
 
 // ============================================
@@ -44,6 +44,45 @@ function scrollModalAlTop(modalElement) {
     if (form) form.scrollTop = 0;
     
     document.body.scrollTop = 0;
+}
+
+// ✅ NUEVO: Helper para bloquear/desbloquear el scroll del body
+function bloquearScrollBody(bloquear) {
+    if (bloquear) {
+        document.body.style.overflow = 'hidden';
+        document.body.style.position = 'fixed';
+        document.body.style.width = '100%';
+    } else {
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.width = '';
+    }
+}
+
+// ✅ NUEVO: Helper para verificar si hay algún modal abierto
+function hayModalAbierto() {
+    const modales = [
+        'modal-detalle', 'admin-panel', 'login-modal', 'modal-generico',
+        'modal-bienvenida', 'modal-pedido', 'modal-ayuda-pedido',
+        'lightbox', 'modal-confirmar'
+    ];
+    
+    for (const id of modales) {
+        const el = document.getElementById(id);
+        if (!el) continue;
+        const clase = el.className || '';
+        if (clase.includes('visible') || clase.includes('login-visible') || clase.includes('admin-visible')) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// ✅ NUEVO: Restaurar el scroll si no hay modales abiertos
+function restaurarScrollSiEsNecesario() {
+    if (!hayModalAbierto()) {
+        bloquearScrollBody(false);
+    }
 }
 
 // ============================================
@@ -145,6 +184,7 @@ async function logout() {
     if (adminPanel) adminPanel.className = 'admin-oculto';
 
     document.body.classList.remove('admin-abierto');
+    bloquearScrollBody(false); // ✅ Restaurar scroll al cerrar sesión
 
     actualizarBotonAcceder();
     actualizarBotonCerrarSesion();
@@ -405,11 +445,11 @@ function confirmar(opciones) {
         }
 
         modal.className = 'confirmar-visible';
-        document.body.style.overflow = 'hidden';
+        bloquearScrollBody(true);
 
         const cerrar = (resultado) => {
             modal.className = 'confirmar-oculto';
-            document.body.style.overflow = 'auto';
+            restaurarScrollSiEsNecesario();
             btnAceptar.onclick = null;
             btnCancelar.onclick = null;
             overlay.onclick = null;
@@ -765,15 +805,15 @@ function abrirModal(producto, datos) {
     `;
 
     modal.className = 'modal-visible';
-    document.body.style.overflow = 'hidden';
+    bloquearScrollBody(true);
     document.body.classList.add('modal-abierto');
     scrollModalAlTop(modal);
 }
 
 function cerrarModal() {
     modal.className = 'modal-oculto';
-    document.body.style.overflow = 'auto';
     document.body.classList.remove('modal-abierto');
+    restaurarScrollSiEsNecesario();
 }
 
 modalCerrar?.addEventListener('click', cerrarModal);
@@ -793,15 +833,15 @@ function abrirLightbox(src, alt) {
     lightboxImg.src = src;
     lightboxImg.alt = alt || 'Imagen ampliada';
     lightbox.className = 'lightbox-visible';
-    document.body.style.overflow = 'hidden';
+    bloquearScrollBody(true);
     document.body.classList.add('lightbox-abierto');
 }
 
 function cerrarLightbox() {
     if (!lightbox) return;
     lightbox.className = 'lightbox-oculto';
-    document.body.style.overflow = 'auto';
     document.body.classList.remove('lightbox-abierto');
+    restaurarScrollSiEsNecesario();
 }
 
 lightboxImg?.addEventListener('click', function(e) {
@@ -1020,7 +1060,7 @@ function solicitarPedido(producto) {
     document.documentElement.scrollTop = 0;
     
     modalPedido.className = 'login-visible';
-    document.body.style.overflow = 'hidden';
+    bloquearScrollBody(true);
     
     setTimeout(() => {
         if (formPedido) formPedido.scrollTop = 0;
@@ -1031,7 +1071,7 @@ function solicitarPedido(producto) {
 
     const cerrar = () => {
         modalPedido.className = 'login-oculto';
-        document.body.style.overflow = 'auto';
+        restaurarScrollSiEsNecesario();
         if (formPedido) formPedido.reset();
         productoPedidoActual = '';
         if (formPedido) formPedido.scrollTop = 0;
@@ -1232,7 +1272,7 @@ async function enviarPedidoPor(via) {
             if (formPedido) formPedido.scrollTop = 0;
             scrollModalAlTop(modalPedido);
         }
-        document.body.style.overflow = 'auto';
+        restaurarScrollSiEsNecesario();
         if (formPedido) formPedido.reset();
         productoPedidoActual = '';
     }, 2000);
@@ -1251,10 +1291,12 @@ document.addEventListener('DOMContentLoaded', function() {
     if (btnAyuda && modalAyuda) {
         const abrirAyuda = () => {
             modalAyuda.className = 'login-visible';
+            bloquearScrollBody(true);
             scrollModalAlTop(modalAyuda);
         };
         const cerrarModalAyuda = () => {
             modalAyuda.className = 'login-oculto';
+            restaurarScrollSiEsNecesario();
             setTimeout(() => scrollModalAlTop(modalAyuda), 50);
         };
 
@@ -1285,7 +1327,7 @@ const loginOverlay = document.getElementById('login-overlay');
 function mostrarLogin() {
     if (loginModal) {
         loginModal.className = 'login-visible';
-        document.body.style.overflow = 'hidden';
+        bloquearScrollBody(true);
         scrollModalAlTop(loginModal);
     }
 }
@@ -1293,14 +1335,14 @@ function mostrarLogin() {
 function cerrarLogin() {
     if (loginModal) {
         loginModal.className = 'login-oculto';
-        document.body.style.overflow = 'auto';
+        restaurarScrollSiEsNecesario();
     }
 }
 
 function abrirAdmin() {
     if (!protegerAdmin()) return;
     adminPanel.className = 'admin-visible';
-    document.body.style.overflow = 'hidden';
+    bloquearScrollBody(true);
     document.body.classList.add('admin-abierto');
     cargarAdminProductos();
     reiniciarTemporizadorInactividad();
@@ -1311,8 +1353,8 @@ function abrirAdmin() {
 
 function cerrarAdmin() {
     adminPanel.className = 'admin-oculto';
-    document.body.style.overflow = 'auto';
     document.body.classList.remove('admin-abierto');
+    restaurarScrollSiEsNecesario();
     if (formProducto) formProducto.className = 'form-oculto';
 }
 
@@ -2526,12 +2568,12 @@ function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit }) {
     });
 
     modal.className = 'login-visible';
-    document.body.style.overflow = 'hidden';
+    bloquearScrollBody(true);
     scrollModalAlTop(modal);
 
     const cerrarModal = () => {
         modal.className = 'login-oculto';
-        document.body.style.overflow = 'auto';
+        restaurarScrollSiEsNecesario();
         form.reset();
     };
     cerrar.onclick = cerrarModal;
@@ -2555,7 +2597,7 @@ function mostrarModalBienvenida() {
     const modal = document.getElementById('modal-bienvenida');
     if (!modal) return;
     modal.className = 'bienvenida-visible';
-    document.body.style.overflow = 'hidden';
+    bloquearScrollBody(true);
     document.body.classList.add('bienvenida-abierta');
     scrollModalAlTop(modal);
 }
@@ -2564,8 +2606,8 @@ function cerrarModalBienvenida() {
     const modal = document.getElementById('modal-bienvenida');
     if (!modal) return;
     modal.className = 'bienvenida-oculto';
-    document.body.style.overflow = 'auto';
     document.body.classList.remove('bienvenida-abierta');
+    restaurarScrollSiEsNecesario();
 }
 
 document.getElementById('modal-bienvenida-crear')?.addEventListener('click', function() {
@@ -3040,3 +3082,26 @@ function animarBannerScroll() {
 }
 
 window.addEventListener('scroll', animarBannerScroll);
+
+// ============================================
+// SAFETY CHECK: Restaurar scroll si se quedó bloqueado
+// ============================================
+window.addEventListener('load', () => {
+    setTimeout(() => {
+        if (!hayModalAbierto()) {
+            bloquearScrollBody(false);
+            console.log('✅ Scroll del body verificado y restaurado');
+        }
+    }, 2000);
+});
+
+// También restaurar cuando la página se vuelve visible
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+        setTimeout(() => {
+            if (!hayModalAbierto()) {
+                bloquearScrollBody(false);
+            }
+        }, 500);
+    }
+});
