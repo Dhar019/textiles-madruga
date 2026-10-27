@@ -1,6 +1,6 @@
 // ============================================
 // SCRIPT.JS - Textiles Madruga
-// Versión 6.1 - Fix scroll bloqueado
+// Versión 6.2 - Fix congelamiento de página
 // ============================================
 
 // ============================================
@@ -46,20 +46,16 @@ function scrollModalAlTop(modalElement) {
     document.body.scrollTop = 0;
 }
 
-// ✅ NUEVO: Helper para bloquear/desbloquear el scroll del body
+// ✅ FIX: Solo overflow, sin position: fixed (evita congelamiento)
 function bloquearScrollBody(bloquear) {
     if (bloquear) {
         document.body.style.overflow = 'hidden';
-        document.body.style.position = 'fixed';
-        document.body.style.width = '100%';
     } else {
         document.body.style.overflow = '';
-        document.body.style.position = '';
-        document.body.style.width = '';
     }
 }
 
-// ✅ NUEVO: Helper para verificar si hay algún modal abierto
+// ✅ FIX: Verificar si hay modal abierto (ampliado)
 function hayModalAbierto() {
     const modales = [
         'modal-detalle', 'admin-panel', 'login-modal', 'modal-generico',
@@ -71,14 +67,14 @@ function hayModalAbierto() {
         const el = document.getElementById(id);
         if (!el) continue;
         const clase = el.className || '';
-        if (clase.includes('visible') || clase.includes('login-visible') || clase.includes('admin-visible')) {
+        if (clase.includes('visible') || clase.includes('login-visible') || clase.includes('admin-visible') || clase.includes('confirmar-visible')) {
             return true;
         }
     }
     return false;
 }
 
-// ✅ NUEVO: Restaurar el scroll si no hay modales abiertos
+// ✅ FIX: Restaurar scroll solo si no hay modales abiertos
 function restaurarScrollSiEsNecesario() {
     if (!hayModalAbierto()) {
         bloquearScrollBody(false);
@@ -184,7 +180,7 @@ async function logout() {
     if (adminPanel) adminPanel.className = 'admin-oculto';
 
     document.body.classList.remove('admin-abierto');
-    bloquearScrollBody(false); // ✅ Restaurar scroll al cerrar sesión
+    bloquearScrollBody(false);
 
     actualizarBotonAcceder();
     actualizarBotonCerrarSesion();
@@ -272,31 +268,43 @@ function protegerAdmin() {
 // 6. VERIFICACIÓN PERIÓDICA DE SESIÓN
 // ============================================
 function iniciarVerificadorSesion() {
+    // ✅ FIX: Detener cualquier verificador previo ANTES de crear uno nuevo
     detenerVerificadorSesion();
+    
+    const session = getSession();
+    if (!session || !session.token) return;
+    
+    console.log('🔍 Iniciando verificador de sesión');
+    
     verificadorSesion = setInterval(async () => {
-        const session = getSession();
-        if (!session || !session.token) return;
+        const sessionActual = getSession();
+        if (!sessionActual || !sessionActual.token) {
+            detenerVerificadorSesion();
+            return;
+        }
 
         try {
             const respuesta = await fetch(`${API_URL}/users`, {
-                headers: { 'Authorization': `Bearer ${session.token}` }
+                headers: { 'Authorization': `Bearer ${sessionActual.token}` }
             });
 
             if (respuesta.status === 401 || respuesta.status === 403) {
                 console.log('🔒 Sesión reemplazada en otro dispositivo');
+                detenerVerificadorSesion();
                 mostrarNotificacion('Tu sesión fue cerrada desde otro dispositivo', 'warning');
                 logout();
             }
         } catch (error) {
-            console.warn('⚠️ Verificación de sesión falló:', error);
+            console.warn('⚠️ Verificación de sesión falló:', error.message);
         }
-    }, 30000);
+    }, 60000); // ✅ FIX: Aumentado a 60 segundos
 }
 
 function detenerVerificadorSesion() {
     if (verificadorSesion) {
         clearInterval(verificadorSesion);
         verificadorSesion = null;
+        console.log('🛑 Verificador de sesión detenido');
     }
 }
 
@@ -2898,7 +2906,8 @@ document.addEventListener('DOMContentLoaded', function() {
 // 30. INICIO
 // ============================================
 async function iniciar() {
-    console.log('🚀 Cargando productos...');
+    console.log('🚀 Iniciando aplicación...');
+    console.log('📊 Verificador de sesión previo:', verificadorSesion);
 
     document.querySelectorAll('.grid-productos').forEach(grid => {
         if (grid.children.length === 0) {

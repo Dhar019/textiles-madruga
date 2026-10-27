@@ -81,14 +81,15 @@
     left: var(--banner-pos, 0%);
     width: 100%;
     height: 100%;
-    background-image: url('../assets/img/banner-tm.webp'); /* ✅ RUTA CORREGIDA CON ../ */
+    background-image: url('../assets/img/banner-tm.webp');
     background-size: contain;
     background-position: left center;
     background-repeat: no-repeat;
     opacity: 0.6;
     z-index: 0;
     pointer-events: none;
-    transition: left 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+    /* ✅ Transición simplificada para evitar consumo de CPU */
+    transition: left 0.5s ease;
 }
 
 .hero-content {
@@ -442,14 +443,14 @@
     display: block !important;
 }
 
+/* ✅ Overlays SIN backdrop-filter blur (evita congelamiento) */
 .modal-overlay, .login-overlay, .admin-overlay, .confirmar-overlay, .bienvenida-overlay, .lightbox-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(6px);
+    background: rgba(0, 0, 0, 0.75);
     animation: fadeIn 0.3s ease;
     z-index: 9998;
 }
@@ -621,7 +622,6 @@
 /* --- Lightbox --- */
 .lightbox-overlay {
     background: rgba(0, 0, 0, 0.95);
-    backdrop-filter: blur(8px);
     cursor: zoom-out;
     z-index: 10001;
 }
@@ -1183,6 +1183,7 @@
     z-index: 1;
 }
 
+/* ✅ Animación infinita eliminada (consumía CPU) */
 .bienvenida-decoracion::before {
     content: '';
     position: absolute;
@@ -1193,12 +1194,6 @@
     background:
         radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.2) 0%, transparent 50%),
         radial-gradient(circle at 70% 70%, rgba(232, 122, 32, 0.3) 0%, transparent 50%);
-    animation: bienvenidaRotate 20s linear infinite;
-}
-
-@keyframes bienvenidaRotate {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
 }
 
 .bienvenida-logo {
@@ -1242,17 +1237,12 @@
 
 .bienvenida-header { text-align: center; margin-bottom: 30px; }
 
+/* ✅ Animación infinita eliminada (consumía CPU) */
 .bienvenida-icono {
     font-size: 2.5rem;
     display: block;
     margin-bottom: 10px;
     color: var(--color-naranja);
-    animation: bienvenidaPulse 2s ease-in-out infinite;
-}
-
-@keyframes bienvenidaPulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.1); }
 }
 
 .bienvenida-titulo {
@@ -2164,6 +2154,7 @@
 .drop-zone-preview { max-width: 100%; max-height: 150px; border-radius: 8px; object-fit: contain; }
 
 /* --- Badge pedidos --- */
+/* ✅ Animación infinita eliminada (consumía CPU) */
 .tab-badge {
     position: absolute;
     top: -6px;
@@ -2177,12 +2168,6 @@
     min-width: 18px;
     text-align: center;
     box-shadow: 0 2px 6px rgba(231, 76, 60, 0.4);
-    animation: pulseBadge 2s ease-in-out infinite;
-}
-
-@keyframes pulseBadge {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.1); }
 }
 
 /* --- Pedidos --- */
