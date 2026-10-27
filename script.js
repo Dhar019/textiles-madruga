@@ -3061,38 +3061,6 @@ document.getElementById('btn-recargar')?.addEventListener('click', recargarProdu
 window.recargarProductos = recargarProductos;
 
 // ============================================
-// ANIMACIÓN DEL BANNER AL HACER SCROLL
-// ============================================
-let ultimoScroll = 0;
-let posicionBanner = 0; // 0 = izquierda, 50 = derecha
-
-function animarBannerScroll() {
-    // Solo en móvil (pantallas <= 768px)
-    if (window.innerWidth > 768) return;
-
-    const hero = document.querySelector('.hero');
-    if (!hero) return;
-
-    const scrollActual = window.scrollY;
-    const alturaPantalla = window.innerHeight;
-
-    // Si el scroll ha bajado más de una pantalla completa
-    if (scrollActual > ultimoScroll + alturaPantalla) {
-        posicionBanner = posicionBanner === 0 ? 50 : 0;
-        hero.style.setProperty('--banner-pos', `${posicionBanner}%`);
-        ultimoScroll = scrollActual;
-    }
-    // Si el scroll ha subido más de una pantalla completa
-    else if (scrollActual < ultimoScroll - alturaPantalla) {
-        posicionBanner = posicionBanner === 0 ? 50 : 0;
-        hero.style.setProperty('--banner-pos', `${posicionBanner}%`);
-        ultimoScroll = scrollActual;
-    }
-}
-
-window.addEventListener('scroll', animarBannerScroll);
-
-// ============================================
 // SAFETY CHECK: Restaurar scroll si se quedó bloqueado
 // ============================================
 window.addEventListener('load', () => {

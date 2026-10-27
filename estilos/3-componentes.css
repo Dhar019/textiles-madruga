@@ -74,11 +74,12 @@
     overflow: hidden;
 }
 
+/* ✅ SIN TRANSICIÓN, SIN ANIMACIÓN, SIN VARIABLES. Solo la imagen quieta. */
 .hero::before {
     content: '';
     position: absolute;
     top: 0;
-    left: var(--banner-pos, 0%);
+    left: 0;
     width: 100%;
     height: 100%;
     background-image: url('../assets/img/banner-tm.webp');
@@ -88,8 +89,6 @@
     opacity: 0.6;
     z-index: 0;
     pointer-events: none;
-    /* ✅ Transición simplificada para evitar consumo de CPU */
-    transition: left 0.5s ease;
 }
 
 .hero-content {
