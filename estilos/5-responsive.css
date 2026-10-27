@@ -2,11 +2,67 @@
 /* 1. ESCRITORIO (PANTALLAS GRANDES)            */
 /* ============================================ */
 @media (min-width: 769px) {
-        /* --- HERO (EL BANNER EN MÓVIL) --- */
+    .hero {
+        min-height: 90vh;
+        padding: 60px 0;
+        background: linear-gradient(135deg, rgba(0, 0, 0, 0.85) 100%, rgba(0, 0, 0, 0.5) 110%);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 15vh;
+        left: auto;
+        width: 150%;
+        height: 100%;
+        background-image: url('../assets/img/banner-tm.webp');
+        background-size: contain;
+        background-position: center;
+        background-repeat: no-repeat;
+        opacity: 0.5;
+        z-index: 0;
+        pointer-events: none;
+    }
+}
+
+/* ============================================ */
+/* 2. RESPONSIVE - TABLET Y MÓVIL (<= 768px)    */
+/* ============================================ */
+@media (max-width: 768px) {
+    /* --- HEADER --- */
+    .header .container {
+        padding: 0 12px;
+    }
+
+    .logo-header {
+        height: 36px;
+    }
+
+    .logo-textiles,
+    .logo-madruga {
+        display: none;
+    }
+
+    .btn-acceder,
+    .btn-cerrar-sesion {
+        font-size: 0.65rem !important;
+        padding: 5px 12px !important;
+    }
+
+    .menu-hamburguesa {
+        display: flex !important;
+        order: 3;
+    }
+
+    /* --- HERO MÓVIL --- */
     .hero {
         min-height: 100dvh;
         padding: 40px 0;
-        background-color: #2c2b2b; /* Fondo gris oscuro */
+        background-color: #2c2b2b;
+        background-image: none;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -19,11 +75,9 @@
         position: absolute;
         top: 0;
         left: var(--banner-pos, 0%);
-        right: auto;
         width: 100%;
         height: 100%;
-        /* ✅ AQUÍ ESTÁ EL ARREGLO: ../ antes de assets */
-        background-image: url('../assets/img/banner-tm.webp'); 
+        background-image: url('../assets/img/banner-tm.webp');
         background-size: contain;
         background-position: left center;
         background-repeat: no-repeat;
@@ -33,94 +87,15 @@
         transition: left 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
-    .letra-madruga {
-        font-size: 5rem;
-    }
-}
-
-/* ============================================ */
-/* 2. RESPONSIVE - TABLET Y MÓVIL (<= 768px)    */
-/* ============================================ */
-@media (max-width: 768px) {
-    /* --- HEADER --- */
-    .header {
-        position: sticky !important;
-        top: 0 !important;
-        z-index: 9999 !important;
-        padding: 10px 0 !important;
-        background-color: var(--color-negro) !important;
-    }
-
-    .header .container {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 8px;
-        flex-wrap: nowrap;
-        padding: 0 12px;
-    }
-
-    .logo-header {
-        height: 36px;
-    }
-
-    .logo-textiles, .logo-madruga {
-        display: none;
-    }
-
-    .header-actions {
-        gap: 6px;
-    }
-
-    .btn-acceder, .btn-cerrar-sesion {
-        font-size: 0.65rem !important;
-        padding: 5px 12px !important;
-    }
-
-    .menu-hamburguesa {
-        display: flex !important;
-        order: 3;
-    }
-
-    /* --- HERO (EL BANNER EN MÓVIL) --- */
-    .hero {
-        min-height: 100dvh;
-        padding: 40px 0; /* ✅ Damos espacio para que no se aplaste */
-        background-color: #2c2b2b; /* ✅ Fondo gris oscuro */
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .hero::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: var(--banner-pos, 0%); /* ✅ Variable para la animación */
-        right: auto;
-        width: 100%;
-        height: 100%;
-        background-image: url('assets/img/banner-tm.webp');
-        background-size: contain; /* ✅ La imagen se ve completa */
-        background-position: left center; /* ✅ Pegada a la izquierda */
-        background-repeat: no-repeat;
-        opacity: 0.6; /* ✅ Transparencia */
-        z-index: 0;
-        pointer-events: none;
-        transition: left 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); /* ✅ Transición */
-    }
-
     .hero-content {
-        padding: 0 20px;
         position: relative;
         z-index: 1;
+        padding: 0 20px;
     }
 
     .letra-madruga {
         font-size: 4rem;
-        text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
     }
 
     .logo-hero {
@@ -129,22 +104,47 @@
 
     .hero-slogan {
         font-size: 1.2rem;
-        text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
     }
 
-    /* --- GRIDS Y PRODUCTOS --- */
-    .grid-productos { grid-template-columns: 1fr 1fr; gap: 15px; }
-    .grid-categorias { grid-template-columns: 1fr 1fr; gap: 15px; }
-    .grid-subcategorias { grid-template-columns: 1fr 1fr; gap: 15px; }
-    .grid-personalizados { grid-template-columns: 1fr; }
+    /* --- GRIDS --- */
+    .grid-productos {
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
 
-    .section-title { font-size: 2.2rem; }
-    .section-subtitle { font-size: 1rem; margin-bottom: 30px; }
+    .grid-categorias {
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
 
-    .producto-img { height: 240px; object-fit: contain; background: transparent; }
+    .grid-subcategorias {
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+
+    .grid-personalizados {
+        grid-template-columns: 1fr;
+    }
+
+    .producto-img {
+        height: 240px;
+        object-fit: contain;
+        background: transparent;
+    }
+
+    .categoria-card img {
+        width: 100%;
+        max-width: 120px;
+        height: 120px;
+        object-fit: cover;
+        border-radius: 8px;
+    }
 
     /* --- MODALES Y ADMIN --- */
-    .login-contenido, .modal-contenido, .confirmar-contenido {
+    .login-contenido,
+    .modal-contenido,
+    .confirmar-contenido {
         width: 95%;
         padding: 20px;
     }
@@ -167,10 +167,13 @@
         gap: 12px;
     }
 
-    .bienvenida-logo-img { height: 45px; }
-    .bienvenida-info { padding: 20px 18px; }
-    .bienvenida-beneficios { grid-template-columns: 1fr; gap: 8px; }
-    .bienvenida-beneficio p { display: none; }
+    .bienvenida-beneficios {
+        grid-template-columns: 1fr;
+    }
+
+    .bienvenida-beneficio p {
+        display: none;
+    }
 
     .admin-contenido {
         width: 100% !important;
@@ -181,17 +184,15 @@
         transform: none !important;
     }
 
-    .admin-tab { padding: 8px 12px !important; font-size: 0.75rem !important; }
-    .admin-tab-content { padding: 0 15px 15px !important; }
+    .admin-tab {
+        padding: 8px 12px !important;
+        font-size: 0.75rem !important;
+    }
 
-    /* Fijar la X en modales */
-    .modal-cerrar, .login-cerrar, .admin-cerrar, .bienvenida-cerrar {
-        position: fixed;
-        top: 10px;
-        right: 10px;
-        width: 40px;
-        height: 40px;
-        z-index: 99999;
+    /* --- MODAL DE AYUDA SCROLL --- */
+    .modal-ayuda-contenido .ayuda-contenido {
+        max-height: calc(100vh - 150px);
+        overflow-y: auto;
     }
 }
 
@@ -199,17 +200,30 @@
 /* 3. RESPONSIVE - MÓVIL PEQUEÑO (<= 480px)     */
 /* ============================================ */
 @media (max-width: 480px) {
-    .grid-productos { grid-template-columns: 1fr; }
-    .producto-img { height: 220px; }
-    .letra-madruga { font-size: 2.8rem; }
-    .logo-hero { max-width: 120px; }
-    .hero-slogan { font-size: 1rem; }
-    .categoria-card img { max-width: 90px; height: 90px; }
-    .login-header h2 { font-size: 1.2rem; }
+    .grid-productos {
+        grid-template-columns: 1fr;
+    }
+
+    .letra-madruga {
+        font-size: 2.8rem;
+    }
+
+    .logo-hero {
+        max-width: 120px;
+    }
+
+    .categoria-card img {
+        max-width: 90px;
+        height: 90px;
+    }
+
+    .login-header h2 {
+        font-size: 1.2rem;
+    }
 }
 
 /* ============================================ */
-/* 4. ESTILOS DEL AVISO DE FIREFOX (GLOBAL)     */
+/* 4. AVISO FIREFOX (ESTILOS GLOBALES)          */
 /* ============================================ */
 .aviso-navegador {
     display: flex;
@@ -222,17 +236,6 @@
     font-size: 0.8rem;
     color: var(--color-negro);
     margin-bottom: 20px;
-    line-height: 1.4;
-}
-
-.aviso-navegador svg {
-    color: var(--color-naranja);
-    flex-shrink: 0;
-    margin-top: 1px;
-}
-
-.aviso-navegador strong {
-    color: var(--color-naranja);
 }
 
 .aviso-navegador-footer {
@@ -246,16 +249,6 @@
     border-radius: 10px;
     font-size: 0.75rem;
     color: var(--color-crema);
-    line-height: 1.3;
     flex-wrap: wrap;
     text-align: center;
-}
-
-.aviso-navegador-footer svg {
-    color: var(--color-naranja);
-    flex-shrink: 0;
-}
-
-.aviso-navegador-footer strong {
-    color: var(--color-naranja);
 }

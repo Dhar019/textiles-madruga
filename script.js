@@ -1011,21 +1011,17 @@ function solicitarPedido(producto) {
     productoPedidoActual = producto;
     document.getElementById('modal-pedido-producto').textContent = `Producto: ${producto}`;
     
-    // Obtener el contenedor que realmente tiene el scroll
     const formPedido = document.getElementById('modal-pedido-form');
     const contenedorPedido = modalPedido.querySelector('.login-contenido');
     
-    // FORZAR SCROLL AL INICIO (antes de mostrar el modal)
     if (formPedido) formPedido.scrollTop = 0;
     if (contenedorPedido) contenedorPedido.scrollTop = 0;
     document.body.scrollTop = 0;
     document.documentElement.scrollTop = 0;
     
-    // Mostrar el modal después de resetear el scroll
     modalPedido.className = 'login-visible';
     document.body.style.overflow = 'hidden';
     
-    // Un pequeño timeout para asegurar que el scroll se resetea DESPUÉS de que el modal se muestre
     setTimeout(() => {
         if (formPedido) formPedido.scrollTop = 0;
         if (contenedorPedido) contenedorPedido.scrollTop = 0;
