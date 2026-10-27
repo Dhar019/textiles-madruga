@@ -1,10 +1,42 @@
 /* ============================================ */
-/* RESPONSIVE - TABLET (<= 768px)               */
+/* 1. ESCRITORIO (PANTALLAS GRANDES)            */
+/* ============================================ */
+@media (min-width: 769px) {
+    .hero {
+        min-height: 90vh;
+        padding: 60px 0;
+        background: linear-gradient(135deg, rgba(0,0,0,0.85) 100%, rgba(0,0,0,0.5) 110%);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 15vh; /* ✅ Banner a la derecha en PC */
+        left: auto;
+        width: 150%;
+        height: 100%;
+        background-image: url('assets/img/banner-tm.webp');
+        background-size: contain;
+        background-position: center;
+        background-repeat: no-repeat;
+        opacity: 0.5;
+        z-index: 0;
+        pointer-events: none;
+    }
+
+    .letra-madruga {
+        font-size: 5rem;
+    }
+}
+
+/* ============================================ */
+/* 2. RESPONSIVE - TABLET Y MÓVIL (<= 768px)    */
 /* ============================================ */
 @media (max-width: 768px) {
-    /* ============================================ */
-    /* 1. HEADER                                    */
-    /* ============================================ */
+    /* --- HEADER --- */
     .header {
         position: sticky !important;
         top: 0 !important;
@@ -22,100 +54,36 @@
         padding: 0 12px;
     }
 
-    .logo {
-        display: flex;
-        align-items: center;
-        gap: 0;
-        flex-shrink: 0;
-    }
-
     .logo-header {
         height: 36px;
-        width: auto;
-        object-fit: contain;
     }
 
-    .logo-textiles,
-    .logo-madruga {
+    .logo-textiles, .logo-madruga {
         display: none;
     }
 
     .header-actions {
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
         gap: 6px;
-        flex-shrink: 0;
     }
 
-    /* Botón de recargar */
-    .btn-recargar {
-        width: 32px !important;
-        height: 32px !important;
-        background: transparent !important;
-        border: 1.5px solid rgba(255, 255, 255, 0.3) !important;
-        color: var(--color-blanco) !important;
-        border-radius: 50% !important;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0 !important;
-        transition: all 0.3s ease;
-    }
-
-    .btn-recargar:hover {
-        background: var(--color-naranja) !important;
-        border-color: var(--color-naranja) !important;
-    }
-
-    .btn-recargar svg {
-        width: 14px !important;
-        height: 14px !important;
-    }
-
-    /* Botones de sesión */
-    .btn-acceder,
-    .btn-cerrar-sesion {
+    .btn-acceder, .btn-cerrar-sesion {
         font-size: 0.65rem !important;
         padding: 5px 12px !important;
-        border-radius: 50px !important;
-        white-space: nowrap !important;
-        background: var(--color-negro) !important;
-        color: var(--color-blanco) !important;
-        border: 1.5px solid #e79a60 !important;
     }
 
-    .btn-acceder.activo {
-        background: transparent !important;
-        border-color: var(--color-naranja) !important;
-    }
-
-    /* Menú hamburguesa */
     .menu-hamburguesa {
         display: flex !important;
-        padding: 4px;
-        margin-left: 2px;
         order: 3;
     }
 
-    .menu-hamburguesa .barra {
-        width: 22px;
-        height: 2.5px;
-        background-color: var(--color-blanco);
-    }
-
-    /* ============================================ */
-    /* 2. HERO                                      */
-    /* ============================================ */
+    /* --- HERO (EL BANNER EN MÓVIL) --- */
     .hero {
-        min-height: 100vh;
         min-height: 100dvh;
-        padding: 0;
+        padding: 40px 0; /* ✅ Damos espacio para que no se aplaste */
+        background-color: #2c2b2b; /* ✅ Fondo gris oscuro */
         display: flex;
         align-items: center;
         justify-content: center;
-        background: linear-gradient(135deg, rgba(0,0,0,0.85) 100%, rgba(0,0,0,0.5) 110%);
-        background-color: #2c2b2b;
         position: relative;
         overflow: hidden;
     }
@@ -124,175 +92,53 @@
         content: '';
         position: absolute;
         top: 0;
-        left: 0;
+        left: var(--banner-pos, 0%); /* ✅ Variable para la animación */
+        right: auto;
         width: 100%;
         height: 100%;
         background-image: url('assets/img/banner-tm.webp');
-        background-size: contain; 
-        background-position: left center; 
+        background-size: contain; /* ✅ La imagen se ve completa */
+        background-position: left center; /* ✅ Pegada a la izquierda */
         background-repeat: no-repeat;
-        opacity: 0.6;
+        opacity: 0.6; /* ✅ Transparencia */
         z-index: 0;
         pointer-events: none;
+        transition: left 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); /* ✅ Transición */
     }
 
     .hero-content {
-        width: 100%;
         padding: 0 20px;
         position: relative;
         z-index: 1;
     }
 
-    .hero-text {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-    }
-
-    .letra-textiles {
-        font-size: 1.3rem;
-        letter-spacing: 6px;
-        margin-bottom: 5px;
-        color: var(--color-naranja);
-    }
-
     .letra-madruga {
         font-size: 4rem;
-        line-height: 1.1;
-        margin-bottom: 20px;
-        color: white;
         text-shadow: 0 2px 10px rgba(0,0,0,0.5);
     }
 
     .logo-hero {
         max-width: 240px;
-        height: auto;
-        margin-bottom: 25px;
-        filter: drop-shadow(0 4px 15px rgba(0,0,0,0.6));
     }
 
     .hero-slogan {
         font-size: 1.2rem;
-        letter-spacing: 2px;
-        margin-bottom: 35px;
-        color: var(--color-crema);
         text-shadow: 0 2px 10px rgba(0,0,0,0.5);
     }
 
-    .btn-primary {
-        padding: 15px 40px;
-        font-size: 1.1rem;
-        font-weight: 600;
-    }
+    /* --- GRIDS Y PRODUCTOS --- */
+    .grid-productos { grid-template-columns: 1fr 1fr; gap: 15px; }
+    .grid-categorias { grid-template-columns: 1fr 1fr; gap: 15px; }
+    .grid-subcategorias { grid-template-columns: 1fr 1fr; gap: 15px; }
+    .grid-personalizados { grid-template-columns: 1fr; }
 
-    /* ============================================ */
-    /* 3. SECCIONES Y GRIDS                         */
-    /* ============================================ */
-    .grid-productos {
-        grid-template-columns: 1fr 1fr;
-        gap: 15px;
-    }
+    .section-title { font-size: 2.2rem; }
+    .section-subtitle { font-size: 1rem; margin-bottom: 30px; }
 
-    .grid-categorias {
-        grid-template-columns: 1fr 1fr;
-        gap: 15px;
-    }
+    .producto-img { height: 240px; object-fit: contain; background: transparent; }
 
-    .grid-subcategorias {
-        grid-template-columns: 1fr 1fr;
-        gap: 15px;
-    }
-
-    .grid-personalizados {
-        grid-template-columns: 1fr;
-    }
-
-    .section-title {
-        font-size: 2.2rem;
-    }
-
-    .section-subtitle {
-        font-size: 1rem;
-        margin-bottom: 30px;
-    }
-
-    /* ============================================ */
-    /* 4. TARJETAS DE PRODUCTO Y CATEGORÍAS         */
-    /* ============================================ */
-    .producto-card {
-        padding: 15px;
-    }
-
-    .producto-img {
-        height: 240px;
-        object-fit: contain;
-        background: transparent;
-        padding: 0;
-    }
-
-    .producto-hint {
-        font-size: 0.65rem;
-    }
-
-    /* Categorías destacadas */
-    .categoria-card {
-        padding: 20px 15px;
-        min-height: 160px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .categoria-card img {
-        width: 100%;
-        max-width: 120px;
-        height: 120px;
-        object-fit: cover;
-        border-radius: 8px;
-        display: block;
-    }
-
-    .categoria-card h3 {
-        font-size: 1rem;
-        margin-top: 8px;
-    }
-
-    /* Subcategorías (Hombre/Mujer) */
-    .subcategoria-card {
-        padding: 25px 15px;
-        min-height: 220px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .subcategoria-card-imagen img {
-        width: 100%;
-        max-width: 150px;
-        height: 150px;
-        object-fit: cover;
-        border-radius: 10%;
-        display: block;
-    }
-
-    .subcategoria-card-imagen h3 {
-        font-size: 1.2rem;
-        margin-top: 8px;
-    }
-
-    .subcategoria-card-imagen p {
-        font-size: 0.8rem;
-    }
-
-    /* ============================================ */
-    /* 5. MODALES                                   */
-    /* ============================================ */
-    .login-contenido,
-    .modal-contenido,
-    .confirmar-contenido {
+    /* --- MODALES Y ADMIN --- */
+    .login-contenido, .modal-contenido, .confirmar-contenido {
         width: 95%;
         padding: 20px;
     }
@@ -306,7 +152,6 @@
     .bienvenida-decoracion {
         width: 100%;
         height: 100px;
-        flex-shrink: 0;
     }
 
     .bienvenida-logo {
@@ -314,635 +159,51 @@
         align-items: center;
         justify-content: center;
         gap: 12px;
-        padding: 0 15px;
     }
 
-    .bienvenida-logo-img {
-        height: 45px;
-        margin-bottom: 0;
-    }
+    .bienvenida-logo-img { height: 45px; }
+    .bienvenida-info { padding: 20px 18px; }
+    .bienvenida-beneficios { grid-template-columns: 1fr; gap: 8px; }
+    .bienvenida-beneficio p { display: none; }
 
-    .bienvenida-logo-textiles,
-    .bienvenida-logo-madruga {
-        display: inline;
-        font-size: 0.95rem;
-        letter-spacing: 2px;
-    }
-
-    .bienvenida-info {
-        padding: 20px 18px;
-        gap: 10px;
-    }
-
-    .bienvenida-header {
-        margin-bottom: 15px;
-    }
-
-    .bienvenida-icono {
-        font-size: 1.8rem;
-        margin-bottom: 6px;
-    }
-
-    .bienvenida-titulo {
-        font-size: 1.2rem;
-        line-height: 1.3;
-    }
-
-    .bienvenida-subtitulo {
-        font-size: 0.85rem;
-    }
-
-    .bienvenida-beneficios {
-        grid-template-columns: 1fr;
-        gap: 8px;
-        margin-bottom: 15px;
-    }
-
-    .bienvenida-beneficio {
-        padding: 8px 10px;
-        border-radius: 8px;
-    }
-
-    .beneficio-icono {
-        width: 24px;
-        height: 24px;
-    }
-
-    .beneficio-icono svg {
-        width: 18px;
-        height: 18px;
-    }
-
-    .bienvenida-beneficio strong {
-        font-size: 0.75rem;
-        margin-bottom: 1px;
-    }
-
-    .bienvenida-beneficio p {
-        display: none;
-    }
-
-    .bienvenida-acciones {
-        gap: 6px;
-        margin-bottom: 10px;
-    }
-
-    .bienvenida-btn-primario {
-        padding: 10px 16px;
-        font-size: 0.8rem;
-    }
-
-    .bienvenida-btn-secundario {
-        padding: 8px 16px;
-        font-size: 0.75rem;
-    }
-
-    .bienvenida-nota {
-        font-size: 0.6rem;
-        margin-top: 4px;
-    }
-
-    /* Fijar la X en modales */
-    .modal-cerrar,
-    .login-cerrar,
-    .admin-cerrar,
-    .bienvenida-cerrar {
-        position: fixed;
-        top: 10px;
-        right: 10px;
-        width: 40px;
-        height: 40px;
-    }
-
-    .modal-cerrar svg,
-    .login-cerrar svg,
-    .admin-cerrar svg,
-    .bienvenida-cerrar svg {
-        width: 20px;
-        height: 20px;
-    }
-
-    /* ============================================ */
-    /* 6. PANEL ADMIN                               */
-    /* ============================================ */
     .admin-contenido {
         width: 100% !important;
-        max-width: 100% !important;
         height: 100dvh !important;
-        max-height: 100dvh !important;
         border-radius: 0 !important;
         top: 0 !important;
         left: 0 !important;
         transform: none !important;
     }
 
-    .admin-header {
-        padding: 15px 15px 10px 15px !important;
-    }
+    .admin-tab { padding: 8px 12px !important; font-size: 0.75rem !important; }
+    .admin-tab-content { padding: 0 15px 15px !important; }
 
-    .admin-header h2 {
-        font-size: 1.1rem !important;
-    }
-
-    .admin-badge {
-        font-size: 0.55rem !important;
-        padding: 2px 8px !important;
-    }
-
-    .admin-tabs {
-        display: flex !important;
-        flex-wrap: nowrap !important;
-        overflow-x: auto !important;
-        overflow-y: hidden !important;
-        margin: 10px 15px 12px 15px !important;
-        padding: 3px !important;
-        gap: 3px !important;
-        scrollbar-width: none !important;
-        -webkit-overflow-scrolling: touch !important;
-    }
-
-    .admin-tabs::-webkit-scrollbar {
-        display: none !important;
-    }
-
-    .admin-tab {
-        flex: 0 0 auto !important;
-        padding: 8px 14px !important;
-        font-size: 0.78rem !important;
-        white-space: nowrap !important;
-        min-width: auto !important;
-    }
-
-    .admin-tab-content {
-        padding: 0 15px 15px 15px !important;
-    }
-
-    .admin-acciones {
-        gap: 6px !important;
-    }
-
-    .admin-acciones .btn-admin {
-        padding: 8px 12px !important;
-        font-size: 0.75rem !important;
-    }
-
-    .admin-buscador {
-        flex-wrap: wrap;
-        gap: 6px !important;
-    }
-
-    .admin-buscador input {
-        flex: 1 1 100%;
-        padding: 8px 12px !important;
-        font-size: 0.85rem !important;
-        height: 40px !important;
-    }
-
-    .admin-buscador button {
-        flex: 1 1 calc(50% - 5px);
-        height: 40px !important;
-        padding: 0 14px !important;
-        font-size: 0.78rem !important;
-    }
-
-    .admin-producto-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-    }
-
-    .admin-producto-item .acciones {
-        flex-wrap: wrap;
-    }
-
-    .oferta-card-producto {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-    }
-
-    .oferta-card-info {
-        align-items: center;
-    }
-
-    .admin-producto-item .info-texto {
-        min-width: auto;
-    }
-
-    .oferta-card-edicion {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .oferta-card-edicion .campo {
-        flex: 1 1 auto;
-    }
-
-    .oferta-card-edicion .btn-admin {
-        width: 100%;
-    }
-
-    /* ============================================ */
-    /* 7. PEDIDOS EN ADMIN                          */
-    /* ============================================ */
-    .pedido-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .pedido-datos {
-        grid-template-columns: 1fr;
-    }
-
-    .pedido-acciones {
-        flex-direction: column;
-    }
-
-    .btn-pedido {
-        width: 100%;
-        text-align: center;
-        padding: 8px 14px;
-    }
-
-    .pedidos-filtros {
-        justify-content: center;
-    }
-
-    .filtro-pedido {
-        flex: 1 1 auto;
-        text-align: center;
-        font-size: 0.75rem;
-        padding: 6px 10px;
-    }
-
-    /* ============================================ */
-    /* 8. MODAL DE PEDIDO Y VARIANTES               */
-    /* ============================================ */
-    .modal-pedido-contenido {
-        padding: 20px 16px;
-        max-width: 95%;
-    }
-
-    .pedido-seccion {
-        padding: 12px 14px;
-    }
-
-    .form-row-2 {
-        grid-template-columns: 1fr;
-    }
-
-    .variante-item {
-        flex-wrap: wrap;
-    }
-
-    .variante-item .variante-talla-select {
-        flex: 1 1 100%;
-    }
-
-    .variante-item .variante-cantidad-wrapper {
-        flex: 1;
-    }
-
-    .cantidad-total-selector {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .cantidad-total-wrapper {
-        justify-content: center;
-    }
-
-    /* ============================================ */
-    /* 9. MODAL DE AYUDA                            */
-    /* ============================================ */
-    .modal-ayuda-contenido {
-        max-width: 95%;
-        padding: 24px 20px;
-    }
-
-    .ayuda-opcion {
-        padding: 12px 14px;
-    }
-
-    .ayuda-icono {
-        font-size: 1.5rem;
-    }
-
-    .ayuda-opcion-header h3 {
-        font-size: 1rem;
-    }
-
-    .ayuda-ventajas ul li {
-        font-size: 0.8rem;
-    }
-
-    /* ============================================ */
-    /* 10. LIGHTBOX                                 */
-    /* ============================================ */
-    .lightbox-contenido {
-        padding: 10px;
-    }
-
-    .lightbox-contenido img {
-        max-width: 100%;
-        max-height: calc(100vh - 20px);
-        border-radius: 6px;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
-    }
-
-    .lightbox-cerrar {
+    /* Fijar la X en modales */
+    .modal-cerrar, .login-cerrar, .admin-cerrar, .bienvenida-cerrar {
+        position: fixed;
         top: 10px;
         right: 10px;
-        width: 36px;
-        height: 36px;
-        background: rgba(0, 0, 0, 0.6);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    .lightbox-cerrar svg {
-        width: 18px;
-        height: 18px;
-    }
-
-    /* ============================================ */
-    /* 11. SCROLL MARGIN                            */
-    /* ============================================ */
-    :root {
-        --header-height: 120px;
-    }
-
-    section[id] {
-        scroll-margin-top: var(--header-height);
+        width: 40px;
+        height: 40px;
+        z-index: 99999;
     }
 }
 
 /* ============================================ */
-/* RESPONSIVE - MÓVIL PEQUEÑO (<= 480px)        */
+/* 3. RESPONSIVE - MÓVIL PEQUEÑO (<= 480px)     */
 /* ============================================ */
 @media (max-width: 480px) {
-    /* ============================================ */
-    /* 1. HEADER                                    */
-    /* ============================================ */
-    .logo-header {
-        height: 40px !important;
-    }
-
-    /* ============================================ */
-    /* 2. HERO                                      */
-    /* ============================================ */
-    .letra-madruga {
-        font-size: 2.8rem;
-    }
-
-    .logo-hero {
-        max-width: 120px;
-    }
-
-    .hero-slogan {
-        font-size: 1rem;
-    }
-
-    /* ============================================ */
-    /* 3. GRIDS                                     */
-    /* ============================================ */
-    .grid-productos {
-        grid-template-columns: 1fr;
-    }
-
-    .grid-categorias {
-        grid-template-columns: 1fr 1fr;
-    }
-
-    /* ============================================ */
-    /* 4. TARJETAS DE PRODUCTO Y CATEGORÍAS         */
-    /* ============================================ */
-    .producto-card {
-        padding: 12px;
-    }
-
-    .producto-img {
-        height: 220px;
-        object-fit: contain;
-        background: transparent;
-        padding: 0;
-    }
-
-    .producto-nombre {
-        font-size: 1rem;
-    }
-
-    .producto-precio {
-        font-size: 0.95rem;
-    }
-
-    .btn-secundario {
-        padding: 8px 16px;
-        font-size: 0.8rem;
-    }
-
-    .producto-hint {
-        font-size: 0.6rem;
-    }
-
-    /* Categorías */
-    .categoria-card {
-        padding: 15px 10px;
-        min-height: 130px;
-    }
-
-    .categoria-card img {
-        width: 100%;
-        max-width: 90px;
-        height: 90px;
-        object-fit: cover;
-        display: block;
-    }
-
-    .categoria-card h3 {
-        font-size: 0.9rem;
-        margin-top: 6px;
-    }
-
-    /* Subcategorías */
-    .subcategoria-card {
-        padding: 20px 12px;
-        min-height: 180px;
-    }
-
-    .subcategoria-card-imagen img {
-        width: 100%;
-        max-width: 110px;
-        height: 110px;
-        object-fit: cover;
-        border-radius: 10%;
-        display: block;
-    }
-
-    .subcategoria-card-imagen h3 {
-        font-size: 1rem;
-        margin-top: 6px;
-    }
-
-    .subcategoria-card-imagen p {
-        font-size: 0.7rem;
-    }
-
-    /* ============================================ */
-    /* 5. MODALES                                   */
-    /* ============================================ */
-    .login-contenido {
-        max-width: 92%;
-    }
-
-    .login-header h2 {
-        font-size: 1.2rem;
-    }
-
-    .login-group input {
-        padding: 9px 40px 9px 12px;
-        font-size: 0.85rem;
-        height: 42px;
-    }
-
-    .btn-login {
-        padding: 10px;
-        font-size: 0.85rem;
-        height: 44px;
-    }
-
-    #login-modal .login-header {
-        padding: 28px 20px 16px 20px;
-    }
-
-    #login-modal .login-form {
-        padding: 0 20px 16px 20px;
-    }
-
-    #login-modal .login-footer {
-        padding: 0 20px 20px 20px;
-    }
-
-    #login-modal > .login-contenido > div[style*="text-align:center"] {
-        padding: 0 20px 8px 20px;
-    }
-
-    .notificacion {
-        top: 10px;
-        right: 10px;
-        left: 10px;
-        max-width: none;
-        font-size: 0.8rem;
-        padding: 12px 18px;
-    }
-
-    /* Modal de bienvenida */
-    .bienvenida-contenido {
-        width: 98%;
-        max-width: 98%;
-        max-height: 96vh;
-        border-radius: 16px;
-    }
-
-    .bienvenida-decoracion {
-        height: 80px;
-    }
-
-    .bienvenida-logo-img {
-        height: 32px;
-    }
-
-    .bienvenida-logo-textiles,
-    .bienvenida-logo-madruga {
-        font-size: 0.8rem;
-    }
-
-    .bienvenida-info {
-        padding: 14px 12px 10px 12px;
-        gap: 8px;
-    }
-
-    .bienvenida-titulo {
-        font-size: 1rem;
-    }
-
-    .bienvenida-icono svg {
-        width: 24px;
-        height: 24px;
-    }
-
-    .bienvenida-beneficios {
-        gap: 4px;
-    }
-
-    .bienvenida-beneficio {
-        padding: 6px 8px;
-    }
-
-    .bienvenida-btn-primario,
-    .bienvenida-btn-secundario {
-        padding: 8px 14px;
-        font-size: 0.75rem;
-    }
-
-    /* Modal de confirmación */
-    .confirmar-contenido {
-        padding: 24px 20px 20px;
-        max-width: 92%;
-    }
-
-    .confirmar-titulo {
-        font-size: 1.2rem;
-    }
-
-    .confirmar-mensaje {
-        font-size: 0.85rem;
-    }
-
-    .confirmar-btn {
-        padding: 10px 16px;
-        font-size: 0.85rem;
-    }
-
-    /* Radios */
-    .radio-option {
-        padding: 7px 12px;
-        font-size: 0.8rem;
-    }
-
-    /* ============================================ */
-    /* 6. PANEL ADMIN                               */
-    /* ============================================ */
-    .admin-tab {
-        padding: 7px 12px !important;
-        font-size: 0.72rem !important;
-    }
-
-    .admin-header h2 {
-        font-size: 1rem !important;
-    }
-
-    .admin-header-left {
-        gap: 8px !important;
-    }
-
-    .admin-icono svg {
-        width: 20px !important;
-        height: 20px !important;
-    }
-
-    .admin-buscador {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .admin-buscador button {
-        width: 100%;
-        flex: 1 1 auto;
-    }
+    .grid-productos { grid-template-columns: 1fr; }
+    .producto-img { height: 220px; }
+    .letra-madruga { font-size: 2.8rem; }
+    .logo-hero { max-width: 120px; }
+    .hero-slogan { font-size: 1rem; }
+    .categoria-card img { max-width: 90px; height: 90px; }
+    .login-header h2 { font-size: 1.2rem; }
 }
 
 /* ============================================ */
-/* AVISO PARA FIREFOX                           */
+/* 4. ESTILOS DEL AVISO DE FIREFOX (GLOBAL)     */
 /* ============================================ */
 .aviso-navegador {
     display: flex;
@@ -991,16 +252,4 @@
 
 .aviso-navegador-footer strong {
     color: var(--color-naranja);
-}
-
-@media (max-width: 480px) {
-    .aviso-navegador {
-        font-size: 0.75rem;
-        padding: 10px 12px;
-    }
-
-    .aviso-navegador-footer {
-        font-size: 0.7rem;
-        padding: 10px 12px;
-    }
 }
