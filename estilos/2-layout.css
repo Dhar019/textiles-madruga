@@ -1,0 +1,292 @@
+/* ============================================ */
+/* 1. HEADER                                    */
+/* ============================================ */
+.header {
+    padding: 15px 0;
+    background-color: var(--color-negro);
+    color: var(--color-blanco);
+    position: sticky;
+    top: 0;
+    z-index: 9999;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    flex-shrink: 0;
+    width: 100%;
+}
+
+.header .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 10px;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-shrink: 0;
+}
+
+.logo-header {
+    height: 50px;
+    width: auto;
+    object-fit: contain;
+}
+
+.logo-textiles {
+    font-family: var(--font-serif);
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--color-naranja);
+    letter-spacing: 2px;
+}
+
+.logo-madruga {
+    font-family: var(--font-serif);
+    font-size: 1.3rem;
+    font-weight: 400;
+    color: var(--color-blanco);
+    letter-spacing: 2px;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: nowrap;
+    margin-left: auto;
+}
+
+.btn-acceder,
+.btn-cerrar-sesion {
+    flex-shrink: 0;
+}
+
+.btn-acceder {
+    padding: 8px 22px;
+    background: var(--color-negro);
+    color: var(--color-blanco);
+    border: 2px solid #e79a60;
+    border-radius: 100px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: var(--font-sans);
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+}
+
+.btn-acceder:hover {
+    background: var(--color-blanco);
+    color: var(--color-negro);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(232, 122, 32, 0.3);
+}
+
+.btn-acceder.activo {
+    background: transparent;
+    color: var(--color-blanco);
+    border: 2px solid var(--color-naranja);
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    padding: 8px 22px;
+    border-radius: 100px;
+    font-size: 0.85rem;
+}
+
+.btn-acceder.activo:hover {
+    background: rgba(232, 122, 32, 0.1);
+    border-color: var(--color-naranja);
+    color: var(--color-naranja);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(232, 122, 32, 0.15);
+}
+
+.btn-acceder.activo.admin {
+    border-color: #ffd93d;
+    color: #ffd93d;
+}
+
+.btn-acceder.activo.admin:hover {
+    background: rgba(255, 217, 61, 0.1);
+    border-color: #ffd93d;
+    color: #ffd93d;
+    box-shadow: 0 4px 20px rgba(255, 217, 61, 0.2);
+}
+
+.btn-cerrar-sesion {
+    padding: 8px 18px;
+    background: transparent;
+    color: var(--color-gris);
+    border: 1.5px solid var(--color-gris);
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: var(--font-sans);
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+    display: none;
+}
+
+.btn-cerrar-sesion:hover {
+    background: #e74c3c;
+    color: var(--color-blanco);
+    border-color: #e74c3c;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.3);
+}
+
+.btn-cerrar-sesion.visible {
+    display: inline-block;
+}
+
+/* --- Menú hamburguesa --- */
+.menu-hamburguesa {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px 5px;
+    z-index: 200;
+    flex-shrink: 0;
+}
+
+.menu-hamburguesa .barra {
+    display: block;
+    width: 28px;
+    height: 3px;
+    background-color: #FFFFFF;
+    border-radius: 3px;
+    transition: all 0.3s ease;
+}
+
+.menu-hamburguesa.activo .barra:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px);
+}
+
+.menu-hamburguesa.activo .barra:nth-child(2) {
+    opacity: 0;
+}
+
+.menu-hamburguesa.activo .barra:nth-child(3) {
+    transform: rotate(-45deg) translate(5px, -5px);
+}
+
+/* --- Nav desplegable --- */
+.nav {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 280px;
+    background-color: var(--color-negro);
+    padding: 20px;
+    box-shadow: -5px 10px 20px rgba(0, 0, 0, 0.5);
+    z-index: 150;
+    border-radius: 0 0 0 12px;
+}
+
+.nav.activo {
+    display: flex;
+}
+
+.nav a {
+    font-size: 1rem;
+    padding: 12px 0;
+    width: 100%;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    color: #FFFFFF;
+    text-decoration: none;
+    transition: background 0.3s ease;
+}
+
+.nav a:hover {
+    color: var(--color-naranja);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.nav a:last-child {
+    border-bottom: none;
+}
+
+/* ============================================ */
+/* 2. FOOTER                                    */
+/* ============================================ */
+.footer {
+    background-color: var(--color-negro);
+    color: var(--color-blanco);
+    padding: 40px 0;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.footer p {
+    margin-bottom: 5px;
+}
+
+/* ============================================ */
+/* 3. SECCIONES Y CONTENEDORES DE PÁGINA        */
+/* ============================================ */
+.categoria {
+    padding: 60px 0;
+}
+
+.seccion-ropa {
+    background-color: var(--color-blanco);
+}
+
+.seccion-telas {
+    background-color: var(--color-crema);
+}
+
+.seccion-otros {
+    background-color: var(--color-blanco);
+}
+
+.seccion-ofertas {
+    background: linear-gradient(135deg, #FFF5EB 0%, #FFFFFF 100%);
+    padding: 60px 0;
+    border-bottom: 3px solid var(--color-naranja);
+}
+
+.seccion-ropa-sub {
+    background-color: var(--color-crema);
+    padding: 60px 0;
+}
+
+.seccion-productos {
+    padding: 60px 0;
+    background-color: var(--color-blanco);
+    scroll-margin-top: 80px;
+}
+
+.seccion-productos:nth-of-type(even) {
+    background-color: var(--color-crema);
+}
+
+.categorias-destacadas {
+    padding: 60px 0;
+    background-color: var(--color-blanco);
+}
+
+.personalizados {
+    padding: 80px 0;
+    background: linear-gradient(135deg, var(--color-negro) 0%, #2A2A2A 100%);
+    color: var(--color-blanco);
+}
+
+.contacto {
+    padding: 80px 0;
+    background-color: var(--color-crema);
+}

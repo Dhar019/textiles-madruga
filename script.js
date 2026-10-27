@@ -1,14 +1,14 @@
 // ============================================
 // SCRIPT.JS - Textiles Madruga
-// Versión 5.6 - Resiliencia y Reintentos
+// Versión 6.0 - Refactorizado y optimizado
 // ============================================
 
+// ============================================
+// 1. CONFIGURACIÓN Y CONSTANTES
+// ============================================
 const API_URL = 'https://textiles-madruga-api.eldani000219.workers.dev/api';
 const SESSION_KEY = 'tm_session';
 
-// ============================================
-// 1. CONFIGURACIÓN DEL NEGOCIO
-// ============================================
 const NEGOCIO = {
     whatsapp: '+5354108544',
     email: 'textilesmadruga@gmail.com',
@@ -35,86 +35,19 @@ let varianteIdCounter = 0;
 // ============================================
 function scrollModalAlTop(modalElement) {
     if (!modalElement) return;
-    const contenido = modalElement.querySelector('.login-contenido, .modal-contenido, .admin-contenido, .confirmar-contenido, .bienvenida-contenido');
-    if (contenido) {
-        contenido.scrollTop = 0;
-    }
+    const contenido = modalElement.querySelector(
+        '.login-contenido, .modal-contenido, .admin-contenido, .confirmar-contenido, .bienvenida-contenido'
+    );
+    if (contenido) contenido.scrollTop = 0;
+    
     const form = modalElement.querySelector('.login-form, .admin-tab-content');
-    if (form) {
-        form.scrollTop = 0;
-    }
+    if (form) form.scrollTop = 0;
+    
     document.body.scrollTop = 0;
 }
 
 // ============================================
-// 4. MODAL DE CONFIRMACIÓN PROPIO
-// ============================================
-function confirmar(opciones) {
-    return new Promise((resolve) => {
-        if (typeof opciones === 'string') {
-            opciones = { mensaje: opciones };
-        }
-        
-        const {
-            titulo = '¿Estás seguro?',
-            mensaje = 'Esta acción no se puede deshacer.',
-            tipo = 'info',
-            textoAceptar = 'Aceptar',
-            textoCancelar = 'Cancelar'
-        } = opciones;
-
-        const modal = document.getElementById('modal-confirmar');
-        const overlay = document.getElementById('confirmar-overlay');
-        const btnAceptar = document.getElementById('confirmar-aceptar');
-        const btnCancelar = document.getElementById('confirmar-cancelar');
-        const icono = document.getElementById('confirmar-icono');
-        const tituloEl = document.getElementById('confirmar-titulo');
-        const mensajeEl = document.getElementById('confirmar-mensaje');
-
-        tituloEl.textContent = titulo;
-        mensajeEl.textContent = mensaje;
-        btnAceptar.textContent = textoAceptar;
-        btnCancelar.textContent = textoCancelar;
-
-        icono.className = 'confirmar-icono';
-        if (tipo === 'peligro') {
-            icono.classList.add('peligro');
-            btnAceptar.className = 'confirmar-btn confirmar-btn-aceptar peligro';
-        } else if (tipo === 'exito') {
-            icono.classList.add('exito');
-            btnAceptar.className = 'confirmar-btn confirmar-btn-aceptar';
-        } else {
-            btnAceptar.className = 'confirmar-btn confirmar-btn-aceptar';
-        }
-
-        modal.className = 'confirmar-visible';
-        document.body.style.overflow = 'hidden';
-
-        const cerrar = (resultado) => {
-            modal.className = 'confirmar-oculto';
-            document.body.style.overflow = 'auto';
-            btnAceptar.onclick = null;
-            btnCancelar.onclick = null;
-            overlay.onclick = null;
-            resolve(resultado);
-        };
-
-        btnAceptar.onclick = () => cerrar(true);
-        btnCancelar.onclick = () => cerrar(false);
-        overlay.onclick = () => cerrar(false);
-
-        const escapeHandler = (e) => {
-            if (e.key === 'Escape') {
-                document.removeEventListener('keydown', escapeHandler);
-                cerrar(false);
-            }
-        };
-        document.addEventListener('keydown', escapeHandler);
-    });
-}
-
-// ============================================
-// 5. POLÍTICAS DE SEGURIDAD
+// 4. POLÍTICAS DE SEGURIDAD
 // ============================================
 const POLITICAS_SEGURIDAD = {
     cliente: {
@@ -133,14 +66,13 @@ const POLITICAS_SEGURIDAD = {
 
 function obtenerPoliticaSeguridad() {
     const session = getSession();
-    if (session && (session.role === 'admin' || session.role === 'superadmin')) {
-        return POLITICAS_SEGURIDAD.admin;
-    }
-    return POLITICAS_SEGURIDAD.cliente;
+    return (session && (session.role === 'admin' || session.role === 'superadmin'))
+        ? POLITICAS_SEGURIDAD.admin
+        : POLITICAS_SEGURIDAD.cliente;
 }
 
 // ============================================
-// 6. AUTENTICACIÓN
+// 5. AUTENTICACIÓN
 // ============================================
 function getSession() {
     const session = localStorage.getItem(SESSION_KEY);
@@ -297,7 +229,7 @@ function protegerAdmin() {
 }
 
 // ============================================
-// 7. VERIFICACIÓN PERIÓDICA DE SESIÓN
+// 6. VERIFICACIÓN PERIÓDICA DE SESIÓN
 // ============================================
 function iniciarVerificadorSesion() {
     detenerVerificadorSesion();
@@ -329,7 +261,7 @@ function detenerVerificadorSesion() {
 }
 
 // ============================================
-// 8. SEGURIDAD: INACTIVIDAD
+// 7. SEGURIDAD: INACTIVIDAD
 // ============================================
 function reiniciarTemporizadorInactividad() {
     if (!isLoggedIn()) return;
@@ -412,44 +344,8 @@ document.addEventListener('visibilitychange', () => {
     }
 });
 
-window.addEventListener('pagehide', () => {
-    if (isLoggedIn()) {
-        sessionStorage.setItem('tm_pestana_activa', 'false');
-        
-        const session = getSession();
-        if (session && session.token) {
-            const url = `${API_URL}/auth/logout`;
-            try {
-                const blob = new Blob(
-                    [JSON.stringify({ token: session.token })],
-                    { type: 'application/json' }
-                );
-                navigator.sendBeacon(url, blob);
-            } catch (e) {
-                console.warn('No se pudo cerrar sesión con sendBeacon:', e);
-            }
-        }
-    }
-});
-
-window.addEventListener('beforeunload', () => {
-    if (isLoggedIn()) {
-        const session = getSession();
-        if (session && session.token) {
-            const url = `${API_URL}/auth/logout`;
-            try {
-                const blob = new Blob(
-                    [JSON.stringify({ token: session.token })],
-                    { type: 'application/json' }
-                );
-                navigator.sendBeacon(url, blob);
-            } catch (e) {}
-        }
-    }
-});
-
 // ============================================
-// 9. NOTIFICACIONES
+// 8. NOTIFICACIONES
 // ============================================
 function mostrarNotificacion(mensaje, tipo = 'info') {
     const existente = document.querySelector('.notificacion');
@@ -468,12 +364,78 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
 }
 
 // ============================================
+// 9. MODAL DE CONFIRMACIÓN
+// ============================================
+function confirmar(opciones) {
+    return new Promise((resolve) => {
+        if (typeof opciones === 'string') {
+            opciones = { mensaje: opciones };
+        }
+        
+        const {
+            titulo = '¿Estás seguro?',
+            mensaje = 'Esta acción no se puede deshacer.',
+            tipo = 'info',
+            textoAceptar = 'Aceptar',
+            textoCancelar = 'Cancelar'
+        } = opciones;
+
+        const modal = document.getElementById('modal-confirmar');
+        const overlay = document.getElementById('confirmar-overlay');
+        const btnAceptar = document.getElementById('confirmar-aceptar');
+        const btnCancelar = document.getElementById('confirmar-cancelar');
+        const icono = document.getElementById('confirmar-icono');
+        const tituloEl = document.getElementById('confirmar-titulo');
+        const mensajeEl = document.getElementById('confirmar-mensaje');
+
+        tituloEl.textContent = titulo;
+        mensajeEl.textContent = mensaje;
+        btnAceptar.textContent = textoAceptar;
+        btnCancelar.textContent = textoCancelar;
+
+        icono.className = 'confirmar-icono';
+        if (tipo === 'peligro') {
+            icono.classList.add('peligro');
+            btnAceptar.className = 'confirmar-btn confirmar-btn-aceptar peligro';
+        } else if (tipo === 'exito') {
+            icono.classList.add('exito');
+            btnAceptar.className = 'confirmar-btn confirmar-btn-aceptar';
+        } else {
+            btnAceptar.className = 'confirmar-btn confirmar-btn-aceptar';
+        }
+
+        modal.className = 'confirmar-visible';
+        document.body.style.overflow = 'hidden';
+
+        const cerrar = (resultado) => {
+            modal.className = 'confirmar-oculto';
+            document.body.style.overflow = 'auto';
+            btnAceptar.onclick = null;
+            btnCancelar.onclick = null;
+            overlay.onclick = null;
+            resolve(resultado);
+        };
+
+        btnAceptar.onclick = () => cerrar(true);
+        btnCancelar.onclick = () => cerrar(false);
+        overlay.onclick = () => cerrar(false);
+
+        const escapeHandler = (e) => {
+            if (e.key === 'Escape') {
+                document.removeEventListener('keydown', escapeHandler);
+                cerrar(false);
+            }
+        };
+        document.addEventListener('keydown', escapeHandler);
+    });
+}
+
+// ============================================
 // 10. CARGA DE PRODUCTOS CON REINTENTOS
 // ============================================
 async function cargarProductos(intentos = 3) {
     console.log(`🔄 Cargando productos... (Intento ${4 - intentos}/3)`);
     
-    // Mostrar un estado de carga en los grids (solo si es la primera vez)
     if (intentos === 3) {
         document.querySelectorAll('.grid-productos').forEach(grid => {
             if (grid.children.length === 0) {
@@ -486,7 +448,7 @@ async function cargarProductos(intentos = 3) {
         const respuesta = await fetch(`${API_URL}/productos`, {
             method: 'GET',
             mode: 'cors',
-            cache: 'no-store' // Forzar a no usar caché
+            cache: 'no-store'
         });
         
         if (!respuesta.ok) throw new Error(`Error HTTP: ${respuesta.status}`);
@@ -511,15 +473,13 @@ async function cargarProductos(intentos = 3) {
     } catch (error) {
         console.warn(`⚠️ Error al cargar (Intento ${4 - intentos}):`, error.message);
         
-        // Si aún quedan intentos, esperar y reintentar
         if (intentos > 1) {
-            const espera = (4 - intentos) * 1000; // 1s, 2s, 3s...
+            const espera = (4 - intentos) * 1000;
             console.log(`⏳ Reintentando en ${espera/1000} segundos...`);
             await new Promise(resolve => setTimeout(resolve, espera));
             return cargarProductos(intentos - 1);
         }
         
-        // Si se agotaron los intentos, intentar cargar desde caché local
         console.error('❌ No se pudo conectar después de varios intentos. Usando caché local.');
         const datosLocales = cargarProductosLocal();
         
@@ -570,14 +530,12 @@ function obtenerProductoPorNombre(nombre) {
 // ============================================
 function obtenerTallasDelProductoActual() {
     const producto = obtenerProductoPorNombre(productoPedidoActual);
-    if (!producto) return [];
-    return producto.tallasDisponibles || [];
+    return producto?.tallasDisponibles || [];
 }
 
 function obtenerTipoTallasDelProductoActual() {
     const producto = obtenerProductoPorNombre(productoPedidoActual);
-    if (!producto) return 'alfabeticas';
-    return producto.tipoTallas || 'alfabeticas';
+    return producto?.tipoTallas || 'alfabeticas';
 }
 
 // ============================================
@@ -1114,7 +1072,6 @@ async function enviarPedidoPor(via) {
     const metodoPago = safeRadio('metodo-pago', 'efectivo');
     const contactoPreferido = safeRadio('contacto-preferido', 'whatsapp');
 
-    // Recoger variantes
     const variantesItems = document.querySelectorAll('.variante-item');
     const variantes = [];
     let cantidadAsignada = 0;
@@ -1133,7 +1090,6 @@ async function enviarPedidoPor(via) {
 
     const cantidadTotal = parseInt(document.getElementById('cantidad-total')?.value) || 1;
 
-    // Validaciones
     if (!nombre) {
         mostrarNotificacion('Por favor, escribe tu nombre', 'error');
         document.getElementById('pedido-nombre')?.focus();
@@ -1205,7 +1161,6 @@ async function enviarPedidoPor(via) {
         via
     };
 
-    // Guardar en el Worker
     try {
         const respuesta = await fetch(`${API_URL}/pedidos`, {
             method: 'POST',
@@ -1223,7 +1178,6 @@ async function enviarPedidoPor(via) {
         console.warn('⚠️ Error al guardar pedido:', error);
     }
 
-    // Mensaje
     const mensaje = `¡Hola! Quiero hacer un pedido:\n\n` +
         `📦 Producto: ${productoPedidoActual}\n` +
         `👤 Nombre: ${nombre}\n` +
@@ -1244,7 +1198,6 @@ async function enviarPedidoPor(via) {
 
     const mensajeEncoded = encodeURIComponent(mensaje);
 
-    // Abrir vía
     if (via === 'whatsapp') {
         const esMovil = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         const url = esMovil 
@@ -1259,7 +1212,6 @@ async function enviarPedidoPor(via) {
         mostrarNotificacion('¡Pedido enviado! Te contactaremos pronto.', 'success');
     }
 
-    // Cerrar modal
     setTimeout(() => {
         const modalPedido = document.getElementById('modal-pedido');
         const formPedido = document.getElementById('modal-pedido-form');
@@ -1360,7 +1312,6 @@ function cargarAdminProductos() {
     renderizarUsuariosAdmin();
 }
 
-// --- Tabs del admin ---
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.admin-tab').forEach(tab => {
         tab.addEventListener('click', function() {
@@ -1524,7 +1475,6 @@ async function eliminarProductoAdmin(id) {
     }
 }
 
-// --- Sistema de tallas en admin ---
 function cambiarTipoTallas(tipo) {
     const alfabeticas = document.getElementById('tallas-alfabeticas');
     const numericas = document.getElementById('tallas-numericas');
@@ -2896,7 +2846,6 @@ document.addEventListener('DOMContentLoaded', function() {
 async function iniciar() {
     console.log('🚀 Cargando productos...');
 
-    // Mostrar estado de carga en los grids vacíos
     document.querySelectorAll('.grid-productos').forEach(grid => {
         if (grid.children.length === 0) {
             grid.innerHTML = '<p style="text-align:center;padding:40px;color:var(--color-gris);">Cargando productos...</p>';
@@ -2984,45 +2933,7 @@ window.cargarTallasProducto = cargarTallasProducto;
 window.obtenerTallasSeleccionadas = obtenerTallasSeleccionadas;
 
 // ============================================
-// 32. BOTÓN DE RECARGAR
-// ============================================
-async function recargarProductos() {
-    const btn = document.getElementById('btn-recargar');
-    if (!btn) return;
-
-    btn.classList.add('recargando');
-    btn.disabled = true;
-
-    try {
-        const datos = await cargarProductos();
-        if (datos) {
-            datosGlobales = datos;
-            adminDatos = JSON.parse(JSON.stringify(datos));
-
-            renderizarOfertas(datos.ofertas, datos);
-            renderizarProductosConModal(datos.productos.hombre, '#ropa-hombre .grid-productos', datos);
-            renderizarProductosConModal(datos.productos.mujer, '#ropa-mujer .grid-productos', datos);
-            renderizarProductosConModal(datos.productos.telas, '#telas .grid-productos', datos);
-            renderizarProductosConModal(datos.productos.objetos, '#otros .grid-productos', datos);
-
-            mostrarNotificacion('Productos actualizados', 'success');
-        }
-    } catch (error) {
-        console.error('Error al recargar:', error);
-        mostrarNotificacion('Error al recargar productos', 'error');
-    } finally {
-        setTimeout(() => {
-            btn.classList.remove('recargando');
-            btn.disabled = false;
-        }, 500);
-    }
-}
-
-document.getElementById('btn-recargar')?.addEventListener('click', recargarProductos);
-window.recargarProductos = recargarProductos;
-
-// ============================================
-// 33. MENÚ HAMBURGUESA
+// 32. MENÚ HAMBURGUESA
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
     const hamburguesa = document.getElementById('menu-hamburguesa');

@@ -1,0 +1,62 @@
+/* ============================================ */
+/* 1. RESET Y VARIABLES GLOBALES                */
+/* ============================================ */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --color-negro: #1A1A1A;
+    --color-naranja: #E87A20;
+    --color-crema: #F5E6D3;
+    --color-blanco: #FFFFFF;
+    --color-gris: #6B6B6B;
+    --font-serif: 'Playfair Display', serif;
+    --font-sans: 'Inter', sans-serif;
+    --header-height: 80px;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: var(--font-sans);
+    color: var(--color-negro);
+    background-color: var(--color-blanco);
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main, .main-content {
+    flex: 1;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* ============================================ */
+/* 2. TIPOGRAFÍA Y TÍTULOS                      */
+/* ============================================ */
+.section-title {
+    font-family: var(--font-serif);
+    font-size: 2.8rem;
+    font-weight: 700;
+    color: var(--color-negro);
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.section-subtitle {
+    text-align: center;
+    font-size: 1.1rem;
+    color: var(--color-gris);
+    margin-bottom: 50px;
+}
