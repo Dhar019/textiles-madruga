@@ -175,11 +175,18 @@ document.addEventListener('DOMContentLoaded', function() {
     if (btnAyuda && modalAyuda) {
         const abrirAyuda = () => {
             modalAyuda.className = 'login-visible';
+            // ✅ FORZAR SCROLL ARRIBA
+            const contenido = modalAyuda.querySelector('.ayuda-contenido');
+            if (contenido) contenido.scrollTop = 0;
             scrollModalAlTop(modalAyuda);
         };
         const cerrarModalAyuda = () => {
             modalAyuda.className = 'login-oculto';
-            setTimeout(() => scrollModalAlTop(modalAyuda), 50);
+            setTimeout(() => {
+                const contenido = modalAyuda.querySelector('.ayuda-contenido');
+                if (contenido) contenido.scrollTop = 0;
+                scrollModalAlTop(modalAyuda);
+            }, 50);
         };
 
         btnAyuda.addEventListener('click', abrirAyuda);

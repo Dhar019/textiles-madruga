@@ -17,3 +17,24 @@
 .personalizado-card p {
     color: var(--color-crema);
 }
+
+/* ============================================ */
+/* FIX: ETIQUETA DE OFERTA ESPECIAL             */
+/* ============================================ */
+.etiqueta-oferta {
+    display: inline-block;
+    background-color: var(--color-naranja) !important;
+    color: var(--color-blanco) !important;
+    padding: 8px 24px !important;
+    border-radius: 50px !important;
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 2px !important;
+    text-transform: uppercase !important;
+    margin-bottom: 15px !important;
+    box-shadow: 0 4px 15px rgba(232, 122, 32, 0.3) !important;
+}
+
+.ofertas-header {
+    text-align: center !important; /* Para centrar la etiqueta */
+}
