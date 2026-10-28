@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     actualizarBotonAcceder();
 
-    // 3. LISTENERS GLOBALES
+    // 3. LISTENERS GLOBALES (AQUÍ ESTABA EL PROBLEMA, SE PERDÍAN LOS BOTONES)
     document.getElementById('btn-acceder')?.addEventListener('click', function(e) {
         e.preventDefault();
         const session = getSession();

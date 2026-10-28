@@ -187,8 +187,8 @@ function renderizarOfertas(ofertasIds, datos) {
                 <p class="producto-descripcion-corta">${descripcionOferta}</p>
                 <p class="producto-precio">
                     ${mostrarPrecioOferta 
-                        ? `<span class="tachado">${producto.precio.toFixed(2)} CUP</span>
-                           <span class="precio-oferta-grande">${precioOferta.toFixed(2)} CUP</span>`
+                        ?  `<span class="tachado">${producto.precio.toFixed(2)} CUP</span>
+                            <span class="precio-oferta-grande">${precioOferta.toFixed(2)} CUP</span>`
                         : `${producto.precio.toFixed(2)} CUP`}
                 </p>
                 <button class="btn-secundario btn-detalle" data-id="${producto.id || producto._id}">Ver detalle</button>
@@ -352,6 +352,10 @@ function abrirModal(producto, datos) {
     modal.className = 'modal-visible';
     document.body.classList.add('modal-abierto');
     scrollModalAlTop(modal);
+
+    // ✅ ENLAZAMOS EL BOTÓN DE CERRAR MODAL AQUÍ MISMO
+    document.getElementById('modal-cerrar').onclick = cerrarModal;
+    document.getElementById('modal-overlay').onclick = cerrarModal;
 }
 
 function cerrarModal() {
@@ -400,11 +404,11 @@ function crearVarianteHTML(talla = '', cantidad = 1) {
                 <div class="variante-cantidad-wrapper" style="flex: 0 0 140px;">
                     <button type="button" class="variante-btn-restar" onclick="cambiarCantidadVariante(${id}, -1)">−</button>
                     <input type="number" 
-                           class="variante-cantidad" 
-                           value="${cantidad}" 
-                           min="1" 
-                           max="999"
-                           oninput="actualizarValidacionVariantes()">
+                            class="variante-cantidad" 
+                            value="${cantidad}" 
+                            min="1" 
+                            max="999"
+                            oninput="actualizarValidacionVariantes()">
                     <button type="button" class="variante-btn-sumar" onclick="cambiarCantidadVariante(${id}, 1)">+</button>
                 </div>
             </div>
