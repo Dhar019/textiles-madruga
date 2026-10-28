@@ -91,7 +91,15 @@ async function cargarProductos(intentos = 3) {
     if (intentos === 3) {
         document.querySelectorAll('.grid-productos').forEach(grid => {
             if (grid.children.length === 0) {
-                grid.innerHTML = '<p style="text-align:center;padding:40px;color:var(--color-gris);">Cargando productos...</p>';
+                // ✅ HTML DEL LOADER
+                grid.innerHTML = `
+                    <div class="loader-container">
+                        <div class="loader-dots">
+                            <span></span><span></span><span></span>
+                        </div>
+                        <p>Cargando productos...</p>
+                    </div>
+                `;
             }
         });
     }
