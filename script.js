@@ -2604,10 +2604,21 @@ function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit }) {
 function mostrarModalBienvenida() {
     const modal = document.getElementById('modal-bienvenida');
     if (!modal) return;
+
+    // Forzar repintado antes de mostrar el modal (evita trabas)
+    void modal.offsetHeight;
+
     modal.className = 'bienvenida-visible';
     bloquearScrollBody(true);
     document.body.classList.add('bienvenida-abierta');
     scrollModalAlTop(modal);
+
+    // Safety check: si en 100ms el modal no se ve, restaurar scroll
+    setTimeout(() => {
+        if (!hayModalAbierto()) {
+            bloquearScrollBody(false);
+        }
+    }, 100);
 }
 
 function cerrarModalBienvenida() {
@@ -2615,7 +2626,8 @@ function cerrarModalBienvenida() {
     if (!modal) return;
     modal.className = 'bienvenida-oculto';
     document.body.classList.remove('bienvenida-abierta');
-    restaurarScrollSiEsNecesario();
+    // Forzar restauración del scroll inmediatamente
+    bloquearScrollBody(false);
 }
 
 document.getElementById('modal-bienvenida-crear')?.addEventListener('click', function() {
