@@ -10,7 +10,7 @@
     <!-- ============================================ -->
     <meta http-equiv="Content-Security-Policy" content="
         default-src 'self';
-        script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://cdn.jsdelivr.net;
+        script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com;
         frame-src 'self' https://challenges.cloudflare.com;
         connect-src 'self' https://textiles-madruga-api.eldani000219.workers.dev https://challenges.cloudflare.com https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com data:;
         style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
@@ -30,9 +30,6 @@
     <link rel="stylesheet" href="estilos/3-componentes.css">
     <link rel="stylesheet" href="estilos/4-paginas.css">
     <link rel="stylesheet" href="estilos/5-responsive.css">
-
-    <!-- EmailJS -->
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
 
@@ -303,6 +300,7 @@
                 <div class="modal-loading">Cargando...</div>
             </div>
         </div>
+    </div>
 
     <!-- PANEL ADMIN -->
     <div id="admin-panel" class="admin-oculto">
