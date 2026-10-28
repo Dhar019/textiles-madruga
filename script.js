@@ -1,6 +1,6 @@
 // ============================================
 // SCRIPT.JS - Textiles Madruga
-// Versión 6.6 - Modal inmediato y scroll nativo
+// Versión 6.4 - Modal inmediato + scroll forzado
 // ============================================
 
 // ============================================
@@ -48,8 +48,6 @@ function scrollModalAlTop(modalElement) {
 
 // ✅ Ya no bloqueamos el scroll del body
 function bloquearScrollBody(bloquear) {
-    // Esta función ahora está vacía intencionalmente.
-    // El control del scroll se maneja con CSS (touch-action en overlays).
     return;
 }
 
@@ -72,7 +70,6 @@ function hayModalAbierto() {
 }
 
 function restaurarScrollSiEsNecesario() {
-    // Esta función ahora está vacía intencionalmente.
     return;
 }
 
