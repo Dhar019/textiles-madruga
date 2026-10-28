@@ -20,7 +20,6 @@
 
 html {
     scroll-behavior: smooth;
-    /* ✅ Forzar scroll siempre visible */
     overflow-y: scroll;
 }
 
@@ -32,8 +31,6 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    /* ✅ Forzar scroll siempre visible */
-    overflow-y: scroll;
 }
 
 main, .main-content {
