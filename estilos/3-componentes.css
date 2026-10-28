@@ -452,7 +452,7 @@
     background: rgba(0, 0, 0, 0.75);
     animation: fadeIn 0.3s ease;
     z-index: 9998;
-    /* Bloquear el scroll SIN tocar el body */
+    /*  Bloquear el scroll SIN tocar el body */
     touch-action: none;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: auto;
@@ -511,6 +511,7 @@
     display: block !important;
     width: 18px !important;
     height: 18px !important;
+    pointer-events: none;
 }
 
 .modal-cerrar:hover, .login-cerrar:hover, .admin-cerrar:hover, .bienvenida-cerrar:hover, .lightbox-cerrar:hover {
@@ -1165,7 +1166,7 @@
 .bienvenida-contenido {
     max-width: 900px;
     flex-direction: row;
-    animation: none !important;
+    will-change: transform, opacity;
 }
 
 .bienvenida-decoracion {

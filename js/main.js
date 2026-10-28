@@ -52,6 +52,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (session) { if (isAdmin()) abrirAdmin(); else mostrarNotificacion('Sesión activa como: ' + session.username, 'info'); }
         else mostrarLogin();
     });
+    
+    document.getElementById('login-cerrar')?.addEventListener('click', cerrarLogin);
+    document.getElementById('login-overlay')?.addEventListener('click', cerrarLogin);
 
     document.getElementById('btn-cerrar-sesion')?.addEventListener('click', async function(e) {
         e.preventDefault();
