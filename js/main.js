@@ -52,9 +52,14 @@ document.addEventListener('DOMContentLoaded', function() {
         if (session) { if (isAdmin()) abrirAdmin(); else mostrarNotificacion('Sesión activa como: ' + session.username, 'info'); }
         else mostrarLogin();
     });
-    
-    document.getElementById('login-cerrar')?.addEventListener('click', cerrarLogin);
-    document.getElementById('login-overlay')?.addEventListener('click', cerrarLogin);
+
+    // CIERRE DEL LOGIN CON DELEGACIÓN DE EVENTOS (a prueba de balas)
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('#login-cerrar') || e.target.closest('#login-overlay')) {
+            console.log('🔒 Cerrando login (delegación)');
+            cerrarLogin();
+        }
+    });
 
     document.getElementById('btn-cerrar-sesion')?.addEventListener('click', async function(e) {
         e.preventDefault();
