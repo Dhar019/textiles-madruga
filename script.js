@@ -1,6 +1,6 @@
 // ============================================
 // SCRIPT.JS - Textiles Madruga
-// Versión 6.2 - Fix congelamiento de página
+// Versión 6.3 - Modal de bienvenida inmediato
 // ============================================
 
 // ============================================
@@ -46,16 +46,11 @@ function scrollModalAlTop(modalElement) {
     document.body.scrollTop = 0;
 }
 
-// ✅ FIX: Solo overflow, sin position: fixed (evita congelamiento)
+// ✅ Ya no bloqueamos el scroll del body
 function bloquearScrollBody(bloquear) {
-    if (bloquear) {
-        document.body.style.overflow = 'hidden';
-    } else {
-        document.body.style.overflow = '';
-    }
+    return;
 }
 
-// ✅ FIX: Verificar si hay modal abierto (ampliado)
 function hayModalAbierto() {
     const modales = [
         'modal-detalle', 'admin-panel', 'login-modal', 'modal-generico',
@@ -74,11 +69,8 @@ function hayModalAbierto() {
     return false;
 }
 
-// ✅ FIX: Restaurar scroll solo si no hay modales abiertos
 function restaurarScrollSiEsNecesario() {
-    if (!hayModalAbierto()) {
-        bloquearScrollBody(false);
-    }
+    return;
 }
 
 // ============================================
@@ -180,7 +172,6 @@ async function logout() {
     if (adminPanel) adminPanel.className = 'admin-oculto';
 
     document.body.classList.remove('admin-abierto');
-    bloquearScrollBody(false);
 
     actualizarBotonAcceder();
     actualizarBotonCerrarSesion();
@@ -268,7 +259,6 @@ function protegerAdmin() {
 // 6. VERIFICACIÓN PERIÓDICA DE SESIÓN
 // ============================================
 function iniciarVerificadorSesion() {
-    // ✅ FIX: Detener cualquier verificador previo ANTES de crear uno nuevo
     detenerVerificadorSesion();
     
     const session = getSession();
@@ -297,7 +287,7 @@ function iniciarVerificadorSesion() {
         } catch (error) {
             console.warn('⚠️ Verificación de sesión falló:', error.message);
         }
-    }, 60000); // ✅ FIX: Aumentado a 60 segundos
+    }, 60000);
 }
 
 function detenerVerificadorSesion() {
@@ -453,11 +443,9 @@ function confirmar(opciones) {
         }
 
         modal.className = 'confirmar-visible';
-        bloquearScrollBody(true);
 
         const cerrar = (resultado) => {
             modal.className = 'confirmar-oculto';
-            restaurarScrollSiEsNecesario();
             btnAceptar.onclick = null;
             btnCancelar.onclick = null;
             overlay.onclick = null;
@@ -813,7 +801,6 @@ function abrirModal(producto, datos) {
     `;
 
     modal.className = 'modal-visible';
-    bloquearScrollBody(true);
     document.body.classList.add('modal-abierto');
     scrollModalAlTop(modal);
 }
@@ -821,7 +808,6 @@ function abrirModal(producto, datos) {
 function cerrarModal() {
     modal.className = 'modal-oculto';
     document.body.classList.remove('modal-abierto');
-    restaurarScrollSiEsNecesario();
 }
 
 modalCerrar?.addEventListener('click', cerrarModal);
@@ -841,7 +827,6 @@ function abrirLightbox(src, alt) {
     lightboxImg.src = src;
     lightboxImg.alt = alt || 'Imagen ampliada';
     lightbox.className = 'lightbox-visible';
-    bloquearScrollBody(true);
     document.body.classList.add('lightbox-abierto');
 }
 
@@ -849,7 +834,6 @@ function cerrarLightbox() {
     if (!lightbox) return;
     lightbox.className = 'lightbox-oculto';
     document.body.classList.remove('lightbox-abierto');
-    restaurarScrollSiEsNecesario();
 }
 
 lightboxImg?.addEventListener('click', function(e) {
@@ -1068,7 +1052,6 @@ function solicitarPedido(producto) {
     document.documentElement.scrollTop = 0;
     
     modalPedido.className = 'login-visible';
-    bloquearScrollBody(true);
     
     setTimeout(() => {
         if (formPedido) formPedido.scrollTop = 0;
@@ -1079,7 +1062,6 @@ function solicitarPedido(producto) {
 
     const cerrar = () => {
         modalPedido.className = 'login-oculto';
-        restaurarScrollSiEsNecesario();
         if (formPedido) formPedido.reset();
         productoPedidoActual = '';
         if (formPedido) formPedido.scrollTop = 0;
@@ -1280,7 +1262,6 @@ async function enviarPedidoPor(via) {
             if (formPedido) formPedido.scrollTop = 0;
             scrollModalAlTop(modalPedido);
         }
-        restaurarScrollSiEsNecesario();
         if (formPedido) formPedido.reset();
         productoPedidoActual = '';
     }, 2000);
@@ -1299,12 +1280,10 @@ document.addEventListener('DOMContentLoaded', function() {
     if (btnAyuda && modalAyuda) {
         const abrirAyuda = () => {
             modalAyuda.className = 'login-visible';
-            bloquearScrollBody(true);
             scrollModalAlTop(modalAyuda);
         };
         const cerrarModalAyuda = () => {
             modalAyuda.className = 'login-oculto';
-            restaurarScrollSiEsNecesario();
             setTimeout(() => scrollModalAlTop(modalAyuda), 50);
         };
 
@@ -1335,7 +1314,6 @@ const loginOverlay = document.getElementById('login-overlay');
 function mostrarLogin() {
     if (loginModal) {
         loginModal.className = 'login-visible';
-        bloquearScrollBody(true);
         scrollModalAlTop(loginModal);
     }
 }
@@ -1343,14 +1321,12 @@ function mostrarLogin() {
 function cerrarLogin() {
     if (loginModal) {
         loginModal.className = 'login-oculto';
-        restaurarScrollSiEsNecesario();
     }
 }
 
 function abrirAdmin() {
     if (!protegerAdmin()) return;
     adminPanel.className = 'admin-visible';
-    bloquearScrollBody(true);
     document.body.classList.add('admin-abierto');
     cargarAdminProductos();
     reiniciarTemporizadorInactividad();
@@ -1362,7 +1338,6 @@ function abrirAdmin() {
 function cerrarAdmin() {
     adminPanel.className = 'admin-oculto';
     document.body.classList.remove('admin-abierto');
-    restaurarScrollSiEsNecesario();
     if (formProducto) formProducto.className = 'form-oculto';
 }
 
@@ -2576,12 +2551,10 @@ function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit }) {
     });
 
     modal.className = 'login-visible';
-    bloquearScrollBody(true);
     scrollModalAlTop(modal);
 
     const cerrarModal = () => {
         modal.className = 'login-oculto';
-        restaurarScrollSiEsNecesario();
         form.reset();
     };
     cerrar.onclick = cerrarModal;
@@ -2605,20 +2578,12 @@ function mostrarModalBienvenida() {
     const modal = document.getElementById('modal-bienvenida');
     if (!modal) return;
 
-    // Forzar repintado antes de mostrar el modal (evita trabas)
+    // Forzar repintado antes de mostrar el modal
     void modal.offsetHeight;
 
     modal.className = 'bienvenida-visible';
-    bloquearScrollBody(true);
     document.body.classList.add('bienvenida-abierta');
     scrollModalAlTop(modal);
-
-    // Safety check: si en 100ms el modal no se ve, restaurar scroll
-    setTimeout(() => {
-        if (!hayModalAbierto()) {
-            bloquearScrollBody(false);
-        }
-    }, 100);
 }
 
 function cerrarModalBienvenida() {
@@ -2626,8 +2591,6 @@ function cerrarModalBienvenida() {
     if (!modal) return;
     modal.className = 'bienvenida-oculto';
     document.body.classList.remove('bienvenida-abierta');
-    // Forzar restauración del scroll inmediatamente
-    bloquearScrollBody(false);
 }
 
 document.getElementById('modal-bienvenida-crear')?.addEventListener('click', function() {
@@ -2919,8 +2882,15 @@ document.addEventListener('DOMContentLoaded', function() {
 // ============================================
 async function iniciar() {
     console.log('🚀 Iniciando aplicación...');
-    console.log('📊 Verificador de sesión previo:', verificadorSesion);
 
+    // ✅ MOSTRAR MODAL DE BIENVENIDA INMEDIATAMENTE (antes de cargar productos)
+    if (!isLoggedIn()) {
+        requestAnimationFrame(() => {
+            mostrarModalBienvenida();
+        });
+    }
+
+    // Placeholder mientras cargan los productos
     document.querySelectorAll('.grid-productos').forEach(grid => {
         if (grid.children.length === 0) {
             grid.innerHTML = '<p style="text-align:center;padding:40px;color:var(--color-gris);">Cargando productos...</p>';
@@ -2951,9 +2921,7 @@ async function iniciar() {
 
     actualizarBotonAcceder();
 
-    if (!isLoggedIn()) {
-        setTimeout(mostrarModalBienvenida, 1500);
-    } else {
+    if (isLoggedIn()) {
         iniciarVerificadorSesion();
     }
 }
@@ -3071,26 +3039,3 @@ async function recargarProductos() {
 
 document.getElementById('btn-recargar')?.addEventListener('click', recargarProductos);
 window.recargarProductos = recargarProductos;
-
-// ============================================
-// SAFETY CHECK: Restaurar scroll si se quedó bloqueado
-// ============================================
-window.addEventListener('load', () => {
-    setTimeout(() => {
-        if (!hayModalAbierto()) {
-            bloquearScrollBody(false);
-            console.log('✅ Scroll del body verificado y restaurado');
-        }
-    }, 2000);
-});
-
-// También restaurar cuando la página se vuelve visible
-document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) {
-        setTimeout(() => {
-            if (!hayModalAbierto()) {
-                bloquearScrollBody(false);
-            }
-        }, 500);
-    }
-});

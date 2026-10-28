@@ -442,7 +442,7 @@
     display: block !important;
 }
 
-/* ✅ Overlays SIN backdrop-filter blur (evita congelamiento) */
+/* Overlays SIN backdrop-filter blur (evita congelamiento) */
 .modal-overlay, .login-overlay, .admin-overlay, .confirmar-overlay, .bienvenida-overlay, .lightbox-overlay {
     position: fixed;
     top: 0;
@@ -452,6 +452,10 @@
     background: rgba(0, 0, 0, 0.75);
     animation: fadeIn 0.3s ease;
     z-index: 9998;
+    /* Bloquear el scroll SIN tocar el body */
+    touch-action: none;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: auto;
 }
 
 .modal-contenido, .login-contenido, .admin-contenido, .confirmar-contenido, .bienvenida-contenido {
@@ -1161,7 +1165,7 @@
 .bienvenida-contenido {
     max-width: 900px;
     flex-direction: row;
-    will-change: transform, opacity;
+    animation: none !important;
 }
 
 .bienvenida-decoracion {
