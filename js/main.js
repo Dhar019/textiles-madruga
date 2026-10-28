@@ -1,6 +1,7 @@
 // ============================================
 // ORQUESTADOR PRINCIPAL E INICIALIZACIÓN
 // ============================================
+console.log('🚀 [main.js] Cargando orquestador...');
 
 function actualizarBotonAcceder() {
     const session = getSession();
@@ -18,145 +19,156 @@ function actualizarBotonCerrarSesion() {
     if (btnCerrarSesion) { if (session) btnCerrarSesion.classList.add('visible'); else btnCerrarSesion.classList.remove('visible'); }
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Iniciando aplicación...');
+// Función principal que se ejecuta cuando el DOM está listo
+function inicializarApp() {
+    try {
+        console.log('✅ [DOM] Listo. Iniciando enlace de eventos...');
 
-    // 1. MOSTRAR EL MODAL DE BIENVENIDA INMEDIATAMENTE
-    if (!isLoggedIn()) {
-        mostrarModalBienvenida();
-    }
-
-    // 2. CARGAR PRODUCTOS EN PARALELO
-    (async () => {
-        const datos = await cargarProductos();
-        if (datos) {
-            datosGlobales = datos;
-            adminDatos = JSON.parse(JSON.stringify(datos));
-            renderizarOfertas(datos.ofertas, datos);
-            renderizarProductosConModal(datos.productos.hombre, '#ropa-hombre .grid-productos', datos);
-            renderizarProductosConModal(datos.productos.mujer, '#ropa-mujer .grid-productos', datos);
-            renderizarProductosConModal(datos.productos.telas, '#telas .grid-productos', datos);
-            renderizarProductosConModal(datos.productos.objetos, '#otros .grid-productos', datos);
-            console.log('✅ Productos cargados correctamente');
-        } else {
-            console.warn('⚠️ No hay productos. La web funcionará sin catálogo.');
+        // 1. MOSTRAR EL MODAL DE BIENVENIDA INMEDIATAMENTE
+        if (typeof mostrarModalBienvenida === 'function' && !isLoggedIn()) {
+            console.log('✅ [DOM] Mostrando modal de bienvenida...');
+            mostrarModalBienvenida();
         }
-    })();
 
-    actualizarBotonAcceder();
-
-    // 3. LISTENERS GLOBALES (AQUÍ ESTABA EL PROBLEMA, SE PERDÍAN LOS BOTONES)
-    document.getElementById('btn-acceder')?.addEventListener('click', function(e) {
-        e.preventDefault();
-        const session = getSession();
-        if (session) { if (isAdmin()) abrirAdmin(); else mostrarNotificacion('Sesión activa como: ' + session.username, 'info'); }
-        else mostrarLogin();
-    });
-
-    document.getElementById('btn-cerrar-sesion')?.addEventListener('click', async function(e) {
-        e.preventDefault();
-        const confirmado = await confirmar({ titulo: '¿Cerrar sesión?', mensaje: 'Tendrás que volver a iniciar sesión para acceder al panel.', tipo: 'info', textoAceptar: 'Sí, cerrar sesión', textoCancelar: 'Cancelar' });
-        if (confirmado) logout();
-    });
-
-    document.getElementById('login-form')?.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const username = document.getElementById('login-user').value.trim();
-        const password = document.getElementById('login-pass').value;
-        const result = await login(username, password);
-        if (result.success) {
-            cerrarLogin();
-            actualizarBotonAcceder();
-            if (isAdmin()) { mostrarNotificacion('Bienvenido administrador', 'success'); abrirAdmin(); }
-            else { mostrarNotificacion('Bienvenido ' + username, 'success'); }
-        } else { mostrarNotificacion(result.message, 'error'); }
-    });
-
-    document.getElementById('login-registro-link')?.addEventListener('click', function(e) {
-        e.preventDefault();
-        cerrarLogin();
-        abrirModalGenerico({
-            titulo: 'Crear Cuenta', subtitulo: 'Es rápido, gratis y seguro',
-            campos: [{ id: 'username', label: 'Usuario', type: 'text', required: true }, { id: 'password', label: 'Contraseña', type: 'password', required: true }, { id: 'email', label: 'Gmail', type: 'email', required: true }],
-            onSubmit: async (datos) => {
-                const result = await registerUser(datos.username, datos.password, datos.email, datos.username);
-                if (result.success) { actualizarBotonAcceder(); mostrarNotificacion('Usuario creado. Sesión iniciada.', 'success'); }
-                else { mostrarNotificacion(result.message, 'error'); return false; }
+        // 2. CARGAR PRODUCTOS EN PARALELO
+        console.log('✅ [DOM] Iniciando carga de productos...');
+        (async () => {
+            try {
+                const datos = await cargarProductos();
+                if (datos) {
+                    datosGlobales = datos;
+                    adminDatos = JSON.parse(JSON.stringify(datos));
+                    renderizarOfertas(datos.ofertas, datos);
+                    renderizarProductosConModal(datos.productos.hombre, '#ropa-hombre .grid-productos', datos);
+                    renderizarProductosConModal(datos.productos.mujer, '#ropa-mujer .grid-productos', datos);
+                    renderizarProductosConModal(datos.productos.telas, '#telas .grid-productos', datos);
+                    renderizarProductosConModal(datos.productos.objetos, '#otros .grid-productos', datos);
+                    console.log('✅ [DOM] Productos renderizados correctamente');
+                } else {
+                    console.warn('⚠️ [DOM] No hay productos. La web funcionará sin catálogo.');
+                }
+            } catch (e) {
+                console.error('❌ [Error] Fallo al cargar/renderizar productos:', e);
             }
-        });
-    });
+        })();
 
-    document.getElementById('forzar-cierre-link')?.addEventListener('click', function(e) {
-        e.preventDefault();
-        cerrarLogin();
-        abrirModalGenerico({
-            titulo: 'Forzar cierre de sesión', subtitulo: 'Introduce tus credenciales para desbloquear tu cuenta',
-            campos: [{ id: 'username', label: 'Usuario', type: 'text', required: true }, { id: 'password', label: 'Contraseña', type: 'password', required: true }],
-            onSubmit: async (datos) => {
-                if (!datos.username || !datos.password) { mostrarNotificacion('Completa ambos campos', 'error'); return false; }
-                try {
-                    const respuesta = await fetch(`${API_URL}/auth/force-logout`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: datos.username, password: datos.password }) });
-                    const data = await respuesta.json();
-                    if (respuesta.ok) { mostrarNotificacion('Sesión cerrada. Ya puedes iniciar sesión.', 'success'); localStorage.removeItem(SESSION_KEY); sessionStorage.removeItem('tm_pestana_activa'); setTimeout(() => mostrarLogin(), 800); }
-                    else { mostrarNotificacion(data.error || 'Error al forzar cierre', 'error'); return false; }
-                } catch (error) { mostrarNotificacion('Error de conexión', 'error'); return false; }
-            }
-        });
-    });
+        actualizarBotonAcceder();
 
-    // Menú Hamburguesa
-    const hamburguesa = document.getElementById('menu-hamburguesa');
-    const nav = document.getElementById('nav-principal');
-    if (hamburguesa && nav) {
-        hamburguesa.addEventListener('click', function(event) { event.stopPropagation(); this.classList.toggle('activo'); nav.classList.toggle('activo'); });
-        nav.querySelectorAll('a').forEach(enlace => { enlace.addEventListener('click', () => { hamburguesa.classList.remove('activo'); nav.classList.remove('activo'); }); });
-        document.addEventListener('click', function(event) { if (!nav.contains(event.target) && !hamburguesa.contains(event.target)) { hamburguesa.classList.remove('activo'); nav.classList.remove('activo'); } });
-    }
-
-    // Modales de detalle y lightbox
-    document.getElementById('modal-cerrar')?.addEventListener('click', cerrarModal);
-    document.getElementById('modal-overlay')?.addEventListener('click', cerrarModal);
-    document.getElementById('lightbox-cerrar')?.addEventListener('click', cerrarLightbox);
-    document.getElementById('lightbox-overlay')?.addEventListener('click', cerrarLightbox);
-
-    // Variantes de pedido
-    document.getElementById('cantidad-total-sumar')?.addEventListener('click', () => cambiarCantidadTotal(1));
-    document.getElementById('cantidad-total-restar')?.addEventListener('click', () => cambiarCantidadTotal(-1));
-    document.getElementById('btn-añadir-variante')?.addEventListener('click', () => añadirVariante());
-
-    // Recargar Productos
-    document.getElementById('btn-recargar')?.addEventListener('click', async function() {
-        this.classList.add('spinning');
-        const datos = await cargarProductos();
-        if (datos) {
-            datosGlobales = datos; adminDatos = JSON.parse(JSON.stringify(datos));
-            renderizarOfertas(datos.ofertas, datos);
-            renderizarProductosConModal(datos.productos.hombre, '#ropa-hombre .grid-productos', datos);
-            renderizarProductosConModal(datos.productos.mujer, '#ropa-mujer .grid-productos', datos);
-            renderizarProductosConModal(datos.productos.telas, '#telas .grid-productos', datos);
-            renderizarProductosConModal(datos.productos.objetos, '#otros .grid-productos', datos);
-            mostrarNotificacion('Productos actualizados', 'success');
+        // 3. LISTENERS GLOBALES
+        console.log('✅ [DOM] Enlazando botones...');
+        
+        // Botón Acceder
+        const btnAcceder = document.getElementById('btn-acceder');
+        if (btnAcceder) {
+            btnAcceder.addEventListener('click', function(e) {
+                e.preventDefault();
+                const session = getSession();
+                if (session) { if (isAdmin()) abrirAdmin(); else mostrarNotificacion('Sesión activa como: ' + session.username, 'info'); }
+                else mostrarLogin();
+            });
+            console.log('  -> Botón "Acceder" enlazado.');
         }
-        setTimeout(() => this.classList.remove('spinning'), 500);
-    });
 
-    // Dropzone para admin
-    const dropZone = document.getElementById('drop-zone');
-    const fileInput = document.getElementById('prod-imagen-file');
-    if (dropZone && fileInput) {
-        dropZone.addEventListener('click', () => fileInput.click());
-        fileInput.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
-                const reader = new FileReader();
-                reader.onload = (ev) => {
-                    const prev = document.getElementById('drop-zone-preview'); const cont = document.getElementById('drop-zone-content'); const hidden = document.getElementById('prod-imagen');
-                    if (prev && cont && hidden) { prev.src = ev.target.result; prev.style.display = 'block'; cont.style.display = 'none'; hidden.value = ev.target.result; }
-                };
-                reader.readAsDataURL(e.target.files[0]);
+        // Botón Cerrar Sesión
+        const btnCerrarSesion = document.getElementById('btn-cerrar-sesion');
+        if (btnCerrarSesion) {
+            btnCerrarSesion.addEventListener('click', async function(e) {
+                e.preventDefault();
+                const confirmado = await confirmar({ titulo: '¿Cerrar sesión?', mensaje: 'Tendrás que volver a iniciar sesión para acceder al panel.', tipo: 'info', textoAceptar: 'Sí, cerrar sesión', textoCancelar: 'Cancelar' });
+                if (confirmado) logout();
+            });
+            console.log('  -> Botón "Cerrar Sesión" enlazado.');
+        }
+
+        // Formulario de Login
+        const loginForm = document.getElementById('login-form');
+        if (loginForm) {
+            loginForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const username = document.getElementById('login-user').value.trim();
+                const password = document.getElementById('login-pass').value;
+                const result = await login(username, password);
+                if (result.success) {
+                    cerrarLogin();
+                    actualizarBotonAcceder();
+                    if (isAdmin()) { mostrarNotificacion('Bienvenido administrador', 'success'); abrirAdmin(); }
+                    else { mostrarNotificacion('Bienvenido ' + username, 'success'); }
+                } else { mostrarNotificacion(result.message, 'error'); }
+            });
+            console.log('  -> Formulario de Login enlazado.');
+        }
+
+        // Menú Hamburguesa
+        const hamburguesa = document.getElementById('menu-hamburguesa');
+        const nav = document.getElementById('nav-principal');
+        if (hamburguesa && nav) {
+            hamburguesa.addEventListener('click', function(event) { event.stopPropagation(); this.classList.toggle('activo'); nav.classList.toggle('activo'); });
+            nav.querySelectorAll('a').forEach(enlace => { enlace.addEventListener('click', () => { hamburguesa.classList.remove('activo'); nav.classList.remove('activo'); }); });
+            document.addEventListener('click', function(event) { if (!nav.contains(event.target) && !hamburguesa.contains(event.target)) { hamburguesa.classList.remove('activo'); nav.classList.remove('activo'); } });
+            console.log('  -> Menú Hamburguesa enlazado.');
+        }
+
+        // Botones de cerrar modales
+        document.getElementById('modal-cerrar')?.addEventListener('click', cerrarModal);
+        document.getElementById('modal-overlay')?.addEventListener('click', cerrarModal);
+        document.getElementById('lightbox-cerrar')?.addEventListener('click', cerrarLightbox);
+        document.getElementById('lightbox-overlay')?.addEventListener('click', cerrarLightbox);
+        document.getElementById('login-cerrar')?.addEventListener('click', cerrarLogin);
+        document.getElementById('login-overlay')?.addEventListener('click', cerrarLogin);
+        console.log('  -> Botones de cierre de modales enlazados.');
+
+        // Botón recargar productos
+        document.getElementById('btn-recargar')?.addEventListener('click', async function() {
+            this.classList.add('spinning');
+            const datos = await cargarProductos();
+            if (datos) {
+                datosGlobales = datos; adminDatos = JSON.parse(JSON.stringify(datos));
+                renderizarOfertas(datos.ofertas, datos);
+                renderizarProductosConModal(datos.productos.hombre, '#ropa-hombre .grid-productos', datos);
+                renderizarProductosConModal(datos.productos.mujer, '#ropa-mujer .grid-productos', datos);
+                renderizarProductosConModal(datos.productos.telas, '#telas .grid-productos', datos);
+                renderizarProductosConModal(datos.productos.objetos, '#otros .grid-productos', datos);
+                mostrarNotificacion('Productos actualizados', 'success');
             }
+            setTimeout(() => this.classList.remove('spinning'), 500);
         });
+        console.log('  -> Botón Recargar enlazado.');
+
+        // Dropzone para admin
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('prod-imagen-file');
+        if (dropZone && fileInput) {
+            dropZone.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        const prev = document.getElementById('drop-zone-preview'); const cont = document.getElementById('drop-zone-content'); const hidden = document.getElementById('prod-imagen');
+                        if (prev && cont && hidden) { prev.src = ev.target.result; prev.style.display = 'block'; cont.style.display = 'none'; hidden.value = ev.target.result; }
+                    };
+                    reader.readAsDataURL(e.target.files[0]);
+                }
+            });
+            console.log('  -> Dropzone enlazado.');
+        }
+
+        console.log('✅ [DOM] Todos los eventos enlazados correctamente. Fin de inicialización.');
+
+    } catch (error) {
+        console.error('❌❌ [ERROR FATAL EN LA INICIALIZACIÓN] ❌❌');
+        console.error(error);
+        // Alerta visual para saber que hay un error
+        mostrarNotificacion('Error interno al cargar la web. Revisa la consola (F12).', 'error');
     }
-});
+}
+
+// Escuchar el evento DOMContentLoaded
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', inicializarApp);
+} else {
+    // Si el DOM ya está cargado (porque el script se cargó tarde), ejecutar directamente
+    inicializarApp();
+}
 
 // Ojito de contraseña
 document.addEventListener('click', function(e) {
