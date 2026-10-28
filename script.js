@@ -1,6 +1,6 @@
 // ============================================
 // SCRIPT.JS - Textiles Madruga
-// Versión 6.3 - Modal de bienvenida inmediato
+// Versión 6.4 - Modal inmediato + scroll forzado
 // ============================================
 
 // ============================================
@@ -2883,40 +2883,32 @@ document.addEventListener('DOMContentLoaded', function() {
 async function iniciar() {
     console.log('🚀 Iniciando aplicación...');
 
-    // ✅ MOSTRAR MODAL DE BIENVENIDA INMEDIATAMENTE (antes de cargar productos)
-    if (!isLoggedIn()) {
-        requestAnimationFrame(() => {
-            mostrarModalBienvenida();
-        });
-    }
-
-    // Placeholder mientras cargan los productos
+    // Placeholder mientras cargan los productos (se ve detrás del modal)
     document.querySelectorAll('.grid-productos').forEach(grid => {
         if (grid.children.length === 0) {
             grid.innerHTML = '<p style="text-align:center;padding:40px;color:var(--color-gris);">Cargando productos...</p>';
         }
     });
 
-    let datos = null;
+    // ✅ Cargar productos en paralelo (no bloquea el modal)
     try {
-        datos = await cargarProductos();
+        const datos = await cargarProductos();
+        if (datos) {
+            datosGlobales = datos;
+            adminDatos = JSON.parse(JSON.stringify(datos));
+
+            renderizarOfertas(datos.ofertas, datos);
+            renderizarProductosConModal(datos.productos.hombre, '#ropa-hombre .grid-productos', datos);
+            renderizarProductosConModal(datos.productos.mujer, '#ropa-mujer .grid-productos', datos);
+            renderizarProductosConModal(datos.productos.telas, '#telas .grid-productos', datos);
+            renderizarProductosConModal(datos.productos.objetos, '#otros .grid-productos', datos);
+
+            console.log('✅ Productos cargados correctamente');
+        } else {
+            console.warn('⚠️ No hay productos. La web funcionará sin catálogo.');
+        }
     } catch (e) {
         console.warn('⚠️ Error en cargarProductos:', e);
-    }
-
-    if (datos) {
-        datosGlobales = datos;
-        adminDatos = JSON.parse(JSON.stringify(datos));
-
-        renderizarOfertas(datos.ofertas, datos);
-        renderizarProductosConModal(datos.productos.hombre, '#ropa-hombre .grid-productos', datos);
-        renderizarProductosConModal(datos.productos.mujer, '#ropa-mujer .grid-productos', datos);
-        renderizarProductosConModal(datos.productos.telas, '#telas .grid-productos', datos);
-        renderizarProductosConModal(datos.productos.objetos, '#otros .grid-productos', datos);
-
-        console.log('✅ Productos cargados correctamente');
-    } else {
-        console.warn('⚠️ No hay productos. La web funcionará sin catálogo.');
     }
 
     actualizarBotonAcceder();
@@ -2925,9 +2917,6 @@ async function iniciar() {
         iniciarVerificadorSesion();
     }
 }
-
-document.addEventListener('DOMContentLoaded', iniciar);
-document.addEventListener('DOMContentLoaded', inicializarDropZone);
 
 // ============================================
 // 31. EXPOSICIÓN GLOBAL
@@ -3039,3 +3028,18 @@ async function recargarProductos() {
 
 document.getElementById('btn-recargar')?.addEventListener('click', recargarProductos);
 window.recargarProductos = recargarProductos;
+
+// ============================================
+// 33. DOMContentLoaded PRINCIPAL
+// ============================================
+document.addEventListener('DOMContentLoaded', function() {
+    // ✅ Mostrar el modal de bienvenida INMEDIATAMENTE
+    if (!isLoggedIn()) {
+        mostrarModalBienvenida();
+    }
+
+    // Luego, iniciar el resto (cargar productos, etc.)
+    iniciar();
+});
+
+document.addEventListener('DOMContentLoaded', inicializarDropZone);
