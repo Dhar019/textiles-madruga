@@ -14,15 +14,15 @@
         content: '';
         position: absolute;
         top: 0;
-        right: 15vh;
-        left: auto;
-        width: 150%;
+        left: 0;
+        width: 100%;
         height: 100%;
         background-image: url('../assets/img/banner-tm.webp');
         background-size: contain;
-        background-position: center;
+        background-position: left center;
         background-repeat: no-repeat;
-        opacity: 0.5;
+        opacity: 0.3;
+        filter: brightness(0.4) contrast(1.2);
         z-index: 0;
         pointer-events: none;
     }
@@ -251,4 +251,128 @@
     color: var(--color-crema);
     flex-wrap: wrap;
     text-align: center;
+}
+
+/* ============================================ */
+/* FIX: MODAL DE BIENVENIDA EN MÓVIL            */
+/* ============================================ */
+@media (max-width: 768px) {
+    /* --- MODAL DE BIENVENIDA EN MÓVIL --- */
+    .bienvenida-contenido {
+        flex-direction: column !important;
+        width: 95% !important;
+        max-height: 90vh !important;
+        border-radius: 16px !important;
+        overflow: hidden !important;
+    }
+
+    .bienvenida-decoracion {
+        width: 100% !important;
+        height: 80px !important; 
+        min-height: 80px !important;
+        flex-shrink: 0 !important;
+        position: relative !important;
+    }
+
+    .bienvenida-logo {
+        display: flex !important;
+        flex-direction: row !important; 
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 10px !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        width: 100% !important;
+        padding: 0 !important;
+    }
+
+    .bienvenida-logo-img {
+        height: 40px !important;
+        margin-bottom: 0 !important;
+    }
+
+    .bienvenida-logo-textiles { font-size: 0.9rem !important; }
+    .bienvenida-logo-madruga { font-size: 1.3rem !important; }
+
+    .bienvenida-info {
+        padding: 20px !important;
+        overflow-y: auto !important;
+        flex: 1 !important;
+    }
+
+    .bienvenida-header {
+        margin-bottom: 15px !important;
+    }
+
+    .bienvenida-icono svg {
+        width: 30px !important;
+        height: 30px !important;
+    }
+
+    .bienvenida-titulo { 
+        font-size: 1.3rem !important; 
+        text-align: center !important; 
+        margin-bottom: 5px !important;
+    }
+    
+    .bienvenida-subtitulo { 
+        font-size: 0.8rem !important; 
+        text-align: center !important; 
+    }
+
+    .aviso-navegador {
+        font-size: 0.7rem !important;
+        padding: 8px 10px !important;
+        margin-bottom: 15px !important;
+    }
+
+    .bienvenida-beneficios {
+        grid-template-columns: 1fr !important; 
+        gap: 8px !important;
+        margin-bottom: 15px !important;
+    }
+
+    .bienvenida-beneficio { 
+        padding: 10px 12px !important; 
+        align-items: center !important;
+    }
+    
+    .bienvenida-beneficio strong { 
+        font-size: 0.85rem !important; 
+        margin-bottom: 0 !important;
+    }
+    
+    .bienvenida-beneficio p { 
+        display: none !important; 
+    }
+
+    .beneficio-icono {
+        width: 24px !important;
+        height: 24px !important;
+    }
+    .beneficio-icono svg {
+        width: 18px !important;
+        height: 18px !important;
+    }
+
+    .bienvenida-acciones {
+        gap: 8px !important;
+        margin-top: 10px !important;
+    }
+
+    .bienvenida-btn-primario { 
+        padding: 12px !important; 
+        font-size: 0.9rem !important; 
+    }
+    
+    .bienvenida-btn-secundario { 
+        padding: 10px !important; 
+        font-size: 0.85rem !important; 
+    }
+    
+    .bienvenida-nota { 
+        font-size: 0.65rem !important; 
+        margin-top: 10px !important; 
+    }
 }
