@@ -5,17 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Textiles Madruga | Catálogo de Confecciones</title>
 
+    <!-- ============================================ -->
+    <!-- CONTENT SECURITY POLICY (CSP)                -->
+    <!-- ============================================ -->
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://cdn.jsdelivr.net;
+        frame-src 'self' https://challenges.cloudflare.com;
+        connect-src 'self' https://textiles-madruga-api.eldani000219.workers.dev https://challenges.cloudflare.com https://hagen.challenges.cloudflare.com https://brunhild.challenges.cloudflare.com data:;
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+        font-src 'self' https://fonts.gstatic.com data:;
+        img-src * data: blob: 'self';
+        media-src 'self' data: blob:;
+    ">
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 
-    <!-- Estilos -->
-    <link rel="stylesheet" href="css/1-base.css">
-    <link rel="stylesheet" href="css/2-layout.css">
-    <link rel="stylesheet" href="css/3-componentes.css">
-    <link rel="stylesheet" href="css/4-paginas.css">
-    <link rel="stylesheet" href="css/5-responsive.css">
+    <!-- ARCHIVOS CSS MODULARES -->
+    <link rel="stylesheet" href="estilos/1-base.css">
+    <link rel="stylesheet" href="estilos/2-layout.css">
+    <link rel="stylesheet" href="estilos/3-componentes.css">
+    <link rel="stylesheet" href="estilos/4-paginas.css">
+    <link rel="stylesheet" href="estilos/5-responsive.css">
+
+    <!-- EmailJS -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
 
@@ -29,6 +46,13 @@
                 </div>
             </div>
             <div class="header-actions">
+                <button class="btn-recargar" id="btn-recargar" aria-label="Recargar productos">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="23 4 23 10 17 10"/>
+                        <polyline points="1 20 1 14 7 14"/>
+                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                    </svg>
+                </button>
                 <button class="menu-hamburguesa" id="menu-hamburguesa" aria-label="Menú de navegación">
                     <span class="barra"></span>
                     <span class="barra"></span>
@@ -252,6 +276,14 @@
     <!-- FOOTER -->
     <footer class="footer">
         <div class="container">
+            <div class="aviso-navegador-footer">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <span>¿No puedes ver los productos? Prueba a acceder desde otro navegador.</span>
+            </div>
             <p>&copy; 2026 Textiles Madruga. Todos los derechos reservados.</p>
             <p>Con esa bella esencia de Cuba.</p>
         </div>
@@ -271,7 +303,6 @@
                 <div class="modal-loading">Cargando...</div>
             </div>
         </div>
-    </div>
 
     <!-- PANEL ADMIN -->
     <div id="admin-panel" class="admin-oculto">
@@ -617,6 +648,14 @@
                     </span>
                     <h1 class="bienvenida-titulo">Bienvenido a <span>Textiles Madruga</span></h1>
                     <p class="bienvenida-subtitulo">Descubre la mejor selección de confecciones cubanas</p>
+                </div>
+                <div class="aviso-navegador">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                    <span>Si usa <strong>Firefox</strong>, es posible que encuentre nuestro catálogo <strong>vacío</strong>. De ser así, pruebe a acceder desde otro navegador.</span>
                 </div>
                 <div class="bienvenida-beneficios">
                     <div class="bienvenida-beneficio">
