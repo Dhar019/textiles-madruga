@@ -224,8 +224,8 @@ function editarProductoAdmin(id) {
     }
     
     cargarTallasProducto(producto);
-    actualizarSubcategoriasForm(); // ✅ Cargar subcategorías de la categoría seleccionada
-    document.getElementById('prod-subcategoria').value = producto.subcategoria || ''; // ✅ Seleccionar la subcategoría actual
+    actualizarSubcategoriasForm();
+    document.getElementById('prod-subcategoria').value = producto.subcategoria || '';
     
     const prev = document.getElementById('drop-zone-preview'); 
     const cont = document.getElementById('drop-zone-content');
@@ -243,6 +243,9 @@ function editarProductoAdmin(id) {
     form.className = 'form-visible';
     document.querySelector('#producto-form button[type="submit"]').textContent = 'Actualizar';
     document.getElementById('form-title').textContent = 'Editar Producto';
+    
+    // SCROLL SUAVE AL FORMULARIO (sin salir del contenedor del admin)
+    form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 async function cargarPedidosAdmin() {

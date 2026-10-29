@@ -77,7 +77,9 @@ document.addEventListener('DOMContentLoaded', function() {
             actualizarBotonAcceder();
             if (isAdmin()) { mostrarNotificacion('Bienvenido administrador', 'success'); abrirAdmin(); }
             else { mostrarNotificacion('Bienvenido ' + username, 'success'); }
-        } else { mostrarNotificacion(result.message, 'error'); }
+        } else { 
+            mostrarNotificacion(result.message, 'error'); 
+        }
     });
 
     document.getElementById('login-registro-link')?.addEventListener('click', function(e) {
@@ -175,7 +177,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (btnAyuda && modalAyuda) {
         const abrirAyuda = () => {
             modalAyuda.className = 'login-visible';
-            // ✅ FORZAR SCROLL ARRIBA
             const contenido = modalAyuda.querySelector('.ayuda-contenido');
             if (contenido) contenido.scrollTop = 0;
             scrollModalAlTop(modalAyuda);
@@ -240,7 +241,7 @@ document.addEventListener('DOMContentLoaded', function() {
             else if (tabName === 'seguridad') renderizarUsuariosAdmin();
             else if (tabName === 'productos') renderizarAdminProductos();
             else if (tabName === 'pedidos') cargarPedidosAdmin();
-            else if (tabName === 'subcategorias') cargarSubcategoriasAdmin(); // ✅ NUEVO
+            else if (tabName === 'subcategorias') cargarSubcategoriasAdmin();
         });
     });
 
@@ -250,7 +251,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const precio = parseFloat(document.getElementById('prod-precio').value);
         let imagen = document.getElementById('prod-imagen').value.trim();
         const categoria = document.getElementById('prod-categoria').value;
-        const subcategoria = document.getElementById('prod-subcategoria').value; // ✅ NUEVO
+        const subcategoria = document.getElementById('prod-subcategoria').value;
         const descripcion = document.getElementById('prod-descripcion').value.trim();
         let idEditable = document.getElementById('prod-id').value.trim();
         if (idEditable === 'sin-id') idEditable = '';
@@ -260,8 +261,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!imagen) imagen = 'assets/img/placeholder.webp';
         const session = getSession();
         if (!session) { mostrarNotificacion('No hay sesión activa', 'error'); return; }
+        
+        // ✅ GUARDAMOS EL ID ANTES DE RESETEAR
+        const idProductoGuardado = modoEdicion || idEditable;
+        
         try {
-            // ✅ AÑADIMOS LA SUBCATEGORÍA AL OBJETO DEL PRODUCTO
             const productoData = { nombre, precio, imagen, categoria, subcategoria, descripcion, tipoTallas, tallasDisponibles };
             if (idEditable && !modoEdicion) productoData.id = idEditable;
             let respuesta;
@@ -280,8 +284,30 @@ document.addEventListener('DOMContentLoaded', function() {
             document.querySelector('#producto-form button[type="submit"]').textContent = 'Crear';
             document.getElementById('form-title').textContent = 'Nuevo Producto';
             mostrarNotificacion('Producto guardado', 'success');
+            
+            // Recargar datos
             const datosActualizados = await cargarProductos();
-            if (datosActualizados) { datosGlobales = datosActualizados; adminDatos = JSON.parse(JSON.stringify(datosActualizados)); renderizarAdminProductos(); renderizarOfertas(datosActualizados.ofertas, datosActualizados); cargarOfertasAdmin(); }
+            if (datosActualizados) { 
+                datosGlobales = datosActualizados; 
+                adminDatos = JSON.parse(JSON.stringify(datosActualizados)); 
+                renderizarAdminProductos(); 
+                renderizarOfertas(datosActualizados.ofertas, datosActualizados); 
+                cargarOfertasAdmin(); 
+            }
+            
+            // ✅ SCROLL A LA TARJETA DEL PRODUCTO ACTUALIZADO CON RESALTADO
+            setTimeout(() => {
+                if (idProductoGuardado) {
+                    const tarjetaActualizada = document.querySelector(`.admin-producto-item[data-id="${idProductoGuardado}"]`);
+                    if (tarjetaActualizada) {
+                        tarjetaActualizada.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        tarjetaActualizada.style.transition = 'background-color 0.5s ease';
+                        tarjetaActualizada.style.backgroundColor = '#FFF5EB';
+                        setTimeout(() => { tarjetaActualizada.style.backgroundColor = ''; }, 2000);
+                    }
+                }
+            }, 300);
+            
         } catch (error) { console.error('Error guardar:', error); mostrarNotificacion(error.message || 'Error al guardar producto', 'error'); }
     });
 
@@ -308,8 +334,6 @@ document.addEventListener('DOMContentLoaded', function() {
         formProducto.className = 'form-visible';
         document.querySelector('#producto-form button[type="submit"]').textContent = 'Crear';
         document.getElementById('form-title').textContent = 'Nuevo Producto';
-        
-        // ✅ Actualizar subcategorías al abrir formulario
         actualizarSubcategoriasForm();
     });
 
