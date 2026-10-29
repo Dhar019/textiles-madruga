@@ -74,6 +74,7 @@
     overflow: hidden;
 }
 
+/* ✅ SIN TRANSICIÓN, SIN ANIMACIÓN, SIN VARIABLES. Solo la imagen quieta. */
 .hero::before {
     content: '';
     position: absolute;
@@ -510,7 +511,7 @@
     display: block !important;
     width: 18px !important;
     height: 18px !important;
-    pointer-events: none;
+    pointer-events: none; /* ✅ El clic pasa al botón, no al SVG */
 }
 
 .modal-cerrar:hover, .login-cerrar:hover, .admin-cerrar:hover, .bienvenida-cerrar:hover, .lightbox-cerrar:hover {
@@ -670,6 +671,9 @@
 /* ============================================ */
 .admin-contenido {
     max-width: 1100px;
+    display: flex;
+    flex-direction: column;
+    height: 90vh;
 }
 
 .admin-header {
@@ -762,7 +766,8 @@
 }
 
 .admin-tab-content.active {
-    display: block;
+    display: flex;
+    flex-direction: column;
     animation: fadeIn 0.25s ease;
 }
 
@@ -938,10 +943,16 @@
 .admin-producto-item .info-texto .id-producto { font-size: 0.7rem; color: var(--color-naranja); font-family: monospace; font-weight: 600; letter-spacing: 0.5px; }
 
 .admin-acciones {
+    flex-shrink: 0;
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
     margin-bottom: 20px;
+    background: #FAF8F5;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    padding-bottom: 10px;
 }
 
 .btn-admin {
@@ -2155,10 +2166,20 @@
 .drop-zone-content svg { color: var(--color-naranja); }
 .drop-zone-content p { font-size: 0.85rem; margin: 0; }
 .drop-zone-content span { color: var(--color-naranja); font-weight: 600; text-decoration: underline; }
-.drop-zone-preview { max-width: 100%; max-height: 150px; border-radius: 8px; object-fit: contain; }
+
+/* ✅ Control de la imagen del producto */
+.drop-zone-preview { 
+    max-width: 100%; 
+    max-height: 180px; 
+    width: auto;       
+    height: auto;
+    object-fit: contain;
+    border-radius: 8px;
+    display: block;
+    margin: 0 auto;    
+}
 
 /* --- Badge pedidos --- */
-/* ✅ Animación infinita eliminada (consumía CPU) */
 .tab-badge {
     position: absolute;
     top: -6px;
@@ -2612,53 +2633,3 @@
 .usuario-item .acciones .btn-quitar-admin:hover { background: #C0392B; color: white; }
 .usuario-item .acciones .btn-eliminar-usuario { background: #FDE8E8; color: #C0392B; }
 .usuario-item .acciones .btn-eliminar-usuario:hover { background: #C0392B; color: white; }
-
-/* ============================================ */
-/* FIX: ANIMACIÓN DE CARGA (LOADER)             */
-/* ============================================ */
-.loader-container {
-    grid-column: 1 / -1 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
-    padding: 60px 20px !important;
-    gap: 15px !important;
-    width: 100%;
-}
-
-.loader-container p {
-    color: var(--color-gris) !important;
-    font-style: italic;
-    font-size: 0.9rem;
-    animation: pulseText 1.5s infinite alternate;
-    margin: 0;
-}
-
-.loader-dots {
-    display: flex !important;
-    gap: 12px !important;
-    justify-content: center !important;
-}
-
-.loader-dots span {
-    width: 14px !important;
-    height: 14px !important;
-    background-color: var(--color-naranja) !important;
-    border-radius: 50% !important;
-    animation: bounceConverge 1.2s infinite ease-in-out !important;
-    display: inline-block !important;
-}
-
-.loader-dots span:nth-child(1) { animation-delay: -0.32s !important; }
-.loader-dots span:nth-child(2) { animation-delay: -0.16s !important; }
-
-@keyframes bounceConverge {
-    0%, 80%, 100% { transform: scale(0.6) translateY(0); opacity: 0.5; }
-    40% { transform: scale(1) translateY(-10px); opacity: 1; }
-}
-
-@keyframes pulseText {
-    0% { opacity: 0.5; }
-    100% { opacity: 1; }
-}
