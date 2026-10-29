@@ -118,7 +118,14 @@
                 <h2 class="section-title">Prendas populares</h2>
                 <p class="section-subtitle">Lo más vendido y las mejores rebajas</p>
             </div>
-            <div class="grid-productos"></div>
+            <div class="grid-productos">
+                <div class="loader-container">
+                    <div class="loader-dots">
+                        <span></span><span></span><span></span>
+                    </div>
+                    <p>Cargando productos...</p>
+                </div>
+            </div>
             <div class="cta-ofertas">
                 <a href="#ropa" class="btn-primary">Ver todo el catálogo</a>
             </div>
@@ -329,6 +336,7 @@
 
             <div class="admin-tabs">
                 <button class="admin-tab active" data-tab="productos">Productos</button>
+                <button class="admin-tab" data-tab="subcategorias">Subcategorías</button>
                 <button class="admin-tab" data-tab="ofertas">Ofertas</button>
                 <button class="admin-tab" data-tab="pedidos">
                     Pedidos
@@ -344,6 +352,45 @@
                     <button class="btn-admin btn-guardar" id="btn-guardar-cambios">Guardar</button>
                     <button class="btn-admin btn-peligro" id="btn-restaurar">Restaurar</button>
                 </div>
+
+            <!-- TAB: SUBCATEGORÍAS -->
+            <div id="tab-subcategorias" class="admin-tab-content">
+                <h3 class="tab-title">Gestión de Subcategorías</h3>
+                <p class="tab-subtitle">Crea subcategorías (ej. Camisas, Pantalones) y organízalas dentro de las categorías principales.</p>
+
+                <div class="admin-acciones">
+                    <button class="btn-admin btn-nuevo" id="btn-nueva-subcategoria">+ Nueva Subcategoría</button>
+                </div>
+
+                <div id="form-subcategoria" class="form-oculto" style="margin-bottom: 20px;">
+                    <div class="form-card">
+                        <h3 class="form-title">Nueva Subcategoría</h3>
+                        <form id="subcategoria-form" class="form-elegante">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Nombre de la Subcategoría</label>
+                                    <input type="text" id="sub-nombre" placeholder="Ej: Camisas" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Categoría Principal</label>
+                                    <select id="sub-categoria-padre" required>
+                                        <option value="hombre">Hombre</option>
+                                        <option value="mujer">Mujer</option>
+                                        <option value="telas">Telas</option>
+                                        <option value="objetos">Otros</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn-admin btn-primario">Guardar Subcategoría</button>
+                                <button type="button" class="btn-admin btn-secundario" id="btn-cancelar-sub">Cancelar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div id="admin-subcategorias-lista" class="admin-lista-elegante"></div>
+            </div>
 
                 <div class="admin-buscador">
                     <input type="text" id="buscador-productos" placeholder="Buscar productos..." onkeydown="if(event.key==='Enter') filtrarProductosAdmin(this.value)">

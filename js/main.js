@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', function() {
         else mostrarLogin();
     });
 
-    // CIERRE DEL LOGIN CON DELEGACIÓN DE EVENTOS (a prueba de balas)
+    // ✅ CIERRE DEL LOGIN CON DELEGACIÓN DE EVENTOS (a prueba de balas)
     document.addEventListener('click', function(e) {
         if (e.target.closest('#login-cerrar') || e.target.closest('#login-overlay')) {
             console.log('🔒 Cerrando login (delegación)');
@@ -235,10 +235,12 @@ document.addEventListener('DOMContentLoaded', function() {
             this.classList.add('active');
             const tabContent = document.getElementById(`tab-${tabName}`);
             if (tabContent) tabContent.classList.add('active');
+            
             if (tabName === 'ofertas') cargarOfertasAdmin();
             else if (tabName === 'seguridad') renderizarUsuariosAdmin();
             else if (tabName === 'productos') renderizarAdminProductos();
             else if (tabName === 'pedidos') cargarPedidosAdmin();
+            else if (tabName === 'subcategorias') cargarSubcategoriasAdmin(); // ✅ NUEVO
         });
     });
 
@@ -248,6 +250,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const precio = parseFloat(document.getElementById('prod-precio').value);
         let imagen = document.getElementById('prod-imagen').value.trim();
         const categoria = document.getElementById('prod-categoria').value;
+        const subcategoria = document.getElementById('prod-subcategoria').value; // ✅ NUEVO
         const descripcion = document.getElementById('prod-descripcion').value.trim();
         let idEditable = document.getElementById('prod-id').value.trim();
         if (idEditable === 'sin-id') idEditable = '';
@@ -258,7 +261,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const session = getSession();
         if (!session) { mostrarNotificacion('No hay sesión activa', 'error'); return; }
         try {
-            const productoData = { nombre, precio, imagen, categoria, descripcion, tipoTallas, tallasDisponibles };
+            // ✅ AÑADIMOS LA SUBCATEGORÍA AL OBJETO DEL PRODUCTO
+            const productoData = { nombre, precio, imagen, categoria, subcategoria, descripcion, tipoTallas, tallasDisponibles };
             if (idEditable && !modoEdicion) productoData.id = idEditable;
             let respuesta;
             if (modoEdicion) respuesta = await fetch(`${API_URL}/products/${modoEdicion}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.token}` }, body: JSON.stringify(productoData) });
@@ -304,6 +308,9 @@ document.addEventListener('DOMContentLoaded', function() {
         formProducto.className = 'form-visible';
         document.querySelector('#producto-form button[type="submit"]').textContent = 'Crear';
         document.getElementById('form-title').textContent = 'Nuevo Producto';
+        
+        // ✅ Actualizar subcategorías al abrir formulario
+        actualizarSubcategoriasForm();
     });
 
     document.getElementById('admin-cerrar')?.addEventListener('click', cerrarAdmin);
@@ -332,6 +339,40 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+
+    // ✅ LISTENERS DE SUBCATEGORÍAS
+    document.getElementById('btn-nueva-subcategoria')?.addEventListener('click', () => {
+        document.getElementById('form-subcategoria').className = 'form-visible';
+    });
+    
+    document.getElementById('btn-cancelar-sub')?.addEventListener('click', () => {
+        document.getElementById('form-subcategoria').className = 'form-oculto';
+        document.getElementById('subcategoria-form').reset();
+    });
+
+    document.getElementById('subcategoria-form')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const nombre = document.getElementById('sub-nombre').value.trim();
+        const catPadre = document.getElementById('sub-categoria-padre').value;
+        
+        if (!nombre) return;
+        
+        const id = nombre.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+        const exito = await guardarSubcategoria({ id, nombre, categoriaPadre: catPadre });
+        
+        if (exito) {
+            mostrarNotificacion('Subcategoría creada', 'success');
+            document.getElementById('form-subcategoria').className = 'form-oculto';
+            document.getElementById('subcategoria-form').reset();
+            cargarSubcategoriasAdmin();
+        } else {
+            mostrarNotificacion('Error al crear', 'error');
+        }
+    });
+    
+    // Al cambiar la categoría en el formulario, actualizar las subcategorías
+    document.getElementById('prod-categoria')?.addEventListener('change', actualizarSubcategoriasForm);
+
 });
 
 // Ojito de contraseña
