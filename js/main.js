@@ -77,7 +77,9 @@ document.addEventListener('DOMContentLoaded', function() {
             actualizarBotonAcceder();
             if (isAdmin()) { mostrarNotificacion('Bienvenido administrador', 'success'); abrirAdmin(); }
             else { mostrarNotificacion('Bienvenido ' + username, 'success'); }
-        } else { mostrarNotificacion(result.message, 'error'); }
+        } else { 
+            mostrarNotificacion(result.message, 'error'); 
+        }
     });
 
     document.getElementById('login-registro-link')?.addEventListener('click', function(e) {
