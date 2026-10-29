@@ -669,13 +669,16 @@
 /* ============================================ */
 .admin-contenido {
     max-width: 1100px;
-    height: 90vh;
+    height: 90vh; /* Altura máxima del modal */
     display: flex;
     flex-direction: column;
 }
 
+.admin-header, .admin-tabs {
+    flex-shrink: 0; /* Se quedan fijos arriba */
+}
+
 .admin-header {
-    flex-shrink: 0;
     padding: 25px 35px 15px 35px;
     display: flex;
     justify-content: space-between;
@@ -716,7 +719,6 @@
 }
 
 .admin-tabs {
-    flex-shrink: 0;
     display: flex;
     gap: 4px;
     margin: 15px 35px 20px 35px;
@@ -756,19 +758,17 @@
 
 .admin-tab-content {
     display: none;
-    flex: 1;
-    overflow-y: auto;
+    flex: 1; /* Ocupa el espacio restante */
+    overflow-y: auto; /* Scroll interno SOLO en el contenido */
     padding: 0 35px 30px 35px;
     scrollbar-width: thin;
     scrollbar-color: var(--color-naranja) transparent;
-    /* ✅ Forzar que el contenido no desborde y se pueda hacer scroll interno */
-    min-height: 0;
+    min-height: 0; /* Necesario para que flex funcione con overflow */
 }
 
 .admin-tab-content.active {
     display: flex;
     flex-direction: column;
-    animation: fadeIn 0.25s ease;
 }
 
 .admin-tab-content::-webkit-scrollbar { width: 8px; }
@@ -943,16 +943,16 @@
 .admin-producto-item .info-texto .id-producto { font-size: 0.7rem; color: var(--color-naranja); font-family: monospace; font-weight: 600; letter-spacing: 0.5px; }
 
 .admin-acciones {
-    flex-shrink: 0; /* ✅ No se colapsa */
+    flex-shrink: 0;
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
     margin-bottom: 20px;
-    background: #FAF8F5; /* Fondo para que no se superponga */
+    background: #FAF8F5;
     position: sticky;
     top: 0;
     z-index: 10;
-    padding: 10px 0; /* Espaciado interno */
+    padding-bottom: 10px;
 }
 
 .btn-admin {

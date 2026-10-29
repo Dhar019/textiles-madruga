@@ -365,7 +365,9 @@
                                     <label>Precio (CUP)</label>
                                     <input type="number" id="prod-precio" placeholder="0.00" step="0.01" required>
                                 </div>
-                                <div class="form-group">
+                                
+                                <!-- Columna Izquierda: Imagen -->
+                                <div class="form-group" style="grid-row: span 2;">
                                     <label>Imagen del Producto</label>
                                     <div id="drop-zone" class="drop-zone">
                                         <input type="file" id="prod-imagen-file" accept="image/*" hidden>
@@ -382,6 +384,8 @@
                                     <input type="hidden" id="prod-imagen" value="">
                                     <span style="font-size:0.65rem;color:var(--color-gris);">Arrastra una imagen o haz clic para seleccionarla</span>
                                 </div>
+
+                                <!-- Columna Derecha: Categoría y Subcategoría -->
                                 <div class="form-group">
                                     <label>Categoría</label>
                                     <select id="prod-categoria" required onchange="actualizarSubcategoriasForm()">
@@ -392,7 +396,6 @@
                                     </select>
                                 </div>
                                 
-                                <!-- ✅ Subcategoría justo al lado de Categoría -->
                                 <div class="form-group">
                                     <label>Subcategoría</label>
                                     <select id="prod-subcategoria">
@@ -400,7 +403,7 @@
                                     </select>
                                 </div>
 
-                                <!-- TALLAS DISPONIBLES -->
+                                <!-- Tallas (Ocupa toda la fila) -->
                                 <div class="form-group form-group-full">
                                     <label>Tallas disponibles</label>
                                     <p class="form-help">Selecciona qué tallas tendrá este producto. El cliente solo podrá elegir entre estas.</p>
