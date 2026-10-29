@@ -14,15 +14,15 @@
         content: '';
         position: absolute;
         top: 0;
-        left: 0;
-        width: 100%;
+        right: 15vh;
+        left: auto;
+        width: 150%;
         height: 100%;
         background-image: url('../assets/img/banner-tm.webp');
         background-size: contain;
-        background-position: left center;
+        background-position: center;
         background-repeat: no-repeat;
-        opacity: 0.3;
-        filter: brightness(0.4) contrast(1.2);
+        opacity: 0.4;
         z-index: 0;
         pointer-events: none;
     }
