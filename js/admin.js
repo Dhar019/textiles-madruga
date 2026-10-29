@@ -209,22 +209,43 @@ function editarProductoAdmin(id) {
     modoEdicion = id;
     const producto = obtenerProductoPorId(id, adminDatos);
     if (!producto) { mostrarNotificacion('Producto no encontrado', 'error'); return; }
+    
     document.getElementById('prod-nombre').value = producto.nombre || '';
     document.getElementById('prod-precio').value = producto.precio || '';
     document.getElementById('prod-imagen').value = producto.imagen || '';
     document.getElementById('prod-descripcion').value = producto.descripcion || '';
     document.getElementById('prod-id').value = producto.id || producto._id || 'sin-id';
-    for (const categoria of ['hombre', 'mujer', 'telas', 'objetos']) { if (adminDatos.productos[categoria]?.some(p => String(p._id) === String(id) || String(p.id) === String(id))) { document.getElementById('prod-categoria').value = categoria; break; } }
+    
+    for (const cat of ['hombre', 'mujer', 'telas', 'objetos']) { 
+        if (adminDatos.productos[cat]?.some(x => String(x._id) === String(id) || String(x.id) === String(id))) { 
+            document.getElementById('prod-categoria').value = cat; 
+            break; 
+        } 
+    }
+    
     cargarTallasProducto(producto);
-    const preview = document.getElementById('drop-zone-preview');
-    const content = document.getElementById('drop-zone-content');
-    if (producto.imagen && preview && content) { preview.src = producto.imagen; preview.style.display = 'block'; content.style.display = 'none'; }
-    else if (preview && content) { preview.style.display = 'none'; preview.src = ''; content.style.display = 'flex'; }
-    const formProducto = document.getElementById('form-producto');
-    formProducto.className = 'form-visible';
+    actualizarSubcategoriasForm(); // Cargar subcategorías de la categoría seleccionada
+    document.getElementById('prod-subcategoria').value = producto.subcategoria || ''; // ✅ Seleccionar la subcategoría actual
+    
+    const prev = document.getElementById('drop-zone-preview'); 
+    const cont = document.getElementById('drop-zone-content');
+    if (producto.imagen && prev && cont) { 
+        prev.src = producto.imagen; 
+        prev.style.display = 'block'; 
+        cont.style.display = 'none'; 
+    } else if (prev && cont) { 
+        prev.style.display = 'none'; 
+        prev.src = ''; 
+        cont.style.display = 'flex'; 
+    }
+    
+    const form = document.getElementById('form-producto');
+    form.className = 'form-visible';
     document.querySelector('#producto-form button[type="submit"]').textContent = 'Actualizar';
     document.getElementById('form-title').textContent = 'Editar Producto';
-    formProducto.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    // Scroll interno sin mover toda la página
+    form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 async function cargarPedidosAdmin() {
@@ -436,4 +457,68 @@ function filtrarUsuariosAdmin(termino) {
     const items = document.querySelectorAll('#admin-usuarios-lista .usuario-item');
     termino = termino.toLowerCase();
     items.forEach(item => { const nombre = item.querySelector('.nombre')?.textContent.toLowerCase() || ''; item.style.display = nombre.includes(termino) ? 'flex' : 'none'; });
+}
+
+// Variables
+let subcategoriasGlobales = [];
+
+async function cargarSubcategoriasAdmin() {
+    const container = document.getElementById('admin-subcategorias-lista');
+    if (!container) return;
+    
+    container.innerHTML = '<p style="text-align:center;padding:20px;">Cargando subcategorías...</p>';
+    subcategoriasGlobales = await obtenerSubcategorias();
+    
+    if (subcategoriasGlobales.length === 0) {
+        container.innerHTML = '<p style="text-align:center;padding:20px;color:var(--color-gris);">No hay subcategorías creadas.</p>';
+        return;
+    }
+    
+    let html = '';
+    subcategoriasGlobales.forEach(sub => {
+        const catNombre = { 'hombre': 'Hombre', 'mujer': 'Mujer', 'telas': 'Telas', 'objetos': 'Otros' }[sub.categoriaPadre] || sub.categoriaPadre;
+        html += `
+            <div class="admin-producto-item">
+                <div class="info">
+                    <div class="info-texto">
+                        <span class="nombre">${sub.nombre}</span>
+                        <span class="descripcion">Categoría: ${catNombre}</span>
+                        <span class="id-producto">ID: ${sub.id}</span>
+                    </div>
+                </div>
+                <div class="acciones">
+                    <button class="btn-eliminar" onclick="eliminarSubcategoria('${sub.id}')">Eliminar</button>
+                </div>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+}
+
+async function eliminarSubcategoria(id) {
+    if (!await confirmar({ titulo: 'Eliminar Subcategoría', mensaje: '¿Seguro? Los productos asociados quedarán sin subcategoría.', tipo: 'peligro', textoAceptar: 'Eliminar' })) return;
+    
+    try {
+        const session = getSession();
+        await fetch(`${API_URL}/subcategorias/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${session.token}` }
+        });
+        mostrarNotificacion('Subcategoría eliminada', 'success');
+        cargarSubcategoriasAdmin();
+    } catch (e) { mostrarNotificacion('Error al eliminar', 'error'); }
+}
+
+// Llenar el select de subcategorías en el formulario de producto
+function actualizarSubcategoriasForm() {
+    const cat = document.getElementById('prod-categoria').value;
+    const selectSub = document.getElementById('prod-subcategoria');
+    if (!selectSub) return;
+    
+    selectSub.innerHTML = '<option value="">-- Sin subcategoría --</option>';
+    const filtradas = subcategoriasGlobales.filter(s => s.categoriaPadre === cat);
+    
+    filtradas.forEach(sub => {
+        selectSub.innerHTML += `<option value="${sub.id}">${sub.nombre}</option>`;
+    });
 }
