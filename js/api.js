@@ -2,10 +2,6 @@
 // COMUNICACIÓN CON EL WORKER (API)
 // ============================================
 
-// ============================================
-// 1. FUNCIONES DE PRODUCTOS (DEFINIDAS PRIMERO)
-// ============================================
-
 async function cargarProductos(intentos = 3) {
     console.log(`🔄 Cargando productos... (Intento ${4 - intentos}/3)`);
     
@@ -105,10 +101,6 @@ function obtenerProductoPorNombre(nombre) {
     return null;
 }
 
-// ============================================
-// 2. FUNCIONES DE AUTENTICACIÓN
-// ============================================
-
 async function login(username, password) {
     try {
         const respuesta = await fetch(`${API_URL}/auth/login`, {
@@ -161,10 +153,6 @@ async function registerUser(username, password, email = '', name = '') {
     }
 }
 
-// ============================================
-// 3. FUNCIONES DE SUBCATEGORÍAS
-// ============================================
-
 async function obtenerSubcategorias() {
     try {
         const respuesta = await fetch(`${API_URL}/subcategorias`);
@@ -187,10 +175,6 @@ async function guardarSubcategoria(subcat) {
         return respuesta.ok;
     } catch (e) { return false; }
 }
-
-// ============================================
-// 4. LOGOUT (AL FINAL, PORQUE USA OTRAS FUNCIONES)
-// ============================================
 
 async function logout() {
     try {
