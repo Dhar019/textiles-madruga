@@ -219,7 +219,10 @@ function renderizarProductosConModal(productos, contenedorSelector, datos) {
 // ✅ NUEVO: Renderizar secciones dinámicas por categoría/subcategoría
 function renderizarSeccionesDinamicas(datos) {
     const contenedor = document.getElementById('contenedor-categorias-dinamicas');
-    if (!contenedor) return;
+    if (!contenedor) {
+        console.warn('⚠️ No se encontró #contenedor-categorias-dinamicas. Revisa el HTML.');
+        return;
+    }
 
     if (!categoriasGlobales || categoriasGlobales.length === 0) {
         contenedor.innerHTML = '<p style="text-align:center;padding:40px;color:var(--color-gris);">No hay categorías configuradas.</p>';
@@ -228,6 +231,9 @@ function renderizarSeccionesDinamicas(datos) {
 
     let html = '';
     categoriasGlobales.forEach(cat => {
+        // Aseguramos que cat.id es la clave para buscar productos
+        const productosCat = (datos.productos[cat.id] || []);
+        
         html += `
             <section id="categoria-${cat.id}" class="categoria seccion-productos">
                 <div class="container">
@@ -255,14 +261,17 @@ function renderizarSeccionesDinamicas(datos) {
 
     contenedor.innerHTML = html;
 
-    // Llenar los grids con productos
+    // Llenar los grids con productos (Blindado)
     categoriasGlobales.forEach(cat => {
-        const productosCat = datos.productos[cat.id] || [];
+        const productosCat = (datos.productos[cat.id] || []);
+        
         if (cat.subcategorias && cat.subcategorias.length > 0) {
             cat.subcategorias.forEach(sub => {
                 const grid = document.getElementById(`grid-${cat.id}-${sub.id}`);
                 if (grid) {
-                    const productosSub = productosCat.filter(p => p.subcategoria === sub.id);
+                    // Filtramos por subcategoría
+                    const productosSub = productosCat.filter(p => String(p.subcategoria) === String(sub.id));
+                    
                     if (productosSub.length === 0) {
                         grid.innerHTML = '<p style="text-align:center;padding:20px;color:var(--color-gris);font-style:italic;">Próximamente...</p>';
                     } else {
@@ -284,6 +293,11 @@ function renderizarSeccionesDinamicas(datos) {
 }
 
 function renderizarProductosEnGrid(productos, contenedor, datos) {
+    if (!productos || productos.length === 0) {
+        contenedor.innerHTML = '<p style="text-align:center;padding:20px;color:var(--color-gris);font-style:italic;">Próximamente...</p>';
+        return;
+    }
+
     let html = '';
     productos.forEach(producto => {
         const unidad = producto.unidad || '';
