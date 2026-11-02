@@ -26,17 +26,28 @@ document.addEventListener('DOMContentLoaded', function() {
         mostrarModalBienvenida();
     }
 
-    // 2. CARGAR PRODUCTOS EN PARALELO
+    // 2. CARGAR CATEGORÍAS Y PRODUCTOS EN PARALELO
     (async () => {
-        const datos = await cargarProductos();
+        const [datos, categorias] = await Promise.all([
+            cargarProductos(),
+            cargarCategorias()
+        ]);
+
+        if (categorias && categorias.length > 0) {
+            categoriasGlobales = categorias;
+            console.log('✅ Categorías cargadas:', categoriasGlobales.length);
+        } else {
+            console.warn('⚠️ No se pudieron cargar las categorías');
+        }
+
         if (datos) {
             datosGlobales = datos;
             adminDatos = JSON.parse(JSON.stringify(datos));
             renderizarOfertas(datos.ofertas, datos);
-            renderizarProductosConModal(datos.productos.hombre, '#ropa-hombre .grid-productos', datos);
-            renderizarProductosConModal(datos.productos.mujer, '#ropa-mujer .grid-productos', datos);
-            renderizarProductosConModal(datos.productos.telas, '#telas .grid-productos', datos);
-            renderizarProductosConModal(datos.productos.objetos, '#otros .grid-productos', datos);
+            
+            // Renderizar secciones dinámicas (Opción B)
+            renderizarSeccionesDinamicas(datos);
+            
             console.log('✅ Productos cargados correctamente');
         } else {
             console.warn('⚠️ No hay productos. La web funcionará sin catálogo.');
@@ -137,14 +148,15 @@ document.addEventListener('DOMContentLoaded', function() {
     // Recargar Productos
     document.getElementById('btn-recargar')?.addEventListener('click', async function() {
         this.classList.add('spinning');
-        const datos = await cargarProductos();
+        const [datos, categorias] = await Promise.all([
+            cargarProductos(),
+            cargarCategorias()
+        ]);
+        if (categorias && categorias.length > 0) categoriasGlobales = categorias;
         if (datos) {
             datosGlobales = datos; adminDatos = JSON.parse(JSON.stringify(datos));
             renderizarOfertas(datos.ofertas, datos);
-            renderizarProductosConModal(datos.productos.hombre, '#ropa-hombre .grid-productos', datos);
-            renderizarProductosConModal(datos.productos.mujer, '#ropa-mujer .grid-productos', datos);
-            renderizarProductosConModal(datos.productos.telas, '#telas .grid-productos', datos);
-            renderizarProductosConModal(datos.productos.objetos, '#otros .grid-productos', datos);
+            renderizarSeccionesDinamicas(datos);
             mostrarNotificacion('Productos actualizados', 'success');
         }
         setTimeout(() => this.classList.remove('spinning'), 500);
@@ -262,7 +274,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const session = getSession();
         if (!session) { mostrarNotificacion('No hay sesión activa', 'error'); return; }
         
-        // ✅ GUARDAMOS EL ID ANTES DE RESETEAR
         const idProductoGuardado = modoEdicion || idEditable;
         
         try {
@@ -285,17 +296,16 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('form-title').textContent = 'Nuevo Producto';
             mostrarNotificacion('Producto guardado', 'success');
             
-            // Recargar datos
             const datosActualizados = await cargarProductos();
             if (datosActualizados) { 
                 datosGlobales = datosActualizados; 
                 adminDatos = JSON.parse(JSON.stringify(datosActualizados)); 
                 renderizarAdminProductos(); 
                 renderizarOfertas(datosActualizados.ofertas, datosActualizados); 
+                renderizarSeccionesDinamicas(datosActualizados);
                 cargarOfertasAdmin(); 
             }
             
-            // ✅ SCROLL A LA TARJETA DEL PRODUCTO ACTUALIZADO CON RESALTADO
             setTimeout(() => {
                 if (idProductoGuardado) {
                     const tarjetaActualizada = document.querySelector(`.admin-producto-item[data-id="${idProductoGuardado}"]`);
@@ -394,9 +404,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Al cambiar la categoría en el formulario, actualizar las subcategorías
     document.getElementById('prod-categoria')?.addEventListener('change', actualizarSubcategoriasForm);
-
 });
 
 // Ojito de contraseña

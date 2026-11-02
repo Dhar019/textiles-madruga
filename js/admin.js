@@ -133,10 +133,7 @@ async function toggleOfertaAdmin(id) {
             renderizarAdminProductos();
             cargarOfertasAdmin();
             renderizarOfertas(datosActualizados.ofertas, datosActualizados);
-            renderizarProductosConModal(datosActualizados.productos.hombre, '#ropa-hombre .grid-productos', datosActualizados);
-            renderizarProductosConModal(datosActualizados.productos.mujer, '#ropa-mujer .grid-productos', datosActualizados);
-            renderizarProductosConModal(datosActualizados.productos.telas, '#telas .grid-productos', datosActualizados);
-            renderizarProductosConModal(datosActualizados.productos.objetos, '#otros .grid-productos', datosActualizados);
+            renderizarSeccionesDinamicas(datosActualizados);
         }
     } catch (error) { mostrarNotificacion('Error al actualizar oferta', 'error'); }
 }
@@ -158,10 +155,7 @@ async function eliminarProductoAdmin(id) {
             renderizarAdminProductos();
             cargarOfertasAdmin();
             renderizarOfertas(datosActualizados.ofertas, datosActualizados);
-            renderizarProductosConModal(datosActualizados.productos.hombre, '#ropa-hombre .grid-productos', datosActualizados);
-            renderizarProductosConModal(datosActualizados.productos.mujer, '#ropa-mujer .grid-productos', datosActualizados);
-            renderizarProductosConModal(datosActualizados.productos.telas, '#telas .grid-productos', datosActualizados);
-            renderizarProductosConModal(datosActualizados.productos.objetos, '#otros .grid-productos', datosActualizados);
+            renderizarSeccionesDinamicas(datosActualizados);
         }
     } catch (error) { console.error('Error al eliminar:', error); mostrarNotificacion(`Error al eliminar: ${error.message}`, 'error'); }
 }
@@ -244,7 +238,6 @@ function editarProductoAdmin(id) {
     document.querySelector('#producto-form button[type="submit"]').textContent = 'Actualizar';
     document.getElementById('form-title').textContent = 'Editar Producto';
     
-    // SCROLL SUAVE AL FORMULARIO (sin salir del contenedor del admin)
     form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
@@ -383,7 +376,7 @@ async function guardarOferta(id) {
         if (!respuesta.ok) throw new Error('Error al guardar oferta');
         mostrarNotificacion('Oferta guardada', 'success');
         const datosActualizados = await cargarProductos();
-        if (datosActualizados) { datosGlobales = datosActualizados; adminDatos = JSON.parse(JSON.stringify(datosActualizados)); renderizarAdminProductos(); cargarOfertasAdmin(); renderizarOfertas(datosActualizados.ofertas, datosActualizados); }
+        if (datosActualizados) { datosGlobales = datosActualizados; adminDatos = JSON.parse(JSON.stringify(datosActualizados)); renderizarAdminProductos(); cargarOfertasAdmin(); renderizarOfertas(datosActualizados.ofertas, datosActualizados); renderizarSeccionesDinamicas(datosActualizados); }
     } catch (error) { console.error('Error al guardar oferta:', error); mostrarNotificacion('Error al guardar oferta', 'error'); }
 }
 
@@ -509,7 +502,6 @@ async function eliminarSubcategoria(id) {
     } catch (e) { mostrarNotificacion('Error al eliminar', 'error'); }
 }
 
-// Llenar el select de subcategorías en el formulario de producto
 function actualizarSubcategoriasForm() {
     const cat = document.getElementById('prod-categoria').value;
     const selectSub = document.getElementById('prod-subcategoria');

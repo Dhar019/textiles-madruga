@@ -21,6 +21,7 @@ let productoPedidoActual = '';
 let pedidosGlobales = [];
 let filtroPedidoActual = 'todos';
 let varianteIdCounter = 0;
+let categoriasGlobales = [];
 
 const POLITICAS_SEGURIDAD = {
     cliente: {

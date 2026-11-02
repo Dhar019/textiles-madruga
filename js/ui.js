@@ -216,6 +216,116 @@ function renderizarProductosConModal(productos, contenedorSelector, datos) {
     });
 }
 
+// ✅ NUEVO: Renderizar secciones dinámicas por categoría/subcategoría
+function renderizarSeccionesDinamicas(datos) {
+    const contenedor = document.getElementById('contenedor-categorias-dinamicas');
+    if (!contenedor) return;
+
+    if (!categoriasGlobales || categoriasGlobales.length === 0) {
+        contenedor.innerHTML = '<p style="text-align:center;padding:40px;color:var(--color-gris);">No hay categorías configuradas.</p>';
+        return;
+    }
+
+    let html = '';
+    categoriasGlobales.forEach(cat => {
+        html += `
+            <section id="categoria-${cat.id}" class="categoria seccion-productos">
+                <div class="container">
+                    <h2 class="section-title">${cat.nombre}</h2>
+                    <p class="section-subtitle">Explora nuestra selección de ${cat.nombre.toLowerCase()}</p>
+                    
+                    ${cat.subcategorias && cat.subcategorias.length > 0 ? `
+                        <div class="grid-subcategorias-dinamicas">
+                            ${cat.subcategorias.map(sub => {
+                                return `
+                                    <div class="subcategoria-bloque" data-subcategoria="${sub.id}">
+                                        <h3 class="subcategoria-titulo">${sub.nombre}</h3>
+                                        <div class="grid-productos" id="grid-${cat.id}-${sub.id}"></div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    ` : `
+                        <div class="grid-productos" id="grid-${cat.id}"></div>
+                    `}
+                </div>
+            </section>
+        `;
+    });
+
+    contenedor.innerHTML = html;
+
+    // Llenar los grids con productos
+    categoriasGlobales.forEach(cat => {
+        const productosCat = datos.productos[cat.id] || [];
+        if (cat.subcategorias && cat.subcategorias.length > 0) {
+            cat.subcategorias.forEach(sub => {
+                const grid = document.getElementById(`grid-${cat.id}-${sub.id}`);
+                if (grid) {
+                    const productosSub = productosCat.filter(p => p.subcategoria === sub.id);
+                    if (productosSub.length === 0) {
+                        grid.innerHTML = '<p style="text-align:center;padding:20px;color:var(--color-gris);font-style:italic;">Próximamente...</p>';
+                    } else {
+                        renderizarProductosEnGrid(productosSub, grid, datos);
+                    }
+                }
+            });
+        } else {
+            const grid = document.getElementById(`grid-${cat.id}`);
+            if (grid) {
+                if (productosCat.length === 0) {
+                    grid.innerHTML = '<p style="text-align:center;padding:20px;color:var(--color-gris);font-style:italic;">Próximamente...</p>';
+                } else {
+                    renderizarProductosEnGrid(productosCat, grid, datos);
+                }
+            }
+        }
+    });
+}
+
+function renderizarProductosEnGrid(productos, contenedor, datos) {
+    let html = '';
+    productos.forEach(producto => {
+        const unidad = producto.unidad || '';
+        const enOferta = producto.enOferta || false;
+        const tipoOferta = producto.tipoOferta || 'descuento';
+        const descuento = enOferta ? (producto.descuento || 0) : 0;
+        const precioOferta = descuento > 0 ? producto.precio * (1 - descuento / 100) : null;
+
+        let badge = '';
+        if (enOferta) {
+            switch (tipoOferta) {
+                case 'descuento': badge = `-${descuento}%`; break;
+                case '2x1': badge = '2x1'; break;
+                case '3x2': badge = '3x2'; break;
+                case 'personalizado': badge = descuento > 0 ? `-${descuento}%` : 'OFERTA'; break;
+            }
+        }
+
+        html += `
+            <div class="producto-card ${enOferta ? 'oferta-destacada' : ''}">
+                ${enOferta ? `<span class="badge-oferta">${badge}</span>` : ''}
+                <img src="${producto.imagen}" alt="${producto.nombre}" class="producto-img" loading="lazy" onclick="abrirLightbox('${producto.imagen}', '${producto.nombre}')" style="cursor: zoom-in;" onerror="this.src='assets/img/placeholder.webp'; this.onerror=null;">
+                <h3 class="producto-nombre">${producto.nombre}</h3>
+                <p class="producto-precio">
+                    ${enOferta && descuento > 0
+                        ? `<span class="tachado">${producto.precio.toFixed(2)} CUP</span> ${precioOferta.toFixed(2)} CUP${unidad}` 
+                        : `${producto.precio.toFixed(2)} CUP${unidad}`}
+                </p>
+                <button class="btn-secundario btn-detalle" data-id="${producto.id || producto._id}">Ver detalle</button>
+            </div>
+        `;
+    });
+
+    contenedor.innerHTML = html;
+    contenedor.querySelectorAll('.btn-detalle').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const producto = obtenerProductoPorId(this.dataset.id, datos);
+            if (producto) abrirModal(producto, datos);
+        });
+    });
+}
+
 // MODAL DETALLE
 function abrirModal(producto, datos) {
     if (!producto || !datos) return;

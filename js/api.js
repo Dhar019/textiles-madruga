@@ -176,6 +176,18 @@ async function guardarSubcategoria(subcat) {
     } catch (e) { return false; }
 }
 
+// ✅ NUEVO: Cargar categorías desde el Worker
+async function cargarCategorias() {
+    try {
+        const respuesta = await fetch(`${API_URL}/categorias`);
+        if (!respuesta.ok) return [];
+        return await respuesta.json();
+    } catch (e) {
+        console.warn('No se pudieron cargar las categorías', e);
+        return [];
+    }
+}
+
 async function logout() {
     try {
         const session = getSession();
