@@ -218,16 +218,25 @@ function renderizarProductosConModal(productos, contenedorSelector, datos) {
 
 // ✅ NUEVO: Renderizar secciones dinámicas por categoría/subcategoría
 function renderizarSeccionesDinamicas(datos) {
+    console.log('🔍 [renderizarSeccionesDinamicas] INICIO');
+    
     const contenedor = document.getElementById('contenedor-categorias-dinamicas');
+    console.log('🔍 Contenedor encontrado:', contenedor ? 'SÍ' : 'NO');
+    
     if (!contenedor) {
-        console.warn('⚠️ No se encontró #contenedor-categorias-dinamicas. Revisa el HTML.');
+        console.error('❌ No existe #contenedor-categorias-dinamicas en el DOM');
         return;
     }
 
+    console.log('🔍 Categorías globales:', categoriasGlobales);
+    
     if (!categoriasGlobales || categoriasGlobales.length === 0) {
+        console.error('❌ categoriasGlobales está vacío');
         contenedor.innerHTML = '<p style="text-align:center;padding:40px;color:var(--color-gris);">No hay categorías configuradas.</p>';
         return;
     }
+
+    console.log('🔍 Datos productos:', datos.productos);
 
     let html = '';
     categoriasGlobales.forEach(cat => {

@@ -43,14 +43,18 @@ document.addEventListener('DOMContentLoaded', function() {
         if (datos) {
             datosGlobales = datos;
             adminDatos = JSON.parse(JSON.stringify(datos));
+            console.log('📊 Datos recibidos:', datos);
+            console.log('📊 Productos por categoría:', {
+                hombre: datos.productos.hombre?.length || 0,
+                mujer: datos.productos.mujer?.length || 0,
+                telas: datos.productos.telas?.length || 0,
+                objetos: datos.productos.objetos?.length || 0
+            });
+            console.log('📊 Categorías:', categoriasGlobales);
+            
             renderizarOfertas(datos.ofertas, datos);
-            
-            // Renderizar secciones dinámicas (Opción B)
             renderizarSeccionesDinamicas(datos);
-            
             console.log('✅ Productos cargados correctamente');
-        } else {
-            console.warn('⚠️ No hay productos. La web funcionará sin catálogo.');
         }
     })();
 
