@@ -81,8 +81,8 @@
         background-size: contain;
         background-position: left center;
         background-repeat: no-repeat;
-        opacity: 0.3; 
-        filter: brightness(0.4) contrast(1.2); 
+        opacity: 0.3;
+        filter: brightness(0.4) contrast(1.2);
         z-index: 0;
         pointer-events: none;
     }
@@ -139,6 +139,31 @@
         height: 120px;
         object-fit: cover;
         border-radius: 8px;
+    }
+
+    /* ✅ FIX: Simetría de los botones de categorías en móvil */
+    .categoria-card {
+        height: 100%;
+        justify-content: space-between;
+    }
+    
+    .categoria-card h3 {
+        margin-top: auto;
+        font-size: 1.1rem;
+    }
+
+    /* --- TOOLBAR DE CATEGORÍAS DINÁMICAS --- */
+    .categoria-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    .buscador-categoria {
+        max-width: 100%;
+    }
+    .toggle-vista {
+        justify-content: center;
+        width: 100%;
     }
 
     /* --- MODALES Y ADMIN --- */
@@ -204,7 +229,7 @@
         padding: 12px !important;
     }
 
-    /* Tarjetas de producto en móvil */
+    /* Tarjetas de producto en móvil (Admin) */
     .admin-producto-item {
         flex-direction: column !important;
         align-items: stretch !important;
@@ -259,7 +284,7 @@
 
     .bienvenida-decoracion {
         width: 100% !important;
-        height: 80px !important; 
+        height: 80px !important;
         min-height: 80px !important;
         flex-shrink: 0 !important;
         position: relative !important;
@@ -267,7 +292,7 @@
 
     .bienvenida-logo {
         display: flex !important;
-        flex-direction: row !important; 
+        flex-direction: row !important;
         align-items: center !important;
         justify-content: center !important;
         gap: 10px !important;
@@ -301,15 +326,15 @@
         height: 30px !important;
     }
 
-    .bienvenida-titulo { 
-        font-size: 1.3rem !important; 
-        text-align: center !important; 
+    .bienvenida-titulo {
+        font-size: 1.3rem !important;
+        text-align: center !important;
         margin-bottom: 5px !important;
     }
-    
-    .bienvenida-subtitulo { 
-        font-size: 0.8rem !important; 
-        text-align: center !important; 
+
+    .bienvenida-subtitulo {
+        font-size: 0.8rem !important;
+        text-align: center !important;
     }
 
     .aviso-navegador {
@@ -319,23 +344,23 @@
     }
 
     .bienvenida-beneficios {
-        grid-template-columns: 1fr !important; 
+        grid-template-columns: 1fr !important;
         gap: 8px !important;
         margin-bottom: 15px !important;
     }
 
-    .bienvenida-beneficio { 
-        padding: 10px 12px !important; 
+    .bienvenida-beneficio {
+        padding: 10px 12px !important;
         align-items: center !important;
     }
-    
-    .bienvenida-beneficio strong { 
-        font-size: 0.85rem !important; 
+
+    .bienvenida-beneficio strong {
+        font-size: 0.85rem !important;
         margin-bottom: 0 !important;
     }
-    
-    .bienvenida-beneficio p { 
-        display: none !important; 
+
+    .bienvenida-beneficio p {
+        display: none !important;
     }
 
     .beneficio-icono {
@@ -352,19 +377,19 @@
         margin-top: 10px !important;
     }
 
-    .bienvenida-btn-primario { 
-        padding: 12px !important; 
-        font-size: 0.9rem !important; 
+    .bienvenida-btn-primario {
+        padding: 12px !important;
+        font-size: 0.9rem !important;
     }
-    
-    .bienvenida-btn-secundario { 
-        padding: 10px !important; 
-        font-size: 0.85rem !important; 
+
+    .bienvenida-btn-secundario {
+        padding: 10px !important;
+        font-size: 0.85rem !important;
     }
-    
-    .bienvenida-nota { 
-        font-size: 0.65rem !important; 
-        margin-top: 10px !important; 
+
+    .bienvenida-nota {
+        font-size: 0.65rem !important;
+        margin-top: 10px !important;
     }
 
     /* --- MODAL DE AYUDA SCROLL --- */

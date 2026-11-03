@@ -220,36 +220,39 @@ function renderizarProductosConModal(productos, contenedorSelector, datos) {
 // Renderizar secciones dinámicas con buscador y toggle
 function renderizarSeccionesDinamicas(datos) {
     const contenedor = document.getElementById('contenedor-categorias-dinamicas');
-    if (!contenedor) {
-        console.warn('⚠️ No se encontró el contenedor de categorías dinámicas');
+    if (!contenedor) return;
+
+    if (!categoriasGlobales || categoriasGlobales.length === 0) {
+        contenedor.innerHTML = '<p style="text-align:center;padding:40px;color:var(--color-gris);">No hay categorías configuradas.</p>';
         return;
     }
 
-    // ✅ PLAN B: Si no hay categorías globales, usamos las fijas
-    let categoriasAUsar = categoriasGlobales;
-    
-    if (!categoriasAUsar || categoriasAUsar.length === 0) {
-        console.warn('⚠️ Usando categorías por defecto porque las dinámicas fallaron');
-        categoriasAUsar = [
-            { id: 'hombre', nombre: 'Hombre', subcategorias: [] },
-            { id: 'mujer', nombre: 'Mujer', subcategorias: [] },
-            { id: 'telas', nombre: 'Telas', subcategorias: [] },
-            { id: 'objetos', nombre: 'Otros', subcategorias: [] }
-        ];
-    }
-
     let html = '';
-    categoriasAUsar.forEach(cat => {
+    categoriasGlobales.forEach(cat => {
+        // Comprobamos si hay productos en esta categoría
         const productosCat = (datos.productos[cat.id] || []);
         
-        if (productosCat.length === 0) return;
+        let contenidoGrid = '';
+        if (productosCat.length === 0) {
+            // ✅ Si no hay productos, mostramos mensaje de aviso
+            contenidoGrid = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 40px; background: #FFF5EB; border-radius: 12px; border: 1px dashed #E87A20; margin-top: 20px;">
+                    <p style="color: var(--color-naranja); font-weight: 600; font-size: 1.1rem;">Lo sentimos, en estos momentos no tenemos ninguna existencia de estos productos.</p>
+                    <p style="color: var(--color-gris); font-size: 0.9rem; margin-top: 5px;">Vuelve pronto, estamos trabajando en ello.</p>
+                </div>
+            `;
+        } else {
+            contenidoGrid = `<div class="grid-productos" id="grid-categoria-${cat.id}"></div>`;
+        }
 
+        // Siempre pintamos la sección para que el botón de arriba tenga dónde hacer scroll
         html += `
             <section id="categoria-${cat.id}" class="categoria seccion-productos">
                 <div class="container">
                     <h2 class="section-title">${cat.nombre}</h2>
                     <p class="section-subtitle">Explora nuestra selección de ${cat.nombre.toLowerCase()}</p>
                     
+                    ${productosCat.length > 0 ? `
                     <div class="categoria-toolbar">
                         <div class="buscador-categoria">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -257,11 +260,12 @@ function renderizarSeccionesDinamicas(datos) {
                         </div>
                         <div class="toggle-vista">
                             <button class="btn-toggle activo" data-vista="todo" onclick="cambiarVista('${cat.id}', 'todo')">Ver Todo</button>
-                            <button class="btn-toggle" data-vista="subcategoria" onclick="cambiarVista('${cat.id}', 'subcategoria')">Agrupar por Tipo</button>
+                            <button class="btn-toggle" data-vista="subcategoria" onclick="cambiarVista('${cat.id}', 'subcategoria')">Ver por Tipo</button>
                         </div>
                     </div>
+                    ` : ''}
 
-                    <div class="grid-productos" id="grid-categoria-${cat.id}"></div>
+                    ${contenidoGrid}
                 </div>
             </section>
         `;
@@ -269,7 +273,8 @@ function renderizarSeccionesDinamicas(datos) {
 
     contenedor.innerHTML = html;
 
-    categoriasAUsar.forEach(cat => {
+    // Inicializar cada categoría que SÍ tenga productos
+    categoriasGlobales.forEach(cat => {
         if ((datos.productos[cat.id] || []).length > 0) {
             filtrarCategoria(cat.id);
         }
