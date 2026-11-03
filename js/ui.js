@@ -257,7 +257,7 @@ function renderizarSeccionesDinamicas(datos) {
                         </div>
                         <div class="toggle-vista">
                             <button class="btn-toggle activo" data-vista="todo" onclick="cambiarVista('${cat.id}', 'todo')">Ver Todo</button>
-                            <button class="btn-toggle" data-vista="subcategoria" onclick="cambiarVista('${cat.id}', 'subcategoria')">Por Subcategoría</button>
+                            <button class="btn-toggle" data-vista="subcategoria" onclick="cambiarVista('${cat.id}', 'subcategoria')">Agrupar por Tipo</button>
                         </div>
                     </div>
 
