@@ -155,68 +155,7 @@ function renderizarOfertas(ofertasIds, datos) {
     });
 }
 
-function renderizarProductosConModal(productos, contenedorSelector, datos) {
-    const contenedor = document.querySelector(contenedorSelector);
-    if (!contenedor) return;
-
-    if (!productos || productos.length === 0) {
-        contenedor.innerHTML = '<p style="text-align:center;padding:40px;color:var(--color-gris);">No hay productos en esta categoría.</p>';
-        return;
-    }
-
-    let html = '';
-    productos.forEach(producto => {
-        const unidad = producto.unidad || '';
-        const enOferta = producto.enOferta || false;
-        const tipoOferta = producto.tipoOferta || 'descuento';
-        const descuento = enOferta ? (producto.descuento || 0) : 0;
-        const promocion = producto.promocion || '';
-        const precioOferta = descuento > 0 ? producto.precio * (1 - descuento / 100) : null;
-
-        let badge = '';
-        if (enOferta) {
-            switch (tipoOferta) {
-                case 'descuento': badge = `-${descuento}%`; break;
-                case '2x1': badge = '2x1'; break;
-                case '3x2': badge = '3x2'; break;
-                case 'personalizado': badge = descuento > 0 ? `-${descuento}%` : 'OFERTA'; break;
-            }
-        }
-
-        html += `
-            <div class="producto-card ${enOferta ? 'oferta-destacada' : ''}">
-                ${enOferta ? `<span class="badge-oferta">${badge}</span>` : ''}
-                <img src="${producto.imagen}" alt="${producto.nombre}" class="producto-img" loading="lazy" onclick="abrirLightbox('${producto.imagen}', '${producto.nombre}')" style="cursor: zoom-in;" onerror="this.src='assets/img/placeholder.webp'; this.onerror=null;">
-                <p class="producto-hint">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;">
-                        <circle cx="11" cy="11" r="8"/>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                        <line x1="11" y1="8" x2="11" y2="14"/>
-                        <line x1="8" y1="11" x2="14" y2="11"/>
-                    </svg>
-                    Toca la imagen para verla completa
-                </p>
-                <h3 class="producto-nombre">${producto.nombre}</h3>
-                <p class="producto-precio">
-                    ${enOferta && descuento > 0
-                        ? `<span class="tachado">${producto.precio.toFixed(2)} CUP</span> ${precioOferta.toFixed(2)} CUP${unidad}` 
-                        : `${producto.precio.toFixed(2)} CUP${unidad}`}
-                </p>
-                <button class="btn-secundario btn-detalle" data-id="${producto.id || producto._id}">Ver detalle</button>
-            </div>
-        `;
-    });
-
-    contenedor.innerHTML = html;
-    contenedor.querySelectorAll('.btn-detalle').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const producto = obtenerProductoPorId(this.dataset.id, datos);
-            if (producto) abrirModal(producto, datos);
-        });
-    });
-}
-
-// Renderizar secciones dinámicas por categoría/subcategoría
+// ✅ NUEVO: Renderizar secciones dinámicas por categoría/subcategoría
 function renderizarSeccionesDinamicas(datos) {
     const contenedor = document.getElementById('contenedor-categorias-dinamicas');
     if (!contenedor) return;
@@ -229,23 +168,37 @@ function renderizarSeccionesDinamicas(datos) {
     let html = '';
     categoriasGlobales.forEach(cat => {
         const productosCat = (datos.productos[cat.id] || []);
+        const tieneSubcategorias = cat.subcategorias && cat.subcategorias.length > 0;
+
+        // ✅ Verificar si hay AL MENOS una subcategoría con productos
+        let hayProductos = false;
+        let subcategoriasConProductos = [];
+
+        if (tieneSubcategorias) {
+            // Filtrar solo las subcategorías que tienen productos
+            subcategoriasConProductos = cat.subcategorias.filter(sub => {
+                const productosSub = productosCat.filter(p => String(p.subcategoria) === String(sub.id));
+                return productosSub.length > 0;
+            });
+            hayProductos = subcategoriasConProductos.length > 0;
+        } else {
+            // Sin subcategorías: verificamos si la categoría tiene productos directamente
+            hayProductos = productosCat.length > 0;
+        }
 
         // ✅ Si la categoría NO tiene productos (ni en subcategorías), no la mostramos
-        if (productosCat.length === 0) return;
+        if (!hayProductos) return;
 
+        // ✅ Renderizar la categoría (siempre visible si tiene productos)
         html += `
             <section id="categoria-${cat.id}" class="categoria seccion-productos">
                 <div class="container">
                     <h2 class="section-title">${cat.nombre}</h2>
                     <p class="section-subtitle">Explora nuestra selección de ${cat.nombre.toLowerCase()}</p>
                     
-                    ${cat.subcategorias && cat.subcategorias.length > 0 ? `
+                    ${tieneSubcategorias ? `
                         <div class="grid-subcategorias-dinamicas">
-                            ${cat.subcategorias.map(sub => {
-                                // ✅ Solo mostramos subcategorías que tengan al menos 1 producto
-                                const productosSub = productosCat.filter(p => String(p.subcategoria) === String(sub.id));
-                                if (productosSub.length === 0) return ''; // ← No renderizar vacías
-                                
+                            ${subcategoriasConProductos.map(sub => {
                                 return `
                                     <div class="subcategoria-bloque" data-subcategoria="${sub.id}">
                                         <h3 class="subcategoria-titulo">${sub.nombre}</h3>
