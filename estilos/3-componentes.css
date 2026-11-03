@@ -2735,3 +2735,96 @@ body.bienvenida-abierta,
 body.lightbox-abierto {
     overscroll-behavior: none;
 }
+
+/* ============================================ */
+/* TOOLBAR DE CATEGORÍA (BUSCADOR Y TOGGLE)     */
+/* ============================================ */
+.categoria-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+}
+
+.buscador-categoria {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: white;
+    border: 2px solid #EDE8E1;
+    border-radius: 50px;
+    padding: 8px 16px;
+    flex: 1;
+    max-width: 400px;
+    transition: all 0.3s ease;
+}
+
+.buscador-categoria:focus-within {
+    border-color: var(--color-naranja);
+    box-shadow: 0 0 0 3px rgba(232, 122, 32, 0.1);
+}
+
+.buscador-categoria svg {
+    color: var(--color-gris);
+    flex-shrink: 0;
+}
+
+.buscador-categoria input {
+    border: none;
+    outline: none;
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    width: 100%;
+    background: transparent;
+}
+
+.toggle-vista {
+    display: flex;
+    gap: 4px;
+    background: #EDE8E1;
+    border-radius: 50px;
+    padding: 4px;
+}
+
+.btn-toggle {
+    padding: 8px 16px;
+    border: none;
+    background: transparent;
+    border-radius: 50px;
+    font-family: var(--font-sans);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-gris);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-toggle:hover {
+    color: var(--color-negro);
+}
+
+.btn-toggle.activo {
+    background: white;
+    color: var(--color-naranja);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* Ajuste del grid de subcategorías dentro de la vista agrupada */
+#contenedor-categorias-dinamicas .grid-productos {
+    margin-top: 10px;
+}
+
+@media (max-width: 768px) {
+    .categoria-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .buscador-categoria {
+        max-width: 100%;
+    }
+    .toggle-vista {
+        justify-content: center;
+    }
+}

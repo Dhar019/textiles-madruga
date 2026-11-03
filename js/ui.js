@@ -155,7 +155,7 @@ function renderizarOfertas(ofertasIds, datos) {
     });
 }
 
-// ✅ NUEVO: Renderizar secciones dinámicas por categoría/subcategoría
+// ✅ NUEVO: Renderizar secciones dinámicas con buscador y toggle
 function renderizarSeccionesDinamicas(datos) {
     const contenedor = document.getElementById('contenedor-categorias-dinamicas');
     if (!contenedor) return;
@@ -168,48 +168,28 @@ function renderizarSeccionesDinamicas(datos) {
     let html = '';
     categoriasGlobales.forEach(cat => {
         const productosCat = (datos.productos[cat.id] || []);
-        const tieneSubcategorias = cat.subcategorias && cat.subcategorias.length > 0;
+        if (productosCat.length === 0) return; // Si no hay productos, no mostramos la categoría
 
-        // ✅ Verificar si hay AL MENOS una subcategoría con productos
-        let hayProductos = false;
-        let subcategoriasConProductos = [];
-
-        if (tieneSubcategorias) {
-            // Filtrar solo las subcategorías que tienen productos
-            subcategoriasConProductos = cat.subcategorias.filter(sub => {
-                const productosSub = productosCat.filter(p => String(p.subcategoria) === String(sub.id));
-                return productosSub.length > 0;
-            });
-            hayProductos = subcategoriasConProductos.length > 0;
-        } else {
-            // Sin subcategorías: verificamos si la categoría tiene productos directamente
-            hayProductos = productosCat.length > 0;
-        }
-
-        // ✅ Si la categoría NO tiene productos (ni en subcategorías), no la mostramos
-        if (!hayProductos) return;
-
-        // ✅ Renderizar la categoría (siempre visible si tiene productos)
         html += `
             <section id="categoria-${cat.id}" class="categoria seccion-productos">
                 <div class="container">
                     <h2 class="section-title">${cat.nombre}</h2>
                     <p class="section-subtitle">Explora nuestra selección de ${cat.nombre.toLowerCase()}</p>
                     
-                    ${tieneSubcategorias ? `
-                        <div class="grid-subcategorias-dinamicas">
-                            ${subcategoriasConProductos.map(sub => {
-                                return `
-                                    <div class="subcategoria-bloque" data-subcategoria="${sub.id}">
-                                        <h3 class="subcategoria-titulo">${sub.nombre}</h3>
-                                        <div class="grid-productos" id="grid-${cat.id}-${sub.id}"></div>
-                                    </div>
-                                `;
-                            }).join('')}
+                    <!-- Barra de herramientas: Buscador y Toggle -->
+                    <div class="categoria-toolbar">
+                        <div class="buscador-categoria">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                            <input type="text" id="buscador-${cat.id}" placeholder="Buscar en ${cat.nombre}..." oninput="filtrarCategoria('${cat.id}')">
                         </div>
-                    ` : `
-                        <div class="grid-productos" id="grid-${cat.id}"></div>
-                    `}
+                        <div class="toggle-vista">
+                            <button class="btn-toggle activo" data-vista="todo" onclick="cambiarVista('${cat.id}', 'todo')">Ver Todo</button>
+                            <button class="btn-toggle" data-vista="subcategoria" onclick="cambiarVista('${cat.id}', 'subcategoria')">Por Subcategoría</button>
+                        </div>
+                    </div>
+
+                    <!-- Grid donde se pintarán los productos -->
+                    <div class="grid-productos" id="grid-categoria-${cat.id}"></div>
                 </div>
             </section>
         `;
@@ -217,28 +197,94 @@ function renderizarSeccionesDinamicas(datos) {
 
     contenedor.innerHTML = html;
 
-    // Llenar los grids SOLO de las subcategorías visibles
+    // Inicializar cada categoría (pintar todos los productos por defecto)
     categoriasGlobales.forEach(cat => {
-        const productosCat = (datos.productos[cat.id] || []);
-        if (productosCat.length === 0) return;
-
-        if (cat.subcategorias && cat.subcategorias.length > 0) {
-            cat.subcategorias.forEach(sub => {
-                const grid = document.getElementById(`grid-${cat.id}-${sub.id}`);
-                if (grid) {
-                    const productosSub = productosCat.filter(p => String(p.subcategoria) === String(sub.id));
-                    if (productosSub.length > 0) {
-                        renderizarProductosEnGrid(productosSub, grid, datos);
-                    }
-                }
-            });
-        } else {
-            const grid = document.getElementById(`grid-${cat.id}`);
-            if (grid) {
-                renderizarProductosEnGrid(productosCat, grid, datos);
-            }
+        if ((datos.productos[cat.id] || []).length > 0) {
+            filtrarCategoria(cat.id);
         }
     });
+}
+
+// ✅ NUEVA FUNCIÓN: Filtra y pinta los productos de una categoría
+function filtrarCategoria(catId) {
+    const grid = document.getElementById(`grid-categoria-${catId}`);
+    if (!grid) return;
+
+    const buscador = document.getElementById(`buscador-${catId}`)?.value.toLowerCase().trim() || '';
+    const vistaActual = document.querySelector(`#categoria-${catId} .btn-toggle.activo`)?.dataset.vista || 'todo';
+    
+    const productosCat = (datosGlobales.productos[catId] || []);
+    const categoria = categoriasGlobales.find(c => c.id === catId);
+    
+    // 1. Filtrar por buscador
+    let productosFiltrados = productosCat.filter(p => p.nombre.toLowerCase().includes(buscador));
+
+    // 2. Renderizar según la vista
+    let html = '';
+    if (vistaActual === 'todo' || !categoria.subcategorias || categoria.subcategorias.length === 0) {
+        // Vista "Todo": un solo grid
+        if (productosFiltrados.length === 0) {
+            grid.innerHTML = '<p style="text-align:center;padding:20px;color:var(--color-gris);font-style:italic;">No se encontraron productos.</p>';
+        } else {
+            renderizarProductosEnGrid(productosFiltrados, grid, datosGlobales);
+        }
+    } else {
+        // Vista "Por Subcategoría": agrupamos
+        let hayProductos = false;
+        categoria.subcategorias.forEach(sub => {
+            const productosSub = productosFiltrados.filter(p => String(p.subcategoria) === String(sub.id));
+            if (productosSub.length > 0) {
+                hayProductos = true;
+                html += `
+                    <div class="subcategoria-bloque" style="grid-column: 1 / -1;">
+                        <h3 class="subcategoria-titulo">${sub.nombre}</h3>
+                        <div class="grid-productos" id="grid-${catId}-${sub.id}"></div>
+                    </div>
+                `;
+            }
+        });
+        
+        // Productos sin subcategoría (o con subcategoría no listada)
+        const idsSubcats = categoria.subcategorias.map(s => String(s.id));
+        const productosSinSub = productosFiltrados.filter(p => !p.subcategoria || !idsSubcats.includes(String(p.subcategoria)));
+        if (productosSinSub.length > 0) {
+            hayProductos = true;
+            html += `
+                <div class="subcategoria-bloque" style="grid-column: 1 / -1;">
+                    <h3 class="subcategoria-titulo">Otros</h3>
+                    <div class="grid-productos" id="grid-${catId}-otros"></div>
+                </div>
+            `;
+        }
+        
+        if (!hayProductos) {
+            grid.innerHTML = '<p style="text-align:center;padding:20px;color:var(--color-gris);font-style:italic;">No se encontraron productos.</p>';
+        } else {
+            grid.innerHTML = html;
+            // Llenar los sub-grids
+            categoria.subcategorias.forEach(sub => {
+                const subGrid = document.getElementById(`grid-${catId}-${sub.id}`);
+                if (subGrid) {
+                    const productosSub = productosFiltrados.filter(p => String(p.subcategoria) === String(sub.id));
+                    if (productosSub.length > 0) renderizarProductosEnGrid(productosSub, subGrid, datosGlobales);
+                }
+            });
+            const otrosGrid = document.getElementById(`grid-${catId}-otros`);
+            if (otrosGrid) {
+                renderizarProductosEnGrid(productosSinSub, otrosGrid, datosGlobales);
+            }
+        }
+    }
+}
+
+// ✅ NUEVA FUNCIÓN: Cambia entre "Todo" y "Por Subcategoría"
+function cambiarVista(catId, vista) {
+    // Actualizar botones
+    document.querySelectorAll(`#categoria-${catId} .btn-toggle`).forEach(btn => {
+        btn.classList.toggle('activo', btn.dataset.vista === vista);
+    });
+    // Volver a filtrar
+    filtrarCategoria(catId);
 }
 
 function renderizarProductosEnGrid(productos, contenedor, datos) {
