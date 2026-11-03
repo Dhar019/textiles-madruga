@@ -2681,3 +2681,57 @@
     0% { opacity: 0.5; }
     100% { opacity: 1; }
 }
+
+/* ============================================ */
+/* FIX: ETIQUETA DE OFERTA ESPECIAL             */
+/* ============================================ */
+.etiqueta-oferta {
+    display: inline-block;
+    background-color: var(--color-naranja) !important;
+    color: var(--color-blanco) !important;
+    padding: 8px 24px !important;
+    border-radius: 50px !important;
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 2px !important;
+    text-transform: uppercase !important;
+    margin-bottom: 15px !important;
+    box-shadow: 0 4px 15px rgba(232, 122, 32, 0.3) !important;
+}
+
+.ofertas-header {
+    text-align: center !important;
+}
+
+/* ============================================ */
+/* FIX: SCROLL INDEPENDIENTE EN MODALES         */
+/* ============================================ */
+
+/* Contenedores con scroll interno (no propagan al body) */
+.login-form,
+.modal-contenido,
+.admin-tab-content,
+.bienvenida-info,
+.modal-ayuda-contenido .ayuda-contenido {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Overlays: bloquean el scroll del body sin propagar */
+.login-overlay,
+.modal-overlay,
+.admin-overlay,
+.confirmar-overlay,
+.bienvenida-overlay,
+.lightbox-overlay {
+    overscroll-behavior: contain;
+    touch-action: none;
+}
+
+/* El body NO debe recibir scroll cuando hay un modal abierto */
+body.modal-abierto,
+body.admin-abierto,
+body.bienvenida-abierta,
+body.lightbox-abierto {
+    overscroll-behavior: none;
+}

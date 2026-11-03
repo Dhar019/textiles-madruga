@@ -216,33 +216,23 @@ function renderizarProductosConModal(productos, contenedorSelector, datos) {
     });
 }
 
-// ✅ NUEVO: Renderizar secciones dinámicas por categoría/subcategoría
+// Renderizar secciones dinámicas por categoría/subcategoría
 function renderizarSeccionesDinamicas(datos) {
-    console.log('🔍 [renderizarSeccionesDinamicas] INICIO');
-    
     const contenedor = document.getElementById('contenedor-categorias-dinamicas');
-    console.log('🔍 Contenedor encontrado:', contenedor ? 'SÍ' : 'NO');
-    
-    if (!contenedor) {
-        console.error('❌ No existe #contenedor-categorias-dinamicas en el DOM');
-        return;
-    }
+    if (!contenedor) return;
 
-    console.log('🔍 Categorías globales:', categoriasGlobales);
-    
     if (!categoriasGlobales || categoriasGlobales.length === 0) {
-        console.error('❌ categoriasGlobales está vacío');
         contenedor.innerHTML = '<p style="text-align:center;padding:40px;color:var(--color-gris);">No hay categorías configuradas.</p>';
         return;
     }
 
-    console.log('🔍 Datos productos:', datos.productos);
-
     let html = '';
     categoriasGlobales.forEach(cat => {
-        // Aseguramos que cat.id es la clave para buscar productos
         const productosCat = (datos.productos[cat.id] || []);
-        
+
+        // ✅ Si la categoría NO tiene productos (ni en subcategorías), no la mostramos
+        if (productosCat.length === 0) return;
+
         html += `
             <section id="categoria-${cat.id}" class="categoria seccion-productos">
                 <div class="container">
@@ -252,6 +242,10 @@ function renderizarSeccionesDinamicas(datos) {
                     ${cat.subcategorias && cat.subcategorias.length > 0 ? `
                         <div class="grid-subcategorias-dinamicas">
                             ${cat.subcategorias.map(sub => {
+                                // ✅ Solo mostramos subcategorías que tengan al menos 1 producto
+                                const productosSub = productosCat.filter(p => String(p.subcategoria) === String(sub.id));
+                                if (productosSub.length === 0) return ''; // ← No renderizar vacías
+                                
                                 return `
                                     <div class="subcategoria-bloque" data-subcategoria="${sub.id}">
                                         <h3 class="subcategoria-titulo">${sub.nombre}</h3>
@@ -270,20 +264,17 @@ function renderizarSeccionesDinamicas(datos) {
 
     contenedor.innerHTML = html;
 
-    // Llenar los grids con productos (Blindado)
+    // Llenar los grids SOLO de las subcategorías visibles
     categoriasGlobales.forEach(cat => {
         const productosCat = (datos.productos[cat.id] || []);
-        
+        if (productosCat.length === 0) return;
+
         if (cat.subcategorias && cat.subcategorias.length > 0) {
             cat.subcategorias.forEach(sub => {
                 const grid = document.getElementById(`grid-${cat.id}-${sub.id}`);
                 if (grid) {
-                    // Filtramos por subcategoría
                     const productosSub = productosCat.filter(p => String(p.subcategoria) === String(sub.id));
-                    
-                    if (productosSub.length === 0) {
-                        grid.innerHTML = '<p style="text-align:center;padding:20px;color:var(--color-gris);font-style:italic;">Próximamente...</p>';
-                    } else {
+                    if (productosSub.length > 0) {
                         renderizarProductosEnGrid(productosSub, grid, datos);
                     }
                 }
@@ -291,11 +282,7 @@ function renderizarSeccionesDinamicas(datos) {
         } else {
             const grid = document.getElementById(`grid-${cat.id}`);
             if (grid) {
-                if (productosCat.length === 0) {
-                    grid.innerHTML = '<p style="text-align:center;padding:20px;color:var(--color-gris);font-style:italic;">Próximamente...</p>';
-                } else {
-                    renderizarProductosEnGrid(productosCat, grid, datos);
-                }
+                renderizarProductosEnGrid(productosCat, grid, datos);
             }
         }
     });
