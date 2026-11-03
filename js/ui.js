@@ -155,141 +155,13 @@ function renderizarOfertas(ofertasIds, datos) {
     });
 }
 
-// ✅ NUEVO: Renderizar secciones dinámicas con buscador y toggle
-function renderizarSeccionesDinamicas(datos) {
-    const contenedor = document.getElementById('contenedor-categorias-dinamicas');
+// ✅ RESTAURADA: Renderiza un grid de productos para las secciones estáticas
+function renderizarProductosConModal(productos, contenedorSelector, datos) {
+    const contenedor = document.querySelector(contenedorSelector);
     if (!contenedor) return;
 
-    if (!categoriasGlobales || categoriasGlobales.length === 0) {
-        contenedor.innerHTML = '<p style="text-align:center;padding:40px;color:var(--color-gris);">No hay categorías configuradas.</p>';
-        return;
-    }
-
-    let html = '';
-    categoriasGlobales.forEach(cat => {
-        const productosCat = (datos.productos[cat.id] || []);
-        if (productosCat.length === 0) return; // Si no hay productos, no mostramos la categoría
-
-        html += `
-            <section id="categoria-${cat.id}" class="categoria seccion-productos">
-                <div class="container">
-                    <h2 class="section-title">${cat.nombre}</h2>
-                    <p class="section-subtitle">Explora nuestra selección de ${cat.nombre.toLowerCase()}</p>
-                    
-                    <!-- Barra de herramientas: Buscador y Toggle -->
-                    <div class="categoria-toolbar">
-                        <div class="buscador-categoria">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                            <input type="text" id="buscador-${cat.id}" placeholder="Buscar en ${cat.nombre}..." oninput="filtrarCategoria('${cat.id}')">
-                        </div>
-                        <div class="toggle-vista">
-                            <button class="btn-toggle activo" data-vista="todo" onclick="cambiarVista('${cat.id}', 'todo')">Ver Todo</button>
-                            <button class="btn-toggle" data-vista="subcategoria" onclick="cambiarVista('${cat.id}', 'subcategoria')">Por Subcategoría</button>
-                        </div>
-                    </div>
-
-                    <!-- Grid donde se pintarán los productos -->
-                    <div class="grid-productos" id="grid-categoria-${cat.id}"></div>
-                </div>
-            </section>
-        `;
-    });
-
-    contenedor.innerHTML = html;
-
-    // Inicializar cada categoría (pintar todos los productos por defecto)
-    categoriasGlobales.forEach(cat => {
-        if ((datos.productos[cat.id] || []).length > 0) {
-            filtrarCategoria(cat.id);
-        }
-    });
-}
-
-// ✅ NUEVA FUNCIÓN: Filtra y pinta los productos de una categoría
-function filtrarCategoria(catId) {
-    const grid = document.getElementById(`grid-categoria-${catId}`);
-    if (!grid) return;
-
-    const buscador = document.getElementById(`buscador-${catId}`)?.value.toLowerCase().trim() || '';
-    const vistaActual = document.querySelector(`#categoria-${catId} .btn-toggle.activo`)?.dataset.vista || 'todo';
-    
-    const productosCat = (datosGlobales.productos[catId] || []);
-    const categoria = categoriasGlobales.find(c => c.id === catId);
-    
-    // 1. Filtrar por buscador
-    let productosFiltrados = productosCat.filter(p => p.nombre.toLowerCase().includes(buscador));
-
-    // 2. Renderizar según la vista
-    let html = '';
-    if (vistaActual === 'todo' || !categoria.subcategorias || categoria.subcategorias.length === 0) {
-        // Vista "Todo": un solo grid
-        if (productosFiltrados.length === 0) {
-            grid.innerHTML = '<p style="text-align:center;padding:20px;color:var(--color-gris);font-style:italic;">No se encontraron productos.</p>';
-        } else {
-            renderizarProductosEnGrid(productosFiltrados, grid, datosGlobales);
-        }
-    } else {
-        // Vista "Por Subcategoría": agrupamos
-        let hayProductos = false;
-        categoria.subcategorias.forEach(sub => {
-            const productosSub = productosFiltrados.filter(p => String(p.subcategoria) === String(sub.id));
-            if (productosSub.length > 0) {
-                hayProductos = true;
-                html += `
-                    <div class="subcategoria-bloque" style="grid-column: 1 / -1;">
-                        <h3 class="subcategoria-titulo">${sub.nombre}</h3>
-                        <div class="grid-productos" id="grid-${catId}-${sub.id}"></div>
-                    </div>
-                `;
-            }
-        });
-        
-        // Productos sin subcategoría (o con subcategoría no listada)
-        const idsSubcats = categoria.subcategorias.map(s => String(s.id));
-        const productosSinSub = productosFiltrados.filter(p => !p.subcategoria || !idsSubcats.includes(String(p.subcategoria)));
-        if (productosSinSub.length > 0) {
-            hayProductos = true;
-            html += `
-                <div class="subcategoria-bloque" style="grid-column: 1 / -1;">
-                    <h3 class="subcategoria-titulo">Otros</h3>
-                    <div class="grid-productos" id="grid-${catId}-otros"></div>
-                </div>
-            `;
-        }
-        
-        if (!hayProductos) {
-            grid.innerHTML = '<p style="text-align:center;padding:20px;color:var(--color-gris);font-style:italic;">No se encontraron productos.</p>';
-        } else {
-            grid.innerHTML = html;
-            // Llenar los sub-grids
-            categoria.subcategorias.forEach(sub => {
-                const subGrid = document.getElementById(`grid-${catId}-${sub.id}`);
-                if (subGrid) {
-                    const productosSub = productosFiltrados.filter(p => String(p.subcategoria) === String(sub.id));
-                    if (productosSub.length > 0) renderizarProductosEnGrid(productosSub, subGrid, datosGlobales);
-                }
-            });
-            const otrosGrid = document.getElementById(`grid-${catId}-otros`);
-            if (otrosGrid) {
-                renderizarProductosEnGrid(productosSinSub, otrosGrid, datosGlobales);
-            }
-        }
-    }
-}
-
-// ✅ NUEVA FUNCIÓN: Cambia entre "Todo" y "Por Subcategoría"
-function cambiarVista(catId, vista) {
-    // Actualizar botones
-    document.querySelectorAll(`#categoria-${catId} .btn-toggle`).forEach(btn => {
-        btn.classList.toggle('activo', btn.dataset.vista === vista);
-    });
-    // Volver a filtrar
-    filtrarCategoria(catId);
-}
-
-function renderizarProductosEnGrid(productos, contenedor, datos) {
     if (!productos || productos.length === 0) {
-        contenedor.innerHTML = '<p style="text-align:center;padding:20px;color:var(--color-gris);font-style:italic;">Próximamente...</p>';
+        contenedor.innerHTML = '<p style="text-align:center;padding:40px;color:var(--color-gris);">No hay productos en esta categoría.</p>';
         return;
     }
 
@@ -299,6 +171,7 @@ function renderizarProductosEnGrid(productos, contenedor, datos) {
         const enOferta = producto.enOferta || false;
         const tipoOferta = producto.tipoOferta || 'descuento';
         const descuento = enOferta ? (producto.descuento || 0) : 0;
+        const promocion = producto.promocion || '';
         const precioOferta = descuento > 0 ? producto.precio * (1 - descuento / 100) : null;
 
         let badge = '';
@@ -315,6 +188,15 @@ function renderizarProductosEnGrid(productos, contenedor, datos) {
             <div class="producto-card ${enOferta ? 'oferta-destacada' : ''}">
                 ${enOferta ? `<span class="badge-oferta">${badge}</span>` : ''}
                 <img src="${producto.imagen}" alt="${producto.nombre}" class="producto-img" loading="lazy" onclick="abrirLightbox('${producto.imagen}', '${producto.nombre}')" style="cursor: zoom-in;" onerror="this.src='assets/img/placeholder.webp'; this.onerror=null;">
+                <p class="producto-hint">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;">
+                        <circle cx="11" cy="11" r="8"/>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        <line x1="11" y1="8" x2="11" y2="14"/>
+                        <line x1="8" y1="11" x2="14" y2="11"/>
+                    </svg>
+                    Toca la imagen para verla completa
+                </p>
                 <h3 class="producto-nombre">${producto.nombre}</h3>
                 <p class="producto-precio">
                     ${enOferta && descuento > 0
