@@ -373,31 +373,43 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // ✅ LISTENERS DE SUBCATEGORÍAS
     document.getElementById('btn-nueva-subcategoria')?.addEventListener('click', () => {
+        document.getElementById('sub-edit-id').value = '';
+        document.getElementById('subcategoria-form').reset();
+        document.getElementById('form-sub-title').textContent = 'Nueva Subcategoría';
         document.getElementById('form-subcategoria').className = 'form-visible';
     });
     
     document.getElementById('btn-cancelar-sub')?.addEventListener('click', () => {
         document.getElementById('form-subcategoria').className = 'form-oculto';
         document.getElementById('subcategoria-form').reset();
+        document.getElementById('sub-edit-id').value = '';
     });
 
     document.getElementById('subcategoria-form')?.addEventListener('submit', async (e) => {
         e.preventDefault();
+        const editId = document.getElementById('sub-edit-id').value.trim();
         const nombre = document.getElementById('sub-nombre').value.trim();
         const catPadre = document.getElementById('sub-categoria-padre').value;
         
         if (!nombre) return;
         
         const id = nombre.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-        const exito = await guardarSubcategoria({ id, nombre, categoriaPadre: catPadre });
+        
+        let exito;
+        if (editId) {
+            exito = await editarSubcategoria(editId, { nombre, categoriaPadre: catPadre });
+        } else {
+            exito = await guardarSubcategoria({ id, nombre, categoriaPadre: catPadre });
+        }
         
         if (exito) {
-            mostrarNotificacion('Subcategoría creada', 'success');
+            mostrarNotificacion(editId ? 'Subcategoría actualizada' : 'Subcategoría creada', 'success');
             document.getElementById('form-subcategoria').className = 'form-oculto';
             document.getElementById('subcategoria-form').reset();
+            document.getElementById('sub-edit-id').value = '';
             cargarSubcategoriasAdmin();
         } else {
-            mostrarNotificacion('Error al crear', 'error');
+            mostrarNotificacion('Error al guardar', 'error');
         }
     });
     

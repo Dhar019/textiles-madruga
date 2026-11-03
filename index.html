@@ -145,7 +145,7 @@
         </div>
     </section>
 
-    <!-- ✅ CONTENEDOR DINÁMICO DE CATEGORÍAS (se llena con JS) -->
+    <!-- CONTENEDOR DINÁMICO DE CATEGORÍAS (se llena con JS) -->
     <div id="contenedor-categorias-dinamicas"></div>
 
     <!-- PERSONALIZADOS -->
@@ -452,7 +452,9 @@
                     <div class="form-card">
                         <h3 class="form-title" id="form-sub-title">Nueva Subcategoría</h3>
                         <form id="subcategoria-form" class="form-elegante">
+                            <!-- Campo oculto para saber si estamos editando -->
                             <input type="hidden" id="sub-edit-id" value="">
+                            
                             <div class="form-grid">
                                 <div class="form-group">
                                     <label>Nombre de la Subcategoría</label>
@@ -482,7 +484,6 @@
                     <button class="btn-admin btn-primario" onclick="filtrarSubcategoriasAdmin(document.getElementById('buscador-subcategorias').value)">Buscar</button>
                     <button class="btn-admin btn-secundario" onclick="document.getElementById('buscador-subcategorias').value=''; filtrarSubcategoriasAdmin('')">Limpiar</button>
                 </div>
-
                 <!-- Contenedor agrupado por categorías -->
                 <div id="admin-subcategorias-lista" class="admin-lista-elegante"></div>
             </div>

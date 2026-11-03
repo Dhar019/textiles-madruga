@@ -499,25 +499,64 @@ async function cargarSubcategoriasAdmin() {
         return;
     }
     
+    const termino = document.getElementById('buscador-subcategorias')?.value.toLowerCase().trim() || '';
+    const catNombres = { 'hombre': 'Hombre', 'mujer': 'Mujer', 'telas': 'Telas', 'objetos': 'Otros' };
+    
     let html = '';
-    subcategoriasGlobales.forEach(sub => {
-        const catNombre = { 'hombre': 'Hombre', 'mujer': 'Mujer', 'telas': 'Telas', 'objetos': 'Otros' }[sub.categoriaPadre] || sub.categoriaPadre;
+    
+    // Agrupar por categoría padre
+    for (const catId of ['hombre', 'mujer', 'telas', 'objetos']) {
+        let subs = subcategoriasGlobales.filter(s => s.categoriaPadre === catId);
+        if (subs.length === 0) continue;
+        
+        // Filtrar por término
+        if (termino) {
+            subs = subs.filter(s => (s.nombre || '').toLowerCase().includes(termino));
+        }
+        
+        if (subs.length === 0) continue;
+        
         html += `
-            <div class="admin-producto-item">
-                <div class="info">
-                    <div class="info-texto">
-                        <span class="nombre">${sub.nombre}</span>
-                        <span class="descripcion">Categoría: ${catNombre}</span>
-                        <span class="id-producto">ID: ${sub.id}</span>
+            <div class="admin-categoria-grupo" style="margin-top: 20px;">
+                <h3 class="admin-categoria-titulo" style="font-family: var(--font-serif); font-size: 1.2rem; color: var(--color-naranja); padding-bottom: 8px; border-bottom: 2px solid #EDE8E1; margin-bottom: 12px;">
+                    ${catNombres[catId]} <span style="font-size: 0.8rem; color: var(--color-gris);">(${subs.length})</span>
+                </h3>
+        `;
+        
+        subs.forEach(sub => {
+            html += `
+                <div class="admin-producto-item">
+                    <div class="info">
+                        <div class="info-texto">
+                            <span class="nombre">${sub.nombre}</span>
+                            <span class="id-producto">ID: ${sub.id}</span>
+                        </div>
+                    </div>
+                    <div class="acciones">
+                        <button class="btn-editar" onclick="editarSubcategoriaAdmin('${sub.id}', '${sub.nombre}', '${sub.categoriaPadre}')">Editar</button>
+                        <button class="btn-eliminar" onclick="eliminarSubcategoria('${sub.id}')">Eliminar</button>
                     </div>
                 </div>
-                <div class="acciones">
-                    <button class="btn-eliminar" onclick="eliminarSubcategoria('${sub.id}')">Eliminar</button>
-                </div>
-            </div>
-        `;
-    });
+            `;
+        });
+        
+        html += `</div>`;
+    }
+    
+    if (!html) {
+        html = '<p style="text-align:center;padding:40px;color:var(--color-gris);">No se encontraron subcategorías.</p>';
+    }
+    
     container.innerHTML = html;
+}
+
+// Editar subcategoría
+function editarSubcategoriaAdmin(id, nombre, catPadre) {
+    document.getElementById('sub-edit-id').value = id;
+    document.getElementById('sub-nombre').value = nombre;
+    document.getElementById('sub-categoria-padre').value = catPadre;
+    document.getElementById('form-sub-title').textContent = 'Editar Subcategoría';
+    document.getElementById('form-subcategoria').className = 'form-visible';
 }
 
 async function eliminarSubcategoria(id) {
