@@ -218,3 +218,15 @@ async function logout() {
     mostrarNotificacion('Sesión cerrada correctamente', 'info');
     setTimeout(() => location.reload(), 500);
 }
+
+async function editarSubcategoria(id, datos) {
+    try {
+        const session = getSession();
+        const respuesta = await fetch(`${API_URL}/subcategorias/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.token}` },
+            body: JSON.stringify(datos)
+        });
+        return respuesta.ok;
+    } catch (e) { return false; }
+}

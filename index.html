@@ -450,8 +450,9 @@
 
                 <div id="form-subcategoria" class="form-oculto" style="margin-bottom: 20px;">
                     <div class="form-card">
-                        <h3 class="form-title">Nueva Subcategoría</h3>
+                        <h3 class="form-title" id="form-sub-title">Nueva Subcategoría</h3>
                         <form id="subcategoria-form" class="form-elegante">
+                            <input type="hidden" id="sub-edit-id" value="">
                             <div class="form-grid">
                                 <div class="form-group">
                                     <label>Nombre de la Subcategoría</label>
@@ -475,6 +476,14 @@
                     </div>
                 </div>
 
+                <!-- Buscador de subcategorías -->
+                <div class="admin-buscador">
+                    <input type="text" id="buscador-subcategorias" placeholder="Buscar subcategoría por nombre..." onkeydown="if(event.key==='Enter') filtrarSubcategoriasAdmin(this.value)">
+                    <button class="btn-admin btn-primario" onclick="filtrarSubcategoriasAdmin(document.getElementById('buscador-subcategorias').value)">Buscar</button>
+                    <button class="btn-admin btn-secundario" onclick="document.getElementById('buscador-subcategorias').value=''; filtrarSubcategoriasAdmin('')">Limpiar</button>
+                </div>
+
+                <!-- Contenedor agrupado por categorías -->
                 <div id="admin-subcategorias-lista" class="admin-lista-elegante"></div>
             </div>
 

@@ -98,10 +98,34 @@ function renderizarAdminProductos() {
     if (!adminDatos) return;
     const adminProductosLista = document.getElementById('admin-productos-lista');
     if (!adminProductosLista) return;
-    let html = '';
+    
+    const termino = document.getElementById('buscador-productos')?.value.toLowerCase().trim() || '';
     const categoriaNombres = { 'hombre': 'Hombre', 'mujer': 'Mujer', 'telas': 'Telas', 'objetos': 'Otros' };
+    
+    let html = '';
+    
     for (const categoria of ['hombre', 'mujer', 'telas', 'objetos']) {
-        const productos = adminDatos.productos[categoria] || [];
+        let productos = adminDatos.productos[categoria] || [];
+        if (productos.length === 0) continue;
+        
+        // Filtrar por término (nombre o ID)
+        if (termino) {
+            productos = productos.filter(p => 
+                (p.nombre || '').toLowerCase().includes(termino) || 
+                (String(p.id || p._id || '')).toLowerCase().includes(termino)
+            );
+        }
+        
+        if (productos.length === 0) continue;
+        
+        // Agrupar por categoría
+        html += `
+            <div class="admin-categoria-grupo" style="margin-top: 20px;">
+                <h3 class="admin-categoria-titulo" style="font-family: var(--font-serif); font-size: 1.2rem; color: var(--color-naranja); padding-bottom: 8px; border-bottom: 2px solid #EDE8E1; margin-bottom: 12px;">
+                    ${categoriaNombres[categoria]} <span style="font-size: 0.8rem; color: var(--color-gris);">(${productos.length})</span>
+                </h3>
+        `;
+        
         productos.forEach(producto => {
             const enOferta = producto.enOferta || false;
             const id = producto.id || producto._id || 'sin-id';
@@ -110,9 +134,17 @@ function renderizarAdminProductos() {
             if (producto.tipoTallas === 'sin_tallas') tallasInfo = '<span style="font-size:0.7rem;color:var(--color-gris);">Sin tallas</span>';
             else if (producto.tallasDisponibles && producto.tallasDisponibles.length > 0) tallasInfo = `<span style="font-size:0.7rem;color:var(--color-gris);">Tallas: ${producto.tallasDisponibles.join(', ')}</span>`;
             else tallasInfo = '<span style="font-size:0.7rem;color:#C0392B;">Sin tallas configuradas</span>';
+            
             html += `<div class="admin-producto-item" data-id="${id}" data-categoria="${categoria}"><div class="info"><img src="${producto.imagen}" alt="${producto.nombre}" onerror="this.src='assets/img/placeholder.webp'; this.onerror=null;"><div class="info-texto"><span class="nombre">${producto.nombre}</span><span class="descripcion">${descripcion.substring(0, 60)}${descripcion.length > 60 ? '...' : ''}</span><span class="id-producto">ID: ${id}</span>${tallasInfo}</div><span class="precio">${producto.precio.toFixed(2)} CUP</span><span class="categoria-tag">${categoriaNombres[categoria]}</span>${enOferta ? '<span style="background:#E87A20;color:white;padding:2px 12px;border-radius:50px;font-size:0.7rem;font-weight:600;">OFERTA</span>' : ''}</div><div class="acciones"><button class="btn-oferta ${enOferta ? 'activo' : ''}" onclick="toggleOfertaAdmin('${id}')">${enOferta ? 'Quitar oferta' : 'Oferta'}</button><button class="btn-editar" onclick="editarProductoAdmin('${id}')">Editar</button><button class="btn-eliminar" onclick="eliminarProductoAdmin('${id}')">Eliminar</button></div></div>`;
         });
+        
+        html += `</div>`;
     }
+    
+    if (!html) {
+        html = '<p style="text-align:center;padding:40px;color:var(--color-gris);">No se encontraron productos.</p>';
+    }
+    
     adminProductosLista.innerHTML = html;
 }
 

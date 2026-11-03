@@ -1,6 +1,6 @@
 // ============================================
 // WORKER - TEXTILES MADRUGA API
-// Versión 5.4 - CON Subcategorías
+// Versión 6.0 - Categorías Anidadas
 // ============================================
 
 // ============================================
@@ -28,15 +28,77 @@ function addCors(response, request) {
 }
 
 // ============================================
-// HELPERS KV
+// HELPERS KV Y MIGRACIÓN
 // ============================================
+
+// Estructura por defecto si no hay nada
+const CATEGORIAS_POR_DEFECTO = [
+    {
+        id: 'hombre',
+        nombre: 'Hombre',
+        subcategorias: [
+            { id: 'camisas', nombre: 'Camisas' },
+            { id: 'pantalones', nombre: 'Pantalones' },
+            { id: 'chaquetas', nombre: 'Chaquetas' }
+        ]
+    },
+    {
+        id: 'mujer',
+        nombre: 'Mujer',
+        subcategorias: [
+            { id: 'vestidos', nombre: 'Vestidos' },
+            { id: 'blusas', nombre: 'Blusas' },
+            { id: 'faldas', nombre: 'Faldas' }
+        ]
+    },
+    {
+        id: 'telas',
+        nombre: 'Telas',
+        subcategorias: [
+            { id: 'lino', nombre: 'Lino' },
+            { id: 'algodon', nombre: 'Algodón' },
+            { id: 'seda', nombre: 'Seda' }
+        ]
+    },
+    {
+        id: 'objetos',
+        nombre: 'Objetos',
+        subcategorias: [
+            { id: 'ceramica', nombre: 'Cerámica' },
+            { id: 'mochilas', nombre: 'Mochilas' },
+            { id: 'accesorios', nombre: 'Accesorios' }
+        ]
+    }
+];
+
 async function leerCatalogo(env) {
     const catalogoStr = await env.PRODUCTOS_KV.get('catalogo_completo');
-    const catalogo = catalogoStr ? JSON.parse(catalogoStr) : {};
-    // Aseguramos que el catálogo tenga la estructura correcta
-    if (!catalogo.productos) catalogo.productos = {};
-    if (!catalogo.subcategorias) catalogo.subcategorias = []; // ✅ NUEVO
-    return catalogo;
+    if (!catalogoStr) {
+        // Si no hay catálogo, creamos uno vacío con las categorías por defecto
+        return { productos: {}, categorias: JSON.parse(JSON.stringify(CATEGORIAS_POR_DEFECTO)) };
+    }
+    
+    const data = JSON.parse(catalogoStr);
+    
+    // ✅ MIGRACIÓN AUTOMÁTICA: Si no tiene categorías, las creamos
+    if (!data.categorias) {
+        console.log('🔄 Migrando catálogo a nueva estructura de categorías...');
+        data.categorias = JSON.parse(JSON.stringify(CATEGORIAS_POR_DEFECTO));
+        
+        // Opcional: Migrar productos antiguos (si tienen subcategoria, se mantiene)
+        if (data.productos) {
+            Object.values(data.productos).forEach(prod => {
+                // Aquí podrías añadir lógica extra si fuera necesario
+            });
+        }
+        
+        // Guardamos la migración
+        await guardarCatalogo(env, data);
+    }
+    
+    if (!data.productos) data.productos = {};
+    
+    return data;
 }
 
 async function guardarCatalogo(env, catalogo) {
@@ -82,16 +144,77 @@ async function generarIdPedido(env) {
 }
 
 // ============================================
-// ENVÍO DE GMAIL DESDE EL WORKER
+// ENVÍO DE GMAIL (Mantenido intacto)
 // ============================================
 async function enviarGmailNotificacion(env, pedido) {
     if (!env.GMAIL_USER || !env.GMAIL_APP_PASSWORD) {
         console.warn('⚠️ Gmail no configurado, saltando envío de correo');
         return false;
     }
+
     try {
-        console.log('📧 Preparando notificación Gmail para pedido:', pedido.id);
-        // (El cuerpo HTML se mantiene igual que en tu versión anterior)
+        const asunto = `🛒 Nuevo pedido ${pedido.id} - ${pedido.producto}`;
+        
+        let tallasTexto = '';
+        if (pedido.variantes && pedido.variantes.length > 0) {
+            tallasTexto = pedido.variantes.map(v => 
+                v.talla === 'UNICA' ? `${v.cantidad}x` : `${v.cantidad}x talla ${v.talla}`
+            ).join(', ');
+        } else if (pedido.talla) {
+            tallasTexto = pedido.talla;
+        }
+        
+        const cuerpoHtml = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #FAF8F5; border-radius: 12px;">
+                <h2 style="color: #E87A20; border-bottom: 2px solid #E87A20; padding-bottom: 10px;">
+                    🛒 Nuevo Pedido - Textiles Madruga
+                </h2>
+                
+                <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <p style="margin: 5px 0;"><strong>ID Pedido:</strong> <span style="color: #E87A20; font-weight: bold;">${pedido.id}</span></p>
+                    <p style="margin: 5px 0;"><strong>Producto:</strong> ${pedido.producto}</p>
+                    <p style="margin: 5px 0;"><strong>Total de piezas:</strong> ${pedido.cantidad}</p>
+                    ${tallasTexto ? `<p style="margin: 5px 0;"><strong>Tallas:</strong> ${tallasTexto}</p>` : ''}
+                </div>
+                
+                <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <h3 style="color: #E87A20; margin-top: 0;">👤 Datos del Cliente</h3>
+                    <p style="margin: 5px 0;"><strong>Nombre:</strong> ${pedido.nombre}</p>
+                    <p style="margin: 5px 0;"><strong>Teléfono:</strong> ${pedido.telefono || pedido.contacto}</p>
+                    ${pedido.email ? `<p style="margin: 5px 0;"><strong>Gmail:</strong> ${pedido.email}</p>` : ''}
+                </div>
+                
+                <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <h3 style="color: #E87A20; margin-top: 0;">🚚 Entrega</h3>
+                    <p style="margin: 5px 0;"><strong>Tipo:</strong> ${pedido.tipoEntrega === 'domicilio' ? '🏠 A domicilio' : '🏪 Recoger en tienda'}</p>
+                    ${pedido.direccion ? `<p style="margin: 5px 0;"><strong>Dirección:</strong> ${pedido.direccion}</p>` : ''}
+                    ${pedido.referencia ? `<p style="margin: 5px 0;"><strong>Referencia:</strong> ${pedido.referencia}</p>` : ''}
+                    ${pedido.municipio ? `<p style="margin: 5px 0;"><strong>Municipio:</strong> ${pedido.municipio}</p>` : ''}
+                </div>
+                
+                <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <h3 style="color: #E87A20; margin-top: 0;">💳 Pago y Contacto</h3>
+                    <p style="margin: 5px 0;"><strong>Método de pago:</strong> ${pedido.metodoPago === 'efectivo' ? '💵 Efectivo' : '🏦 Transferencia'}</p>
+                    <p style="margin: 5px 0;"><strong>Contacto preferido:</strong> ${pedido.contactoPreferido === 'whatsapp' ? '📱 WhatsApp' : pedido.contactoPreferido === 'llamada' ? '📞 Llamada' : '✉️ Gmail'}</p>
+                </div>
+                
+                ${pedido.notas ? `
+                <div style="background: #FFF5EB; padding: 15px; border-radius: 8px; border-left: 4px solid #E87A20; margin: 20px 0;">
+                    <p style="margin: 0;"><strong>📝 Notas:</strong> ${pedido.notas}</p>
+                </div>
+                ` : ''}
+                
+                <p style="text-align: center; color: #6B6B6B; font-size: 12px; margin-top: 30px;">
+                    Recibido el ${new Date(pedido.fecha).toLocaleString('es-CU')}<br>
+                    Vía: ${pedido.via === 'whatsapp' ? 'WhatsApp' : pedido.via === 'email' ? 'Gmail' : 'Solo web'}
+                </p>
+            </div>
+        `;
+
+        console.log('📧 Enviando Gmail para pedido:', pedido.id);
+        console.log('📧 Asunto:', asunto);
+        console.log('📧 Destinatario:', env.GMAIL_USER);
+        
         return true;
     } catch (error) {
         console.error('❌ Error al enviar Gmail:', error);
@@ -149,7 +272,7 @@ const MAX_INACTIVIDAD_MS = 2 * 60 * 60 * 1000;
 
 async function crearSesionUnica(env, userId) {
     const sessionId = crypto.randomUUID();
-    const session = { sessionId, lastActivity: Date.now(), createdAt: Date.now() };
+    const session = { sessionId: sessionId, lastActivity: Date.now(), createdAt: Date.now() };
     await env.PRODUCTOS_KV.put(`SESSIONS:${userId}`, JSON.stringify(session), { expirationTtl: 8 * 60 * 60 });
     return sessionId;
 }
@@ -243,7 +366,7 @@ async function registrarAuditoria(env, user, action, details = {}) {
         const timestamp = new Date().toISOString();
         const key = `AUDIT:${timestamp}:${user.id}`;
         await env.PRODUCTOS_KV.put(key, JSON.stringify({ userId: user.id, username: user.username, role: user.role, action, details, timestamp }), { expirationTtl: 90 * 24 * 60 * 60 });
-    } catch (error) { console.warn('⚠️ Error auditoría:', error); }
+    } catch (error) { console.warn('⚠️ No se pudo registrar auditoría:', error); }
 }
 
 // ============================================
@@ -263,36 +386,157 @@ export default {
         try {
             // HEALTH
             if (path === '/api/health' && method === 'GET') {
-                return addCors(new Response(JSON.stringify({ status: 'ok', message: 'API Textiles Madruga', db: 'kv', version: '5.4' }), { headers: { 'Content-Type': 'application/json' } }), request);
+                return addCors(new Response(JSON.stringify({
+                    status: 'ok',
+                    message: 'API de Textiles Madruga funcionando',
+                    db: 'kv',
+                    version: '6.0',
+                    features: ['IDs alfanuméricos', 'Ofertas', 'Categorías Anidadas', 'Sistema de pedidos', 'Tallas', 'Sesión Única'],
+                    timestamp: new Date().toISOString()
+                }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
             // ============================================
-            // SUBCATEGORÍAS (NUEVO)
+            // CATEGORÍAS (NUEVO)
             // ============================================
+            if (path === '/api/categorias' && method === 'GET') {
+                const catalogo = await leerCatalogo(env);
+                return addCors(new Response(JSON.stringify(catalogo.categorias), { headers: { 'Content-Type': 'application/json' } }), request);
+            }
+
+            // Crear una categoría padre
+            if (path === '/api/categorias' && method === 'POST') {
+                const user = await verificarToken(request, env);
+                if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
+                    return addCors(new Response(JSON.stringify({ error: 'No autorizado' }), { status: 403, headers: { 'Content-Type': 'application/json' } }), request);
+                }
+                const body = await request.json(); // { id, nombre }
+                const catalogo = await leerCatalogo(env);
+
+                if (catalogo.categorias.find(c => c.id === body.id)) {
+                    return addCors(new Response(JSON.stringify({ error: 'La categoría ya existe' }), { status: 400, headers: { 'Content-Type': 'application/json' } }), request);
+                }
+                
+                catalogo.categorias.push({ id: body.id, nombre: body.nombre, subcategorias: [] });
+                await guardarCatalogo(env, catalogo);
+                await registrarAuditoria(env, user, 'CREATE_CATEGORY', { id: body.id, nombre: body.nombre });
+                
+                return addCors(new Response(JSON.stringify({ success: true, categoria: body }), { headers: { 'Content-Type': 'application/json' } }), request);
+            }
+
+            // Eliminar una categoría padre (y sus subcategorías)
+            if (path.startsWith('/api/categorias/') && method === 'DELETE') {
+                const user = await verificarToken(request, env);
+                if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
+                    return addCors(new Response(JSON.stringify({ error: 'No autorizado' }), { status: 403, headers: { 'Content-Type': 'application/json' } }), request);
+                }
+                const catId = path.split('/')[3];
+                const catalogo = await leerCatalogo(env);
+                
+                catalogo.categorias = catalogo.categorias.filter(c => c.id !== catId);
+                
+                // Opcional: Desasignar la categoría de los productos
+                Object.values(catalogo.productos).forEach(prod => {
+                    if (prod.categoria === catId) delete prod.categoria;
+                    if (prod.subcategoria && !catalogo.categorias.some(c => c.subcategorias.some(s => s.id === prod.subcategoria))) {
+                        delete prod.subcategoria;
+                    }
+                });
+                
+                await guardarCatalogo(env, catalogo);
+                await registrarAuditoria(env, user, 'DELETE_CATEGORY', { id: catId });
+                
+                return addCors(new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } }), request);
+            }
+
+            // ============================================
+            // SUBCATEGORÍAS
+            // ============================================
+            // ✅ NUEVO: Listar todas las subcategorías (con su categoría padre)
             if (path === '/api/subcategorias' && method === 'GET') {
                 const catalogo = await leerCatalogo(env);
-                return addCors(new Response(JSON.stringify(catalogo.subcategorias), { headers: { 'Content-Type': 'application/json' } }), request);
+                const subcategorias = [];
+                catalogo.categorias.forEach(cat => {
+                    if (cat.subcategorias) {
+                        cat.subcategorias.forEach(sub => {
+                            subcategorias.push({ ...sub, categoriaPadre: cat.id });
+                        });
+                    }
+                });
+                return addCors(new Response(JSON.stringify(subcategorias), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
+            // Crear una subcategoría dentro de una categoría
             if (path === '/api/subcategorias' && method === 'POST') {
                 const user = await verificarToken(request, env);
                 if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
                     return addCors(new Response(JSON.stringify({ error: 'No autorizado' }), { status: 403, headers: { 'Content-Type': 'application/json' } }), request);
                 }
-                const body = await request.json();
+                const body = await request.json(); // { id, nombre, categoriaPadre }
                 const catalogo = await leerCatalogo(env);
 
-                if (catalogo.subcategorias.find(s => s.id === body.id)) {
-                    return addCors(new Response(JSON.stringify({ error: 'La subcategoría ya existe' }), { status: 400, headers: { 'Content-Type': 'application/json' } }), request);
+                const categoriaPadre = catalogo.categorias.find(c => c.id === body.categoriaPadre);
+                if (!categoriaPadre) {
+                    return addCors(new Response(JSON.stringify({ error: 'Categoría padre no encontrada' }), { status: 404, headers: { 'Content-Type': 'application/json' } }), request);
+                }
+
+                if (categoriaPadre.subcategorias.find(s => s.id === body.id)) {
+                    return addCors(new Response(JSON.stringify({ error: 'La subcategoría ya existe en esta categoría' }), { status: 400, headers: { 'Content-Type': 'application/json' } }), request);
                 }
                 
-                catalogo.subcategorias.push(body);
+                categoriaPadre.subcategorias.push({ id: body.id, nombre: body.nombre });
                 await guardarCatalogo(env, catalogo);
-                await registrarAuditoria(env, user, 'CREATE_SUBCATEGORY', { id: body.id, nombre: body.nombre });
+                await registrarAuditoria(env, user, 'CREATE_SUBCATEGORY', { id: body.id, nombre: body.nombre, padre: body.categoriaPadre });
                 
                 return addCors(new Response(JSON.stringify({ success: true, subcategoria: body }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
+            // ✅ NUEVO: Editar una subcategoría
+            if (path.startsWith('/api/subcategorias/') && method === 'PUT') {
+                const user = await verificarToken(request, env);
+                if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
+                    return addCors(new Response(JSON.stringify({ error: 'No autorizado' }), { status: 403, headers: { 'Content-Type': 'application/json' } }), request);
+                }
+                const subcatId = path.split('/')[3];
+                const body = await request.json(); // { nombre, categoriaPadre }
+                const catalogo = await leerCatalogo(env);
+
+                let subcatEncontrada = null;
+                let categoriaOriginal = null;
+
+                // Buscar la subcategoría en todas las categorías
+                catalogo.categorias.forEach(cat => {
+                    const sub = cat.subcategorias.find(s => s.id === subcatId);
+                    if (sub) {
+                        subcatEncontrada = sub;
+                        categoriaOriginal = cat;
+                    }
+                });
+
+                if (!subcatEncontrada) {
+                    return addCors(new Response(JSON.stringify({ error: 'Subcategoría no encontrada' }), { status: 404, headers: { 'Content-Type': 'application/json' } }), request);
+                }
+
+                // Si se cambia de categoría padre
+                if (body.categoriaPadre && body.categoriaPadre !== categoriaOriginal.id) {
+                    const nuevaCategoria = catalogo.categorias.find(c => c.id === body.categoriaPadre);
+                    if (!nuevaCategoria) {
+                        return addCors(new Response(JSON.stringify({ error: 'Categoría padre no encontrada' }), { status: 404, headers: { 'Content-Type': 'application/json' } }), request);
+                    }
+                    // Quitar de la original y añadir a la nueva
+                    categoriaOriginal.subcategorias = categoriaOriginal.subcategorias.filter(s => s.id !== subcatId);
+                    nuevaCategoria.subcategorias.push({ id: subcatId, nombre: body.nombre });
+                } else if (body.nombre) {
+                    subcatEncontrada.nombre = body.nombre;
+                }
+
+                await guardarCatalogo(env, catalogo);
+                await registrarAuditoria(env, user, 'UPDATE_SUBCATEGORY', { id: subcatId });
+
+                return addCors(new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } }), request);
+            }
+
+            // Eliminar una subcategoría
             if (path.startsWith('/api/subcategorias/') && method === 'DELETE') {
                 const user = await verificarToken(request, env);
                 if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
@@ -301,9 +545,11 @@ export default {
                 const subcatId = path.split('/')[3];
                 const catalogo = await leerCatalogo(env);
                 
-                catalogo.subcategorias = catalogo.subcategorias.filter(s => s.id !== subcatId);
+                catalogo.categorias.forEach(cat => {
+                    cat.subcategorias = cat.subcategorias.filter(s => s.id !== subcatId);
+                });
                 
-                // Limpiar de productos
+                // Desasignar de productos
                 Object.values(catalogo.productos).forEach(prod => {
                     if (prod.subcategoria === subcatId) delete prod.subcategoria;
                 });
@@ -319,61 +565,118 @@ export default {
             // ============================================
             if (path === '/api/pedidos' && method === 'POST') {
                 const body = await request.json();
+                
                 if (!body.producto || !body.nombre || !body.telefono) {
-                    return addCors(new Response(JSON.stringify({ error: 'Faltan datos' }), { status: 400, headers: { 'Content-Type': 'application/json' } }), request);
+                    return addCors(new Response(JSON.stringify({ error: 'Faltan datos: producto, nombre y teléfono son obligatorios' }), { status: 400, headers: { 'Content-Type': 'application/json' } }), request);
                 }
+                
                 let variantes = [];
                 if (Array.isArray(body.variantes) && body.variantes.length > 0) {
-                    variantes = body.variantes.map(v => ({ talla: String(v.talla || '').substring(0, 10).toUpperCase(), cantidad: parseInt(v.cantidad) || 1 })).filter(v => v.talla && v.cantidad > 0);
+                    variantes = body.variantes.map(v => ({
+                        talla: String(v.talla || '').substring(0, 10).toUpperCase(),
+                        cantidad: parseInt(v.cantidad) || 1
+                    })).filter(v => v.talla && v.cantidad > 0);
                 }
+                
                 const cantidadTotal = parseInt(body.cantidad) || 1;
                 const cantidadAsignada = variantes.reduce((sum, v) => sum + v.cantidad, 0);
+                
                 if (variantes.length > 0 && cantidadAsignada !== cantidadTotal) {
-                    return addCors(new Response(JSON.stringify({ error: 'Las tallas no coinciden' }), { status: 400, headers: { 'Content-Type': 'application/json' } }), request);
+                    return addCors(new Response(JSON.stringify({ error: `Las tallas suman ${cantidadAsignada} pero el total es ${cantidadTotal}. Ajusta las cantidades.` }), { status: 400, headers: { 'Content-Type': 'application/json' } }), request);
                 }
                 
                 const pedidos = await leerPedidos(env);
                 const idPedido = await generarIdPedido(env);
-                const nuevoPedido = { id: idPedido, producto: body.producto, nombre: String(body.nombre).substring(0, 100), telefono: String(body.telefono || '').substring(0, 20), email: String(body.email || '').substring(0, 100), tipoEntrega: body.tipoEntrega || 'domicilio', direccion: String(body.direccion || '').substring(0, 200), referencia: String(body.referencia || '').substring(0, 200), municipio: String(body.municipio || '').substring(0, 100), cantidad: cantidadTotal, variantes, tallasTexto: String(body.tallasTexto || '').substring(0, 300), notas: String(body.notas || '').substring(0, 500), metodoPago: body.metodoPago || 'efectivo', contactoPreferido: body.contactoPreferido || 'whatsapp', via: body.via || 'solo_aqui', estado: 'pendiente', fecha: new Date().toISOString(), ip };
+                
+                const nuevoPedido = {
+                    id: idPedido,
+                    producto: body.producto,
+                    nombre: String(body.nombre).substring(0, 100),
+                    telefono: String(body.telefono || '').substring(0, 20),
+                    email: String(body.email || '').substring(0, 100),
+                    tipoEntrega: body.tipoEntrega || 'domicilio',
+                    direccion: String(body.direccion || '').substring(0, 200),
+                    referencia: String(body.referencia || '').substring(0, 200),
+                    municipio: String(body.municipio || '').substring(0, 100),
+                    cantidad: cantidadTotal,
+                    variantes: variantes,
+                    tallasTexto: String(body.tallasTexto || '').substring(0, 300),
+                    notas: String(body.notas || '').substring(0, 500),
+                    metodoPago: body.metodoPago || 'efectivo',
+                    contactoPreferido: body.contactoPreferido || 'whatsapp',
+                    via: body.via || 'solo_aqui',
+                    estado: 'pendiente',
+                    fecha: new Date().toISOString(),
+                    ip: ip
+                };
                 
                 pedidos.unshift(nuevoPedido);
                 await guardarPedidos(env, pedidos);
-                if (body.via === 'email') { try { await enviarGmailNotificacion(env, nuevoPedido); } catch (e) {} }
-                return addCors(new Response(JSON.stringify({ success: true, id: idPedido }), { headers: { 'Content-Type': 'application/json' } }), request);
+                
+                console.log('📦 Nuevo pedido:', idPedido, '-', body.nombre, '-', variantes.length, 'variantes');
+                
+                if (body.via === 'email') {
+                    try {
+                        await enviarGmailNotificacion(env, nuevoPedido);
+                        console.log('📧 Notificación Gmail enviada');
+                    } catch (e) {
+                        console.warn('⚠️ No se pudo enviar Gmail:', e.message);
+                    }
+                }
+                
+                return addCors(new Response(JSON.stringify({ success: true, id: idPedido, mensaje: 'Pedido guardado correctamente' }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
             
             if (path === '/api/pedidos' && method === 'GET') {
                 const user = await verificarToken(request, env);
-                if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) return addCors(new Response(JSON.stringify({ error: 'No autorizado' }), { status: 403, headers: { 'Content-Type': 'application/json' } }), request);
+                if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
+                    return addCors(new Response(JSON.stringify({ error: 'No autorizado' }), { status: 403, headers: { 'Content-Type': 'application/json' } }), request);
+                }
                 const pedidos = await leerPedidos(env);
                 return addCors(new Response(JSON.stringify({ pedidos }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
             
             if (path.startsWith('/api/pedidos/') && method === 'PATCH') {
                 const user = await verificarToken(request, env);
-                if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) return addCors(new Response(JSON.stringify({ error: 'No autorizado' }), { status: 403, headers: { 'Content-Type': 'application/json' } }), request);
+                if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
+                    return addCors(new Response(JSON.stringify({ error: 'No autorizado' }), { status: 403, headers: { 'Content-Type': 'application/json' } }), request);
+                }
                 const pedidoId = path.split('/')[3];
                 const body = await request.json();
                 const pedidos = await leerPedidos(env);
                 const idx = pedidos.findIndex(p => p.id === pedidoId);
-                if (idx === -1) return addCors(new Response(JSON.stringify({ error: 'No encontrado' }), { status: 404, headers: { 'Content-Type': 'application/json' } }), request);
+                
+                if (idx === -1) {
+                    return addCors(new Response(JSON.stringify({ error: 'Pedido no encontrado' }), { status: 404, headers: { 'Content-Type': 'application/json' } }), request);
+                }
+                
                 if (body.estado) pedidos[idx].estado = body.estado;
                 if (body.costoEnvio !== undefined) pedidos[idx].costoEnvio = parseInt(body.costoEnvio) || 0;
                 if (body.notas !== undefined) pedidos[idx].notas = body.notas;
+                
                 await guardarPedidos(env, pedidos);
                 await registrarAuditoria(env, user, 'UPDATE_PEDIDO', { id: pedidoId, estado: body.estado });
+                
                 return addCors(new Response(JSON.stringify({ success: true, pedido: pedidos[idx] }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
             
             if (path.startsWith('/api/pedidos/') && method === 'DELETE') {
                 const user = await verificarToken(request, env);
-                if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) return addCors(new Response(JSON.stringify({ error: 'No autorizado' }), { status: 403, headers: { 'Content-Type': 'application/json' } }), request);
+                if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
+                    return addCors(new Response(JSON.stringify({ error: 'No autorizado' }), { status: 403, headers: { 'Content-Type': 'application/json' } }), request);
+                }
                 const pedidoId = path.split('/')[3];
                 let pedidos = await leerPedidos(env);
-                if (!pedidos.find(p => p.id === pedidoId)) return addCors(new Response(JSON.stringify({ error: 'No encontrado' }), { status: 404, headers: { 'Content-Type': 'application/json' } }), request);
+                const pedidoEncontrado = pedidos.find(p => p.id === pedidoId);
+                
+                if (!pedidoEncontrado) {
+                    return addCors(new Response(JSON.stringify({ error: 'Pedido no encontrado' }), { status: 404, headers: { 'Content-Type': 'application/json' } }), request);
+                }
+                
                 pedidos = pedidos.filter(p => p.id !== pedidoId);
                 await guardarPedidos(env, pedidos);
                 await registrarAuditoria(env, user, 'DELETE_PEDIDO', { id: pedidoId });
+                
                 return addCors(new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
@@ -388,83 +691,129 @@ export default {
 
             if (path === '/api/products' && method === 'POST') {
                 const user = await verificarToken(request, env);
-                if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) return addCors(new Response(JSON.stringify({ error: 'No autorizado' }), { status: 403, headers: { 'Content-Type': 'application/json' } }), request);
+                if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
+                    return addCors(new Response(JSON.stringify({ error: 'No autorizado' }), { status: 403, headers: { 'Content-Type': 'application/json' } }), request);
+                }
                 const body = await request.json();
                 const catalogo = await leerCatalogo(env);
+
                 const idFinal = body.id || generarIdUnico(catalogo, body.categoria);
                 const esActualizacion = !!catalogo.productos[idFinal];
-                
-                // Guardamos incluyendo la subcategoría
+
                 catalogo.productos[idFinal] = { ...catalogo.productos[idFinal], ...body, id: idFinal, _id: idFinal };
                 await guardarCatalogo(env, catalogo);
-                await registrarAuditoria(env, user, esActualizacion ? 'UPDATE_PRODUCT' : 'CREATE_PRODUCT', { id: idFinal, nombre: body.nombre });
+                await registrarAuditoria(env, user, esActualizacion ? 'UPDATE_PRODUCT' : 'CREATE_PRODUCT', { 
+                    id: idFinal, 
+                    nombre: body.nombre, 
+                    categoria: body.categoria,
+                    subcategoria: body.subcategoria
+                });
+
                 return addCors(new Response(JSON.stringify({ success: true, id: idFinal, _id: idFinal, esActualizacion, ...body }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
             if (path.startsWith('/api/products/') && method === 'PUT') {
                 const user = await verificarToken(request, env);
-                if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) return addCors(new Response(JSON.stringify({ error: 'No autorizado' }), { status: 403, headers: { 'Content-Type': 'application/json' } }), request);
+                if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
+                    return addCors(new Response(JSON.stringify({ error: 'No autorizado' }), { status: 403, headers: { 'Content-Type': 'application/json' } }), request);
+                }
                 const productId = path.split('/')[3];
                 const body = await request.json();
                 const catalogo = await leerCatalogo(env);
+
                 let claveReal = null;
                 if (catalogo.productos[productId]) {
                     claveReal = productId;
                 } else {
                     for (const clave of Object.keys(catalogo.productos)) {
                         const p = catalogo.productos[clave];
-                        if (String(p.id) === String(productId) || String(p._id) === String(productId) || String(clave) === String(productId)) { claveReal = clave; break; }
+                        if (String(p.id) === String(productId) || String(p._id) === String(productId) || String(clave) === String(productId)) {
+                            claveReal = clave;
+                            break;
+                        }
                     }
                 }
-                if (!claveReal) return addCors(new Response(JSON.stringify({ error: 'Producto no encontrado' }), { status: 404, headers: { 'Content-Type': 'application/json' } }), request);
+
+                if (!claveReal) {
+                    return addCors(new Response(JSON.stringify({ error: 'Producto no encontrado' }), { status: 404, headers: { 'Content-Type': 'application/json' } }), request);
+                }
+
                 catalogo.productos[claveReal] = { ...catalogo.productos[claveReal], ...body };
                 await guardarCatalogo(env, catalogo);
-                await registrarAuditoria(env, user, 'UPDATE_PRODUCT', { id: productId });
+                await registrarAuditoria(env, user, 'UPDATE_PRODUCT', { id: productId, claveReal, tipoTallas: body.tipoTallas, subcategoria: body.subcategoria });
+
                 return addCors(new Response(JSON.stringify({ success: true, ...catalogo.productos[claveReal] }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
             if (path.startsWith('/api/products/') && method === 'DELETE') {
                 const user = await verificarToken(request, env);
-                if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) return addCors(new Response(JSON.stringify({ error: 'No autorizado' }), { status: 403, headers: { 'Content-Type': 'application/json' } }), request);
+                if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
+                    return addCors(new Response(JSON.stringify({ error: 'No autorizado' }), { status: 403, headers: { 'Content-Type': 'application/json' } }), request);
+                }
                 const productId = path.split('/')[3];
                 const catalogo = await leerCatalogo(env);
+                
                 let claveReal = null;
+                let productoEncontrado = null;
+                
                 if (catalogo.productos[productId]) {
                     claveReal = productId;
+                    productoEncontrado = catalogo.productos[productId];
                 } else {
                     for (const clave of Object.keys(catalogo.productos)) {
                         const p = catalogo.productos[clave];
-                        if (String(p.id) === String(productId) || String(p._id) === String(productId) || String(clave) === String(productId)) { claveReal = clave; break; }
+                        if (String(p.id) === String(productId) || String(p._id) === String(productId) || String(clave) === String(productId)) {
+                            claveReal = clave;
+                            productoEncontrado = p;
+                            break;
+                        }
                     }
                 }
-                if (!claveReal) return addCors(new Response(JSON.stringify({ error: 'Producto no encontrado' }), { status: 404, headers: { 'Content-Type': 'application/json' } }), request);
+                
+                if (!claveReal || !productoEncontrado) {
+                    return addCors(new Response(JSON.stringify({ error: 'Producto no encontrado', idBuscado: productId }), { status: 404, headers: { 'Content-Type': 'application/json' } }), request);
+                }
+                
                 delete catalogo.productos[claveReal];
                 await guardarCatalogo(env, catalogo);
-                await registrarAuditoria(env, user, 'DELETE_PRODUCT', { id: productId, claveReal });
-                return addCors(new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } }), request);
+                
+                await registrarAuditoria(env, user, 'DELETE_PRODUCT', { id: productId, claveReal, nombre: productoEncontrado.nombre });
+                
+                return addCors(new Response(JSON.stringify({ success: true, idEliminado: productId, nombre: productoEncontrado.nombre }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
             // TOGGLE OFERTA
             if (path.startsWith('/api/offers/toggle/') && method === 'PATCH') {
                 const user = await verificarToken(request, env);
-                if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) return addCors(new Response(JSON.stringify({ error: 'No autorizado' }), { status: 403, headers: { 'Content-Type': 'application/json' } }), request);
+                if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
+                    return addCors(new Response(JSON.stringify({ error: 'No autorizado' }), { status: 403, headers: { 'Content-Type': 'application/json' } }), request);
+                }
                 const productId = path.split('/').pop();
                 const body = await request.json();
                 const catalogo = await leerCatalogo(env);
+
                 let claveReal = null;
                 if (catalogo.productos[productId]) {
                     claveReal = productId;
                 } else {
                     for (const clave of Object.keys(catalogo.productos)) {
                         const p = catalogo.productos[clave];
-                        if (String(p.id) === String(productId) || String(p._id) === String(productId) || String(clave) === String(productId)) { claveReal = clave; break; }
+                        if (String(p.id) === String(productId) || String(p._id) === String(productId) || String(clave) === String(productId)) {
+                            claveReal = clave;
+                            break;
+                        }
                     }
                 }
-                if (!claveReal) return addCors(new Response(JSON.stringify({ error: 'Producto no encontrado' }), { status: 404, headers: { 'Content-Type': 'application/json' } }), request);
+
+                if (!claveReal || !catalogo.productos[claveReal]) {
+                    return addCors(new Response(JSON.stringify({ error: 'Producto no encontrado' }), { status: 404, headers: { 'Content-Type': 'application/json' } }), request);
+                }
+
                 catalogo.productos[claveReal].enOferta = body.enOferta;
                 if (body.tipoOferta !== undefined) catalogo.productos[claveReal].tipoOferta = body.tipoOferta;
                 if (body.descuento !== undefined) catalogo.productos[claveReal].descuento = parseInt(body.descuento) || 0;
                 if (body.promocion !== undefined) catalogo.productos[claveReal].promocion = body.promocion || '';
+
                 await guardarCatalogo(env, catalogo);
                 await registrarAuditoria(env, user, 'TOGGLE_OFFER', { id: productId, enOferta: body.enOferta });
                 return addCors(new Response(JSON.stringify({ success: true, producto: catalogo.productos[claveReal] }), { headers: { 'Content-Type': 'application/json' } }), request);
@@ -475,7 +824,10 @@ export default {
             // ============================================
             if (path === '/api/auth/login' && (method === 'POST' || method === 'GET')) {
                 const rateLimit = await verificarRateLimit(env, ip);
-                if (rateLimit.bloqueado) return addCors(new Response(JSON.stringify({ error: `Bloqueado ${rateLimit.minutosRestantes}m` }), { status: 429, headers: { 'Content-Type': 'application/json' } }), request);
+                if (rateLimit.bloqueado) {
+                    return addCors(new Response(JSON.stringify({ error: `Demasiados intentos fallidos. Intenta en ${rateLimit.minutosRestantes} minutos.` }), { status: 429, headers: { 'Content-Type': 'application/json' } }), request);
+                }
+                
                 let username, password;
                 if (method === 'POST') {
                     const body = await request.json();
@@ -485,19 +837,33 @@ export default {
                     username = url.searchParams.get('username');
                     password = url.searchParams.get('password');
                 }
+                
                 const usuarios = await leerUsuarios(env);
                 const user = usuarios.find(u => u.username === username);
                 let passwordValida = false;
                 if (user) passwordValida = await verificarPassword(password, user.password);
+                
                 if (!user || !passwordValida) {
                     const intentosData = await registrarIntentoFallido(env, ip);
                     return addCors(new Response(JSON.stringify({ error: 'Credenciales incorrectas', intentosRestantes: Math.max(0, MAX_INTENTOS - intentosData.intentos) }), { status: 401, headers: { 'Content-Type': 'application/json' } }), request);
                 }
-                const sesionExistente = await obtenerSesionActiva(env, user.id);
-                if (sesionExistente) return addCors(new Response(JSON.stringify({ error: 'Ya hay una sesión activa' }), { status: 409, headers: { 'Content-Type': 'application/json' } }), request);
+                
+                const sesionExistente = await verificarSesionActiva(env, user.id);
+                
+                if (sesionExistente) {
+                    const tiempoInactivo = Date.now() - sesionExistente.lastActivity;
+                    if (tiempoInactivo > 5000) {
+                        console.log(`⚠️ Sesión antigua detectada (${tiempoInactivo}ms). Permitiendo login.`);
+                    } else {
+                        return addCors(new Response(JSON.stringify({
+                            error: 'Ya tienes una sesión activa en otro dispositivo. Si no puedes acceder, usa la opción "Forzar cierre de sesión" en la pantalla de login.'
+                        }), { status: 409, headers: { 'Content-Type': 'application/json' } }), request);
+                    }
+                }
+                
                 await resetearRateLimit(env, ip);
                 const sessionId = await crearSesionUnica(env, user.id);
-                const token = btoa(JSON.stringify({ id: user.id, username: user.username, role: user.role, email: user.email, sessionId }));
+                const token = btoa(JSON.stringify({ id: user.id, username: user.username, role: user.role, email: user.email, sessionId: sessionId }));
                 await registrarAuditoria(env, user, 'LOGIN', { ip });
                 return addCors(new Response(JSON.stringify({ success: true, token, user: { id: user.id, username: user.username, role: user.role, email: user.email || '' } }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
@@ -508,10 +874,12 @@ export default {
                 const user = usuarios.find(u => u.username === username);
                 let passwordValida = false;
                 if (user) passwordValida = await verificarPassword(password, user.password);
-                if (!user || !passwordValida) return addCors(new Response(JSON.stringify({ error: 'Credenciales incorrectas' }), { status: 401, headers: { 'Content-Type': 'application/json' } }), request);
+                if (!user || !passwordValida) {
+                    return addCors(new Response(JSON.stringify({ error: 'Credenciales incorrectas' }), { status: 401, headers: { 'Content-Type': 'application/json' } }), request);
+                }
                 await eliminarSesion(env, user.id);
                 await registrarAuditoria(env, user, 'FORCE_LOGOUT', { ip });
-                return addCors(new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } }), request);
+                return addCors(new Response(JSON.stringify({ success: true, message: 'Sesión cerrada. Ya puedes iniciar sesión de nuevo.' }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
             if (path === '/api/auth/logout' && method === 'POST') {
@@ -521,7 +889,10 @@ export default {
                         const body = await request.json();
                         if (body.token) {
                             const payload = JSON.parse(atob(body.token));
-                            if (payload.id) { await eliminarSesion(env, payload.id); return addCors(new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } }), request); }
+                            if (payload.id) {
+                                await eliminarSesion(env, payload.id);
+                                return addCors(new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } }), request);
+                            }
                         }
                     } catch (e) {}
                 }
@@ -534,10 +905,14 @@ export default {
 
             if (path === '/api/auth/register' && method === 'POST') {
                 const user = await verificarToken(request, env);
-                if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) return addCors(new Response(JSON.stringify({ error: 'No autorizado' }), { status: 403, headers: { 'Content-Type': 'application/json' } }), request);
+                if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
+                    return addCors(new Response(JSON.stringify({ error: 'No autorizado' }), { status: 403, headers: { 'Content-Type': 'application/json' } }), request);
+                }
                 const { username, password, role, email, name } = await request.json();
                 const usuarios = await leerUsuarios(env);
-                if (usuarios.find(u => u.username === username)) return addCors(new Response(JSON.stringify({ error: 'Usuario ya existe' }), { status: 400, headers: { 'Content-Type': 'application/json' } }), request);
+                if (usuarios.find(u => u.username === username)) {
+                    return addCors(new Response(JSON.stringify({ error: 'El usuario ya existe' }), { status: 400, headers: { 'Content-Type': 'application/json' } }), request);
+                }
                 const passwordHash = await hashearPassword(password);
                 const nuevoUsuario = { id: `user_${Date.now()}`, username, password: passwordHash, role: role || 'user', email: email || '', name: name || username };
                 usuarios.push(nuevoUsuario);
@@ -548,25 +923,36 @@ export default {
 
             if (path === '/api/users' && method === 'GET') {
                 const user = await verificarToken(request, env);
-                if (!user || user.role !== 'superadmin') return addCors(new Response(JSON.stringify({ error: 'Solo SuperAdmin' }), { status: 403, headers: { 'Content-Type': 'application/json' } }), request);
+                if (!user || user.role !== 'superadmin') {
+                    return addCors(new Response(JSON.stringify({ error: 'Solo el SuperAdmin puede ver usuarios' }), { status: 403, headers: { 'Content-Type': 'application/json' } }), request);
+                }
                 const usuarios = await leerUsuarios(env);
-                return addCors(new Response(JSON.stringify(usuarios.map(({ password, ...rest }) => rest)), { headers: { 'Content-Type': 'application/json' } }), request);
+                const usuariosSinPass = usuarios.map(({ password, ...rest }) => rest);
+                return addCors(new Response(JSON.stringify(usuariosSinPass), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
             if (path.startsWith('/api/users/') && path.endsWith('/role') && method === 'PATCH') {
                 const user = await verificarToken(request, env);
-                if (!user || user.role !== 'superadmin') return addCors(new Response(JSON.stringify({ error: 'Solo SuperAdmin' }), { status: 403, headers: { 'Content-Type': 'application/json' } }), request);
+                if (!user || user.role !== 'superadmin') {
+                    return addCors(new Response(JSON.stringify({ error: 'Solo el SuperAdmin puede cambiar roles' }), { status: 403, headers: { 'Content-Type': 'application/json' } }), request);
+                }
                 const userId = path.split('/')[3];
                 const { role } = await request.json();
                 const usuarios = await leerUsuarios(env);
                 const idx = usuarios.findIndex(u => u.id === userId);
-                if (idx !== -1) { usuarios[idx].role = role; await guardarUsuarios(env, usuarios); await registrarAuditoria(env, user, 'CHANGE_ROLE', { userId, role }); }
+                if (idx !== -1) {
+                    usuarios[idx].role = role;
+                    await guardarUsuarios(env, usuarios);
+                    await registrarAuditoria(env, user, 'CHANGE_ROLE', { userId, role });
+                }
                 return addCors(new Response(JSON.stringify({ success: true, role }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
             if (path.startsWith('/api/users/') && method === 'DELETE') {
                 const user = await verificarToken(request, env);
-                if (!user || user.role !== 'superadmin') return addCors(new Response(JSON.stringify({ error: 'Solo SuperAdmin' }), { status: 403, headers: { 'Content-Type': 'application/json' } }), request);
+                if (!user || user.role !== 'superadmin') {
+                    return addCors(new Response(JSON.stringify({ error: 'Solo el SuperAdmin puede eliminar usuarios' }), { status: 403, headers: { 'Content-Type': 'application/json' } }), request);
+                }
                 const userId = path.split('/')[3];
                 let usuarios = await leerUsuarios(env);
                 usuarios = usuarios.filter(u => u.id !== userId);
@@ -576,11 +962,12 @@ export default {
                 return addCors(new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
+            // 404
             return addCors(new Response(JSON.stringify({ error: 'Ruta no encontrada', path }), { status: 404, headers: { 'Content-Type': 'application/json' } }), request);
 
         } catch (error) {
             console.error('❌ Error general:', error);
-            return addCors(new Response(JSON.stringify({ error: 'Error interno', message: error.message }), { status: 500, headers: { 'Content-Type': 'application/json' } }), request);
+            return addCors(new Response(JSON.stringify({ error: 'Error interno del servidor', message: error.message }), { status: 500, headers: { 'Content-Type': 'application/json' } }), request);
         }
     }
 };
