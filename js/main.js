@@ -46,7 +46,13 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('📊 Datos recibidos:', datos);
             
             renderizarOfertas(datos.ofertas, datos);
-            renderizarSeccionesDinamicas(datos);
+            
+            // ✅ Telas y Otros se renderizan en sus contenedores fijos
+            renderizarTelasYOtros(datos);
+            
+            // ✅ Esto sigue renderizando Hombre y Mujer en la sección de subcategorías
+            renderizarSeccionesDinamicas(datos); 
+            
             console.log('✅ Productos cargados correctamente');
         }
     })();
@@ -153,6 +159,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (datos) {
             datosGlobales = datos; adminDatos = JSON.parse(JSON.stringify(datos));
             renderizarOfertas(datos.ofertas, datos);
+            renderizarTelasYOtros(datos);
             renderizarSeccionesDinamicas(datos);
             mostrarNotificacion('Productos actualizados', 'success');
         }
@@ -299,6 +306,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 adminDatos = JSON.parse(JSON.stringify(datosActualizados)); 
                 renderizarAdminProductos(); 
                 renderizarOfertas(datosActualizados.ofertas, datosActualizados); 
+                renderizarTelasYOtros(datosActualizados);
                 renderizarSeccionesDinamicas(datosActualizados);
                 cargarOfertasAdmin(); 
             }

@@ -90,25 +90,25 @@
         <div class="container">
             <h2 class="section-title">Nuestras ofertas</h2>
             <div class="grid-categorias">
-                <!-- ROPAS: Lleva a la categoría de Hombre (o Mujer) -->
-                <a href="#categoria-hombre" class="categoria-card" style="--cat-color: #E87A20;">
+                <!-- ✅ ROPAS: Lleva a la sección de Hombre/Mujer -->
+                <a href="#ropa" class="categoria-card" style="--cat-color: #E87A20;">
                     <span><img src="assets/img/categorías/categoria-ropa.webp" alt="Ropas" class="logo-hero"></span>
                     <h3>Ropas</h3>
                 </a>
                 
-                <!-- TELAS: Lleva a la categoría de Telas dinámica -->
-                <a href="#categoria-telas" class="categoria-card" style="--cat-color: #F5E6D3;">
+                <!-- ✅ TELAS: Lleva a la sección de Telas -->
+                <a href="#telas" class="categoria-card" style="--cat-color: #F5E6D3;">
                     <span><img src="assets/img/categorías/categoria-telas.webp" alt="Telas" class="logo-hero"></span>
                     <h3>Telas</h3>
                 </a>
                 
-                <!-- OTROS: Lleva a la categoría de Objetos dinámica -->
-                <a href="#categoria-objetos" class="categoria-card" style="--cat-color: #D4A574;">
+                <!-- ✅ OTROS: Lleva a la sección de Otros -->
+                <a href="#otros" class="categoria-card" style="--cat-color: #D4A574;">
                     <span><img src="assets/img/categorías/categoria-otros.webp" alt="Otros" class="logo-hero"></span>
                     <h3>Otros</h3>
                 </a>
                 
-                <!-- PERSONALIZADOS: Esta sección sí es estática en el HTML -->
+                <!-- ✅ PERSONALIZADOS: Lleva a la sección de Personalizados -->
                 <a href="#personalizados" class="categoria-card" style="--cat-color: #B0B0B0;">
                     <span><img src="assets/img/categorías/categoria-personalizados.webp" alt="Personalizados" class="logo-hero"></span>
                     <h3>Personalizados</h3>
@@ -152,8 +152,26 @@
         </div>
     </section>
 
-    <!-- CONTENEDOR DINÁMICO DE CATEGORÍAS (se llena con JS) -->
+    <!-- ✅ CONTENEDOR DINÁMICO DE CATEGORÍAS (se llena con JS) -->
     <div id="contenedor-categorias-dinamicas"></div>
+
+    <!-- ✅ TELAS (Contenedor fijo) -->
+    <section id="telas" class="categoria seccion-telas">
+        <div class="container">
+            <h2 class="section-title">Telas</h2>
+            <p class="section-subtitle">Texturas y colores para tus creaciones</p>
+            <div id="contenedor-telas"></div>
+        </div>
+    </section>
+
+    <!-- ✅ OTROS (Contenedor fijo) -->
+    <section id="otros" class="categoria seccion-otros">
+        <div class="container">
+            <h2 class="section-title">Otros</h2>
+            <p class="section-subtitle">Complementos con estilo</p>
+            <div id="contenedor-otros"></div>
+        </div>
+    </section>
 
     <!-- PERSONALIZADOS -->
     <section id="personalizados" class="personalizados">
@@ -459,9 +477,7 @@
                     <div class="form-card">
                         <h3 class="form-title" id="form-sub-title">Nueva Subcategoría</h3>
                         <form id="subcategoria-form" class="form-elegante">
-                            <!-- Campo oculto para saber si estamos editando -->
                             <input type="hidden" id="sub-edit-id" value="">
-                            
                             <div class="form-grid">
                                 <div class="form-group">
                                     <label>Nombre de la Subcategoría</label>
@@ -485,13 +501,13 @@
                     </div>
                 </div>
 
-                <!-- Buscador de subcategorías -->
+                <!-- ✅ Buscador de subcategorías -->
                 <div class="admin-buscador">
                     <input type="text" id="buscador-subcategorias" placeholder="Buscar subcategoría por nombre..." onkeydown="if(event.key==='Enter') filtrarSubcategoriasAdmin(this.value)">
                     <button class="btn-admin btn-primario" onclick="filtrarSubcategoriasAdmin(document.getElementById('buscador-subcategorias').value)">Buscar</button>
                     <button class="btn-admin btn-secundario" onclick="document.getElementById('buscador-subcategorias').value=''; filtrarSubcategoriasAdmin('')">Limpiar</button>
                 </div>
-                <!-- Contenedor agrupado por categorías -->
+
                 <div id="admin-subcategorias-lista" class="admin-lista-elegante"></div>
             </div>
 
@@ -1288,10 +1304,10 @@
         </div>
     </div>
 
-    <script src="js/config.js?v=2" defer></script>
-    <script src="js/api.js?v=2" defer></script>
-    <script src="js/ui.js?v=2" defer></script>
-    <script src="js/admin.js?v=2" defer></script>
-    <script src="js/main.js?v=2" defer></script>
+    <script src="js/config.js" defer></script>
+    <script src="js/api.js" defer></script>
+    <script src="js/ui.js" defer></script>
+    <script src="js/admin.js" defer></script>
+    <script src="js/main.js" defer></script>
 </body>
 </html>

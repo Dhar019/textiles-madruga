@@ -217,7 +217,7 @@ function renderizarProductosConModal(productos, contenedorSelector, datos) {
     });
 }
 
-// Renderizar secciones dinámicas con buscador y toggle
+// Renderizar secciones dinámicas con buscador y toggle (Hombre y Mujer)
 function renderizarSeccionesDinamicas(datos) {
     const contenedor = document.getElementById('contenedor-categorias-dinamicas');
     if (!contenedor) return;
@@ -229,12 +229,13 @@ function renderizarSeccionesDinamicas(datos) {
 
     let html = '';
     categoriasGlobales.forEach(cat => {
-        // Comprobamos si hay productos en esta categoría
+        // Si es telas u objetos, las saltamos porque tienen sus contenedores fijos
+        if (cat.id === 'telas' || cat.id === 'objetos') return;
+
         const productosCat = (datos.productos[cat.id] || []);
         
         let contenidoGrid = '';
         if (productosCat.length === 0) {
-            // ✅ Si no hay productos, mostramos mensaje de aviso
             contenidoGrid = `
                 <div style="grid-column: 1 / -1; text-align: center; padding: 40px; background: #FFF5EB; border-radius: 12px; border: 1px dashed #E87A20; margin-top: 20px;">
                     <p style="color: var(--color-naranja); font-weight: 600; font-size: 1.1rem;">Lo sentimos, en estos momentos no tenemos ninguna existencia de estos productos.</p>
@@ -245,7 +246,6 @@ function renderizarSeccionesDinamicas(datos) {
             contenidoGrid = `<div class="grid-productos" id="grid-categoria-${cat.id}"></div>`;
         }
 
-        // Siempre pintamos la sección para que el botón de arriba tenga dónde hacer scroll
         html += `
             <section id="categoria-${cat.id}" class="categoria seccion-productos">
                 <div class="container">
@@ -273,12 +273,35 @@ function renderizarSeccionesDinamicas(datos) {
 
     contenedor.innerHTML = html;
 
-    // Inicializar cada categoría que SÍ tenga productos
     categoriasGlobales.forEach(cat => {
-        if ((datos.productos[cat.id] || []).length > 0) {
+        if (cat.id !== 'telas' && cat.id !== 'objetos' && (datos.productos[cat.id] || []).length > 0) {
             filtrarCategoria(cat.id);
         }
     });
+}
+
+// ✅ NUEVA FUNCIÓN: Renderiza Telas y Otros en sus contenedores fijos
+function renderizarTelasYOtros(datos) {
+    const renderCategoriaFija = (catId, selector, titulo) => {
+        const contenedor = document.querySelector(selector);
+        if (!contenedor) return;
+
+        const productos = datos.productos[catId] || [];
+        
+        if (productos.length === 0) {
+            contenedor.innerHTML = `
+                <div style="text-align: center; padding: 40px; background: #FFF5EB; border-radius: 12px; border: 1px dashed #E87A20; margin-top: 20px;">
+                    <p style="color: var(--color-naranja); font-weight: 600; font-size: 1.1rem;">Lo sentimos, en estos momentos no tenemos ninguna existencia de estos productos.</p>
+                    <p style="color: var(--color-gris); font-size: 0.9rem; margin-top: 5px;">Vuelve pronto, estamos trabajando en ello.</p>
+                </div>
+            `;
+        } else {
+            renderizarProductosConModal(productos, selector, datos);
+        }
+    };
+
+    renderCategoriaFija('telas', '#contenedor-telas');
+    renderCategoriaFija('objetos', '#contenedor-otros');
 }
 
 // Filtra y pinta los productos de una categoría
@@ -290,25 +313,25 @@ function filtrarCategoria(catId) {
     const vistaActual = document.querySelector(`#categoria-${catId} .btn-toggle.activo`)?.dataset.vista || 'todo';
     
     const productosCat = (datosGlobales.productos[catId] || []);
-    
-    // Buscamos la categoría, si no está (porque usamos las de por defecto), creamos un objeto vacío
-    const categoria = categoriasGlobales?.find(c => c.id === catId) || { id: catId, subcategorias: [] };
+    const categoria = categoriasGlobales.find(c => c.id === catId);
     
     // 1. Filtrar por buscador
     let productosFiltrados = productosCat.filter(p => p.nombre.toLowerCase().includes(buscador));
 
     // 2. Renderizar según la vista
-    if (vistaActual === 'todo' || !categoria.subcategorias || categoria.subcategorias.length === 0) {
+    if (vistaActual === 'todo' || !categoria || !categoria.subcategorias || categoria.subcategorias.length === 0) {
+        // Vista "Todo": un solo grid
         if (productosFiltrados.length === 0) {
             grid.innerHTML = '<p style="text-align:center;padding:20px;color:var(--color-gris);font-style:italic;">No se encontraron productos.</p>';
         } else {
             renderizarProductosEnGrid(productosFiltrados, grid, datosGlobales);
         }
     } else {
-        // ... (el resto del código de subcategorías se mantiene igual)
+        // Vista "Por Subcategoría": agrupamos
         let html = '';
         let hayProductos = false;
         
+        // A. Recorremos las subcategorías de la categoría
         categoria.subcategorias.forEach(sub => {
             const productosSub = productosFiltrados.filter(p => String(p.subcategoria) === String(sub.id));
             if (productosSub.length > 0) {
@@ -322,6 +345,7 @@ function filtrarCategoria(catId) {
             }
         });
         
+        // B. Productos SIN subcategoría o con subcategoría NO listada
         const idsSubcats = (categoria.subcategorias || []).map(s => String(s.id));
         const productosSinSub = productosFiltrados.filter(p => !p.subcategoria || !idsSubcats.includes(String(p.subcategoria)));
         
@@ -340,6 +364,7 @@ function filtrarCategoria(catId) {
         } else {
             grid.innerHTML = html;
             
+            // C. Llenar los sub-grids
             categoria.subcategorias.forEach(sub => {
                 const subGrid = document.getElementById(`grid-${catId}-${sub.id}`);
                 if (subGrid) {
@@ -348,6 +373,7 @@ function filtrarCategoria(catId) {
                 }
             });
             
+            // D. Llenar el grid de "Otros"
             const otrosGrid = document.getElementById(`grid-${catId}-otros`);
             if (otrosGrid) {
                 renderizarProductosEnGrid(productosSinSub, otrosGrid, datosGlobales);
@@ -358,11 +384,9 @@ function filtrarCategoria(catId) {
 
 // Cambia entre "Todo" y "Por Subcategoría"
 function cambiarVista(catId, vista) {
-    // Actualizar botones
     document.querySelectorAll(`#categoria-${catId} .btn-toggle`).forEach(btn => {
         btn.classList.toggle('activo', btn.dataset.vista === vista);
     });
-    // Volver a filtrar
     filtrarCategoria(catId);
 }
 

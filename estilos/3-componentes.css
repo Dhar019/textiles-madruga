@@ -2833,3 +2833,8 @@ body.lightbox-abierto {
 .seccion-productos {
     scroll-margin-top: 100px; /* Ajusta este valor según la altura de tu header */
 }
+
+/* FIX: Evitar que el header tape el título de la sección al hacer scroll */
+#telas, #otros, #ropa-hombre, #ropa-mujer {
+    scroll-margin-top: 100px;
+}
