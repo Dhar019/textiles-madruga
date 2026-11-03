@@ -43,19 +43,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (datos) {
             datosGlobales = datos;
             adminDatos = JSON.parse(JSON.stringify(datos));
+            console.log('📊 Datos recibidos:', datos);
             
-            // ✅ Llenar las secciones estáticas del HTML
             renderizarOfertas(datos.ofertas, datos);
-            
-            // ✅ Usar la función que sí existe en ui.js
-            renderizarProductosConModal(datos.productos.hombre, '#ropa-hombre .grid-productos', datos);
-            renderizarProductosConModal(datos.productos.mujer, '#ropa-mujer .grid-productos', datos);
-            renderizarProductosConModal(datos.productos.telas, '#telas .grid-productos', datos);
-            renderizarProductosConModal(datos.productos.objetos, '#otros .grid-productos', datos);
-            
+            renderizarSeccionesDinamicas(datos);
             console.log('✅ Productos cargados correctamente');
-        } else {
-            console.warn('⚠️ No hay productos. La web funcionará sin catálogo.');
         }
     })();
 
@@ -69,9 +61,10 @@ document.addEventListener('DOMContentLoaded', function() {
         else mostrarLogin();
     });
 
-    // ✅ CIERRE DEL LOGIN
+    // ✅ CIERRE DEL LOGIN CON DELEGACIÓN DE EVENTOS (a prueba de balas)
     document.addEventListener('click', function(e) {
         if (e.target.closest('#login-cerrar') || e.target.closest('#login-overlay')) {
+            console.log('🔒 Cerrando login (delegación)');
             cerrarLogin();
         }
     });
@@ -160,10 +153,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (datos) {
             datosGlobales = datos; adminDatos = JSON.parse(JSON.stringify(datos));
             renderizarOfertas(datos.ofertas, datos);
-            renderizarProductosConModal(datos.productos.hombre, '#ropa-hombre .grid-productos', datos);
-            renderizarProductosConModal(datos.productos.mujer, '#ropa-mujer .grid-productos', datos);
-            renderizarProductosConModal(datos.productos.telas, '#telas .grid-productos', datos);
-            renderizarProductosConModal(datos.productos.objetos, '#otros .grid-productos', datos);
+            renderizarSeccionesDinamicas(datos);
             mostrarNotificacion('Productos actualizados', 'success');
         }
         setTimeout(() => this.classList.remove('spinning'), 500);
@@ -186,7 +176,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // ✅ LISTENERS DE UI
+    // ✅ LISTENERS DE UI (Movidos desde ui.js)
     const btnAyuda = document.getElementById('btn-ayuda-pedido');
     const modalAyuda = document.getElementById('modal-ayuda-pedido');
     const cerrarAyuda = document.getElementById('modal-ayuda-pedido-cerrar');
@@ -246,7 +236,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('modal-bienvenida-cerrar')?.addEventListener('click', cerrarModalBienvenida);
     document.getElementById('modal-bienvenida-overlay')?.addEventListener('click', cerrarModalBienvenida);
 
-    // ✅ LISTENERS DE ADMIN
+    // ✅ LISTENERS DE ADMIN (Movidos desde admin.js)
     document.querySelectorAll('.admin-tab').forEach(tab => {
         tab.addEventListener('click', function() {
             const tabName = this.dataset.tab;
@@ -309,10 +299,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 adminDatos = JSON.parse(JSON.stringify(datosActualizados)); 
                 renderizarAdminProductos(); 
                 renderizarOfertas(datosActualizados.ofertas, datosActualizados); 
-                renderizarProductosConModal(datosActualizados.productos.hombre, '#ropa-hombre .grid-productos', datosActualizados);
-                renderizarProductosConModal(datosActualizados.productos.mujer, '#ropa-mujer .grid-productos', datosActualizados);
-                renderizarProductosConModal(datosActualizados.productos.telas, '#telas .grid-productos', datosActualizados);
-                renderizarProductosConModal(datosActualizados.productos.objetos, '#otros .grid-productos', datosActualizados);
+                renderizarSeccionesDinamicas(datosActualizados);
                 cargarOfertasAdmin(); 
             }
             
@@ -386,43 +373,31 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // ✅ LISTENERS DE SUBCATEGORÍAS
     document.getElementById('btn-nueva-subcategoria')?.addEventListener('click', () => {
-        document.getElementById('sub-edit-id').value = '';
-        document.getElementById('subcategoria-form').reset();
-        document.getElementById('form-sub-title').textContent = 'Nueva Subcategoría';
         document.getElementById('form-subcategoria').className = 'form-visible';
     });
     
     document.getElementById('btn-cancelar-sub')?.addEventListener('click', () => {
         document.getElementById('form-subcategoria').className = 'form-oculto';
         document.getElementById('subcategoria-form').reset();
-        document.getElementById('sub-edit-id').value = '';
     });
 
     document.getElementById('subcategoria-form')?.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const editId = document.getElementById('sub-edit-id').value.trim();
         const nombre = document.getElementById('sub-nombre').value.trim();
         const catPadre = document.getElementById('sub-categoria-padre').value;
         
         if (!nombre) return;
         
         const id = nombre.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-        
-        let exito;
-        if (editId) {
-            exito = await editarSubcategoria(editId, { nombre, categoriaPadre: catPadre });
-        } else {
-            exito = await guardarSubcategoria({ id, nombre, categoriaPadre: catPadre });
-        }
+        const exito = await guardarSubcategoria({ id, nombre, categoriaPadre: catPadre });
         
         if (exito) {
-            mostrarNotificacion(editId ? 'Subcategoría actualizada' : 'Subcategoría creada', 'success');
+            mostrarNotificacion('Subcategoría creada', 'success');
             document.getElementById('form-subcategoria').className = 'form-oculto';
             document.getElementById('subcategoria-form').reset();
-            document.getElementById('sub-edit-id').value = '';
             cargarSubcategoriasAdmin();
         } else {
-            mostrarNotificacion('Error al guardar', 'error');
+            mostrarNotificacion('Error al crear', 'error');
         }
     });
     
