@@ -220,19 +220,28 @@ function renderizarProductosConModal(productos, contenedorSelector, datos) {
 // Renderizar secciones dinámicas con buscador y toggle
 function renderizarSeccionesDinamicas(datos) {
     const contenedor = document.getElementById('contenedor-categorias-dinamicas');
-    if (!contenedor) return;
-
-    if (!categoriasGlobales || categoriasGlobales.length === 0) {
-        contenedor.innerHTML = '<p style="text-align:center;padding:40px;color:var(--color-gris);">No hay categorías configuradas.</p>';
+    if (!contenedor) {
+        console.warn('⚠️ No se encontró el contenedor de categorías dinámicas');
         return;
     }
 
+    // ✅ PLAN B: Si no hay categorías globales, usamos las fijas
+    let categoriasAUsar = categoriasGlobales;
+    
+    if (!categoriasAUsar || categoriasAUsar.length === 0) {
+        console.warn('⚠️ Usando categorías por defecto porque las dinámicas fallaron');
+        categoriasAUsar = [
+            { id: 'hombre', nombre: 'Hombre', subcategorias: [] },
+            { id: 'mujer', nombre: 'Mujer', subcategorias: [] },
+            { id: 'telas', nombre: 'Telas', subcategorias: [] },
+            { id: 'objetos', nombre: 'Otros', subcategorias: [] }
+        ];
+    }
+
     let html = '';
-    categoriasGlobales.forEach(cat => {
-        // ✅ IMPORTANTE: Verificamos si la categoría tiene productos (en cualquier subcategoría)
+    categoriasAUsar.forEach(cat => {
         const productosCat = (datos.productos[cat.id] || []);
         
-        // Si no hay NINGÚN producto en esta categoría, no la mostramos
         if (productosCat.length === 0) return;
 
         html += `
@@ -241,7 +250,6 @@ function renderizarSeccionesDinamicas(datos) {
                     <h2 class="section-title">${cat.nombre}</h2>
                     <p class="section-subtitle">Explora nuestra selección de ${cat.nombre.toLowerCase()}</p>
                     
-                    <!-- Barra de herramientas: Buscador y Toggle -->
                     <div class="categoria-toolbar">
                         <div class="buscador-categoria">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -253,7 +261,6 @@ function renderizarSeccionesDinamicas(datos) {
                         </div>
                     </div>
 
-                    <!-- Grid donde se pintarán los productos -->
                     <div class="grid-productos" id="grid-categoria-${cat.id}"></div>
                 </div>
             </section>
@@ -262,8 +269,7 @@ function renderizarSeccionesDinamicas(datos) {
 
     contenedor.innerHTML = html;
 
-    // Inicializar cada categoría visible
-    categoriasGlobales.forEach(cat => {
+    categoriasAUsar.forEach(cat => {
         if ((datos.productos[cat.id] || []).length > 0) {
             filtrarCategoria(cat.id);
         }
@@ -279,25 +285,25 @@ function filtrarCategoria(catId) {
     const vistaActual = document.querySelector(`#categoria-${catId} .btn-toggle.activo`)?.dataset.vista || 'todo';
     
     const productosCat = (datosGlobales.productos[catId] || []);
-    const categoria = categoriasGlobales.find(c => c.id === catId);
+    
+    // Buscamos la categoría, si no está (porque usamos las de por defecto), creamos un objeto vacío
+    const categoria = categoriasGlobales?.find(c => c.id === catId) || { id: catId, subcategorias: [] };
     
     // 1. Filtrar por buscador
     let productosFiltrados = productosCat.filter(p => p.nombre.toLowerCase().includes(buscador));
 
     // 2. Renderizar según la vista
     if (vistaActual === 'todo' || !categoria.subcategorias || categoria.subcategorias.length === 0) {
-        // Vista "Todo": un solo grid
         if (productosFiltrados.length === 0) {
             grid.innerHTML = '<p style="text-align:center;padding:20px;color:var(--color-gris);font-style:italic;">No se encontraron productos.</p>';
         } else {
             renderizarProductosEnGrid(productosFiltrados, grid, datosGlobales);
         }
     } else {
-        // Vista "Por Subcategoría": agrupamos
+        // ... (el resto del código de subcategorías se mantiene igual)
         let html = '';
         let hayProductos = false;
         
-        // A. Recorremos las subcategorías de la categoría
         categoria.subcategorias.forEach(sub => {
             const productosSub = productosFiltrados.filter(p => String(p.subcategoria) === String(sub.id));
             if (productosSub.length > 0) {
@@ -311,7 +317,6 @@ function filtrarCategoria(catId) {
             }
         });
         
-        // B. Productos SIN subcategoría o con subcategoría NO listada
         const idsSubcats = (categoria.subcategorias || []).map(s => String(s.id));
         const productosSinSub = productosFiltrados.filter(p => !p.subcategoria || !idsSubcats.includes(String(p.subcategoria)));
         
@@ -330,7 +335,6 @@ function filtrarCategoria(catId) {
         } else {
             grid.innerHTML = html;
             
-            // C. Llenar los sub-grids
             categoria.subcategorias.forEach(sub => {
                 const subGrid = document.getElementById(`grid-${catId}-${sub.id}`);
                 if (subGrid) {
@@ -339,7 +343,6 @@ function filtrarCategoria(catId) {
                 }
             });
             
-            // D. Llenar el grid de "Otros"
             const otrosGrid = document.getElementById(`grid-${catId}-otros`);
             if (otrosGrid) {
                 renderizarProductosEnGrid(productosSinSub, otrosGrid, datosGlobales);
