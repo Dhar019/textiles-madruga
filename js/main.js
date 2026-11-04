@@ -73,12 +73,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         else {
             mostrarLogin();
-            // ✅ Renderizar el captcha con reintento
-            setTimeout(() => {
-                if (typeof renderizarTurnstileLogin === 'function') {
-                    renderizarTurnstileLogin();
-                }
-            }, 300); // Un poco más de margen
         }
     });
 
