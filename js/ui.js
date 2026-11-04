@@ -414,23 +414,18 @@ function filtrarCategoria(catId) {
     const productosCat = (datosGlobales.productos[catId] || []);
     const categoria = categoriasGlobales.find(c => c.id === catId);
     
-    // 1. Filtrar por buscador
     let productosFiltrados = productosCat.filter(p => p.nombre.toLowerCase().includes(buscador));
 
-    // 2. Renderizar según la vista
     if (vistaActual === 'todo' || !categoria || !categoria.subcategorias || categoria.subcategorias.length === 0) {
-        // Vista "Todo": un solo grid
         if (productosFiltrados.length === 0) {
             grid.innerHTML = '<p style="text-align:center;padding:20px;color:var(--color-gris);font-style:italic;">No se encontraron productos.</p>';
         } else {
             renderizarProductosEnGrid(productosFiltrados, grid, datosGlobales);
         }
     } else {
-        // Vista "Por Subcategoría": agrupamos
         let html = '';
         let hayProductos = false;
         
-        // A. Recorremos las subcategorías de la categoría
         categoria.subcategorias.forEach(sub => {
             const productosSub = productosFiltrados.filter(p => String(p.subcategoria) === String(sub.id));
             if (productosSub.length > 0) {
@@ -444,7 +439,6 @@ function filtrarCategoria(catId) {
             }
         });
         
-        // B. Productos SIN subcategoría o con subcategoría NO listada
         const idsSubcats = (categoria.subcategorias || []).map(s => String(s.id));
         const productosSinSub = productosFiltrados.filter(p => !p.subcategoria || !idsSubcats.includes(String(p.subcategoria)));
         
@@ -463,7 +457,6 @@ function filtrarCategoria(catId) {
         } else {
             grid.innerHTML = html;
             
-            // C. Llenar los sub-grids
             categoria.subcategorias.forEach(sub => {
                 const subGrid = document.getElementById(`grid-${catId}-${sub.id}`);
                 if (subGrid) {
@@ -472,7 +465,6 @@ function filtrarCategoria(catId) {
                 }
             });
             
-            // D. Llenar el grid de "Otros"
             const otrosGrid = document.getElementById(`grid-${catId}-otros`);
             if (otrosGrid) {
                 renderizarProductosEnGrid(productosSinSub, otrosGrid, datosGlobales);

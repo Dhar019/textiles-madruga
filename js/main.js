@@ -100,22 +100,29 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // ✅ ÚNICO LISTENER PARA login-registro-link (con Turnstile)
     document.getElementById('login-registro-link')?.addEventListener('click', function(e) {
         e.preventDefault();
         cerrarLogin();
         abrirModalGenerico({
-            titulo: 'Crear Cuenta', subtitulo: 'Es rápido, gratis y seguro',
+            titulo: 'Crear Cuenta', 
+            subtitulo: 'Es rápido, gratis y seguro',
             campos: [
                 { id: 'username', label: 'Usuario', type: 'text', required: true },
                 { id: 'password', label: 'Contraseña', type: 'password', required: true },
-                { id: 'email', label: 'Gmail', type: 'email', required: true },
-                { id: 'turnstile-container', type: 'hidden' } // ✅ Contenedor de Turnstile
+                { id: 'email', label: 'Gmail', type: 'email', required: true }
             ],
+            conTurnstile: true,
             onSubmit: async (datos) => {
-                // ✅ Pasamos el token de Turnstile
                 const result = await registerUser(datos.username, datos.password, datos.email, datos.username, window.__turnstileToken);
-                if (result.success) { actualizarBotonAcceder(); mostrarNotificacion('Usuario creado. Sesión iniciada.', 'success'); }
-                else { mostrarNotificacion(result.message, 'error'); return false; }
+                if (result.success) { 
+                    actualizarBotonAcceder(); 
+                    mostrarNotificacion('Usuario creado. Sesión iniciada.', 'success'); 
+                }
+                else { 
+                    mostrarNotificacion(result.message, 'error'); 
+                    return false; 
+                }
             }
         });
     });
@@ -222,53 +229,26 @@ document.addEventListener('DOMContentLoaded', function() {
         btnVolver.addEventListener('click', cerrarModalAyuda);
     }
 
-// ✅ REGISTRO DESDE EL MODAL DE BIENVENIDA
-document.getElementById('modal-bienvenida-crear')?.addEventListener('click', function() {
-    cerrarModalBienvenida();
-    abrirModalGenerico({
-        titulo: 'Crear Cuenta',
-        subtitulo: 'Es rápido, gratis y seguro',
-        campos: [
-            { id: 'username', label: 'Usuario', type: 'text', placeholder: 'Tu nombre de usuario', required: true },
-            { id: 'password', label: 'Contraseña', type: 'password', placeholder: 'Mínimo 6 caracteres', required: true },
-            { id: 'email', label: 'Gmail', type: 'email', placeholder: 'tucorreo@gmail.com', required: true }
-        ],
-        conTurnstile: true, // ✅ Activar Turnstile
-        onSubmit: async (datos) => {
-            const result = await registerUser(datos.username, datos.password, datos.email, datos.username, window.__turnstileToken);
-            if (result.success) {
-                actualizarBotonAcceder();
-                mostrarNotificacion('¡Bienvenido a Textiles Madruga!', 'success');
-            } else {
-                mostrarNotificacion(result.message, 'error');
-                return false;
-            }
-        }
-    });
-});
-
-// REGISTRO DESDE EL LINK DEL LOGIN
-    document.getElementById('login-registro-link')?.addEventListener('click', function(e) {
-        e.preventDefault();
-        cerrarLogin();
+    // ✅ REGISTRO DESDE EL MODAL DE BIENVENIDA (CON TURNSTILE)
+    document.getElementById('modal-bienvenida-crear')?.addEventListener('click', function() {
+        cerrarModalBienvenida();
         abrirModalGenerico({
-            titulo: 'Crear Cuenta', 
+            titulo: 'Crear Cuenta',
             subtitulo: 'Es rápido, gratis y seguro',
             campos: [
-                { id: 'username', label: 'Usuario', type: 'text', required: true },
-                { id: 'password', label: 'Contraseña', type: 'password', required: true },
-                { id: 'email', label: 'Gmail', type: 'email', required: true }
+                { id: 'username', label: 'Usuario', type: 'text', placeholder: 'Tu nombre de usuario', required: true },
+                { id: 'password', label: 'Contraseña', type: 'password', placeholder: 'Mínimo 6 caracteres', required: true },
+                { id: 'email', label: 'Gmail', type: 'email', placeholder: 'tucorreo@gmail.com', required: true }
             ],
-            conTurnstile: true, // ✅ Activar Turnstile
+            conTurnstile: true,
             onSubmit: async (datos) => {
                 const result = await registerUser(datos.username, datos.password, datos.email, datos.username, window.__turnstileToken);
-                if (result.success) { 
-                    actualizarBotonAcceder(); 
-                    mostrarNotificacion('Usuario creado. Sesión iniciada.', 'success'); 
-                }
-                else { 
-                    mostrarNotificacion(result.message, 'error'); 
-                    return false; 
+                if (result.success) {
+                    actualizarBotonAcceder();
+                    mostrarNotificacion('¡Bienvenido a Textiles Madruga!', 'success');
+                } else {
+                    mostrarNotificacion(result.message, 'error');
+                    return false;
                 }
             }
         });
@@ -463,7 +443,7 @@ document.getElementById('modal-bienvenida-crear')?.addEventListener('click', fun
     document.getElementById('prod-categoria')?.addEventListener('change', actualizarSubcategoriasForm);
 });
 
-// Ojito de contraseña
+// Ojito de contraseña (delegación global)
 document.addEventListener('click', function(e) {
     if (e.target.closest('.toggle-password')) {
         const btn = e.target.closest('.toggle-password');
