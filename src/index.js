@@ -1,6 +1,6 @@
 // ============================================
 // WORKER - TEXTILES MADRUGA API
-// Versión 6.0 - Categorías Anidadas + Turnstile
+// Versión 6.1 - Categorías Anidadas + Turnstile + Sesión Única Estricta + Reset Password
 // ============================================
 
 // ============================================
@@ -370,7 +370,7 @@ async function registrarAuditoria(env, user, action, details = {}) {
 }
 
 // ============================================
-// TURNSTILE (NUEVO)
+// TURNSTILE
 // ============================================
 async function verificarTurnstile(env, token, ip) {
     if (!env.TURNSTILE_SECRET_KEY) return true; // Si no hay secret, no validamos
@@ -413,14 +413,14 @@ export default {
                     status: 'ok',
                     message: 'API de Textiles Madruga funcionando',
                     db: 'kv',
-                    version: '6.0',
-                    features: ['IDs alfanuméricos', 'Ofertas', 'Categorías Anidadas', 'Sistema de pedidos', 'Tallas', 'Sesión Única', 'Turnstile'],
+                    version: '6.1',
+                    features: ['IDs alfanuméricos', 'Ofertas', 'Categorías Anidadas', 'Sistema de pedidos', 'Tallas', 'Sesión Única Estricta', 'Turnstile', 'Reset Password'],
                     timestamp: new Date().toISOString()
                 }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
             // ============================================
-            // CATEGORÍAS (NUEVO)
+            // CATEGORÍAS
             // ============================================
             if (path === '/api/categorias' && method === 'GET') {
                 const catalogo = await leerCatalogo(env);
@@ -851,14 +851,16 @@ export default {
                     return addCors(new Response(JSON.stringify({ error: `Demasiados intentos fallidos. Intenta en ${rateLimit.minutosRestantes} minutos.` }), { status: 429, headers: { 'Content-Type': 'application/json' } }), request);
                 }
                 
-                let username, password;
+                let username, password, turnstileToken;
                 if (method === 'POST') {
                     const body = await request.json();
                     username = body.username;
                     password = body.password;
+                    turnstileToken = body.turnstileToken;
                 } else {
                     username = url.searchParams.get('username');
                     password = url.searchParams.get('password');
+                    turnstileToken = url.searchParams.get('turnstileToken');
                 }
                 
                 const usuarios = await leerUsuarios(env);
@@ -874,14 +876,11 @@ export default {
                 const sesionExistente = await verificarSesionActiva(env, user.id);
                 
                 if (sesionExistente) {
-                    const tiempoInactivo = Date.now() - sesionExistente.lastActivity;
-                    if (tiempoInactivo > 5000) {
-                        console.log(`⚠️ Sesión antigua detectada (${tiempoInactivo}ms). Permitiendo login.`);
-                    } else {
-                        return addCors(new Response(JSON.stringify({
-                            error: 'Ya tienes una sesión activa en otro dispositivo. Si no puedes acceder, usa la opción "Forzar cierre de sesión" en la pantalla de login.'
-                        }), { status: 409, headers: { 'Content-Type': 'application/json' } }), request);
-                    }
+                    // ✅ SESIÓN ÚNICA ESTRICTA: Si hay una sesión activa, rechazar el login.
+                    // El usuario debe usar "Forzar cierre de sesión" o esperar a que expire.
+                    return addCors(new Response(JSON.stringify({
+                        error: 'Ya tienes una sesión activa en otro dispositivo. Cierra sesión allí o usa "Forzar cierre de sesión" para desbloquear esta cuenta.'
+                    }), { status: 409, headers: { 'Content-Type': 'application/json' } }), request);
                 }
                 
                 await resetearRateLimit(env, ip);
@@ -963,6 +962,28 @@ export default {
                 const usuarios = await leerUsuarios(env);
                 const usuariosSinPass = usuarios.map(({ password, ...rest }) => rest);
                 return addCors(new Response(JSON.stringify(usuariosSinPass), { headers: { 'Content-Type': 'application/json' } }), request);
+            }
+
+            // ✅ NUEVO: Cambiar contraseña de un usuario (solo SuperAdmin)
+            if (path.startsWith('/api/users/') && path.endsWith('/password') && method === 'PATCH') {
+                const user = await verificarToken(request, env);
+                if (!user || user.role !== 'superadmin') {
+                    return addCors(new Response(JSON.stringify({ error: 'Solo el SuperAdmin puede resetear contraseñas' }), { status: 403, headers: { 'Content-Type': 'application/json' } }), request);
+                }
+                const userId = path.split('/')[3];
+                const { password } = await request.json();
+                if (!password || password.length < 6) {
+                    return addCors(new Response(JSON.stringify({ error: 'La contraseña debe tener al menos 6 caracteres' }), { status: 400, headers: { 'Content-Type': 'application/json' } }), request);
+                }
+                const usuarios = await leerUsuarios(env);
+                const idx = usuarios.findIndex(u => u.id === userId);
+                if (idx === -1) {
+                    return addCors(new Response(JSON.stringify({ error: 'Usuario no encontrado' }), { status: 404, headers: { 'Content-Type': 'application/json' } }), request);
+                }
+                usuarios[idx].password = await hashearPassword(password);
+                await guardarUsuarios(env, usuarios);
+                await registrarAuditoria(env, user, 'RESET_PASSWORD', { userId });
+                return addCors(new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
             if (path.startsWith('/api/users/') && path.endsWith('/role') && method === 'PATCH') {
