@@ -280,31 +280,130 @@ function renderizarSeccionesDinamicas(datos) {
     });
 }
 
-// ✅ NUEVA FUNCIÓN: Renderiza Telas y Otros en sus contenedores fijos
+// ✅ NUEVA FUNCIÓN: Renderiza Telas y Otros en sus contenedores fijos con buscador y toggle
 function renderizarTelasYOtros(datos) {
-    const renderCategoriaFija = (catId, selector, titulo) => {
+    const renderCategoriaFija = (catId, nombre, selector) => {
         const contenedor = document.querySelector(selector);
         if (!contenedor) return;
 
         const productos = datos.productos[catId] || [];
+        const categoria = categoriasGlobales.find(c => c.id === catId) || { id: catId, nombre: nombre, subcategorias: [] };
         
+        let contenidoGrid = '';
         if (productos.length === 0) {
-            contenedor.innerHTML = `
-                <div style="text-align: center; padding: 40px; background: #FFF5EB; border-radius: 12px; border: 1px dashed #E87A20; margin-top: 20px;">
+            contenidoGrid = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 40px; background: #FFF5EB; border-radius: 12px; border: 1px dashed #E87A20; margin-top: 20px;">
                     <p style="color: var(--color-naranja); font-weight: 600; font-size: 1.1rem;">Lo sentimos, en estos momentos no tenemos ninguna existencia de estos productos.</p>
                     <p style="color: var(--color-gris); font-size: 0.9rem; margin-top: 5px;">Vuelve pronto, estamos trabajando en ello.</p>
                 </div>
             `;
         } else {
-            renderizarProductosConModal(productos, selector, datos);
+            contenidoGrid = `<div class="grid-productos" id="grid-${catId}"></div>`;
+        }
+
+        contenedor.innerHTML = `
+            <div class="categoria-toolbar" style="${productos.length === 0 ? 'display: none;' : ''}">
+                <div class="buscador-categoria">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" id="buscador-${catId}" placeholder="Buscar en ${nombre}..." oninput="filtrarCategoriaFija('${catId}')">
+                </div>
+                <div class="toggle-vista">
+                    <button class="btn-toggle activo" data-vista="todo" onclick="cambiarVistaFija('${catId}', 'todo')">Ver Todo</button>
+                    <button class="btn-toggle" data-vista="subcategoria" onclick="cambiarVistaFija('${catId}', 'subcategoria')">Ver por Tipo</button>
+                </div>
+            </div>
+            ${contenidoGrid}
+        `;
+
+        if (productos.length > 0) {
+            filtrarCategoriaFija(catId);
         }
     };
 
-    renderCategoriaFija('telas', '#contenedor-telas');
-    renderCategoriaFija('objetos', '#contenedor-otros');
+    renderCategoriaFija('telas', 'Telas', '#contenedor-telas');
+    renderCategoriaFija('objetos', 'Otros', '#contenedor-otros');
 }
 
-// Filtra y pinta los productos de una categoría
+// ✅ NUEVA FUNCIÓN: Filtra y pinta Telas/Otros con su buscador y toggle
+function filtrarCategoriaFija(catId) {
+    const grid = document.getElementById(`grid-${catId}`);
+    if (!grid) return;
+
+    const buscador = document.getElementById(`buscador-${catId}`)?.value.toLowerCase().trim() || '';
+    const vistaActual = document.querySelector(`#contenedor-${catId === 'objetos' ? 'otros' : 'telas'} .btn-toggle.activo`)?.dataset.vista || 'todo';
+    
+    const productosCat = (datosGlobales.productos[catId] || []);
+    const categoria = categoriasGlobales.find(c => c.id === catId) || { id: catId, subcategorias: [] };
+    
+    let productosFiltrados = productosCat.filter(p => p.nombre.toLowerCase().includes(buscador));
+
+    if (vistaActual === 'todo' || !categoria.subcategorias || categoria.subcategorias.length === 0) {
+        if (productosFiltrados.length === 0) {
+            grid.innerHTML = '<p style="text-align:center;padding:20px;color:var(--color-gris);font-style:italic;">No se encontraron productos.</p>';
+        } else {
+            renderizarProductosEnGrid(productosFiltrados, grid, datosGlobales);
+        }
+    } else {
+        let html = '';
+        let hayProductos = false;
+        
+        categoria.subcategorias.forEach(sub => {
+            const productosSub = productosFiltrados.filter(p => String(p.subcategoria) === String(sub.id));
+            if (productosSub.length > 0) {
+                hayProductos = true;
+                html += `
+                    <div class="subcategoria-bloque" style="grid-column: 1 / -1;">
+                        <h3 class="subcategoria-titulo">${sub.nombre}</h3>
+                        <div class="grid-productos" id="grid-${catId}-${sub.id}"></div>
+                    </div>
+                `;
+            }
+        });
+        
+        const idsSubcats = (categoria.subcategorias || []).map(s => String(s.id));
+        const productosSinSub = productosFiltrados.filter(p => !p.subcategoria || !idsSubcats.includes(String(p.subcategoria)));
+        
+        if (productosSinSub.length > 0) {
+            hayProductos = true;
+            html += `
+                <div class="subcategoria-bloque" style="grid-column: 1 / -1;">
+                    <h3 class="subcategoria-titulo">Otros</h3>
+                    <div class="grid-productos" id="grid-${catId}-otros"></div>
+                </div>
+            `;
+        }
+        
+        if (!hayProductos) {
+            grid.innerHTML = '<p style="text-align:center;padding:20px;color:var(--color-gris);font-style:italic;">No se encontraron productos.</p>';
+        } else {
+            grid.innerHTML = html;
+            
+            categoria.subcategorias.forEach(sub => {
+                const subGrid = document.getElementById(`grid-${catId}-${sub.id}`);
+                if (subGrid) {
+                    const productosSub = productosFiltrados.filter(p => String(p.subcategoria) === String(sub.id));
+                    if (productosSub.length > 0) renderizarProductosEnGrid(productosSub, subGrid, datosGlobales);
+                }
+            });
+            
+            const otrosGrid = document.getElementById(`grid-${catId}-otros`);
+            if (otrosGrid) {
+                renderizarProductosEnGrid(productosSinSub, otrosGrid, datosGlobales);
+            }
+        }
+    }
+}
+
+// ✅ NUEVA FUNCIÓN: Cambia la vista en Telas/Otros
+function cambiarVistaFija(catId, vista) {
+    const seccionId = catId === 'objetos' ? 'otros' : 'telas';
+    document.querySelectorAll(`#contenedor-${seccionId} .btn-toggle`).forEach(btn => {
+        btn.classList.toggle('activo', btn.dataset.vista === vista);
+    });
+    filtrarCategoriaFija(catId);
+}
+
+// Filtra y pinta los productos de una categoría (Hombre y Mujer)
 function filtrarCategoria(catId) {
     const grid = document.getElementById(`grid-categoria-${catId}`);
     if (!grid) return;
@@ -382,7 +481,7 @@ function filtrarCategoria(catId) {
     }
 }
 
-// Cambia entre "Todo" y "Por Subcategoría"
+// Cambia entre "Todo" y "Por Subcategoría" (Hombre y Mujer)
 function cambiarVista(catId, vista) {
     document.querySelectorAll(`#categoria-${catId} .btn-toggle`).forEach(btn => {
         btn.classList.toggle('activo', btn.dataset.vista === vista);
