@@ -30,29 +30,9 @@ function detenerVerificadorSesion() {
     }
 }
 
-function reiniciarTemporizadorInactividad() {
-    if (!isLoggedIn()) return;
-    actualizarActividad();
-    const politica = obtenerPoliticaSeguridad();
-    detenerTemporizadorInactividad();
-    detenerTemporizadorAviso();
-    const tiempoAviso = politica.inactividadMs - politica.avisoPrevioMs;
-    if (tiempoAviso > 0) {
-        temporizadorAviso = setTimeout(() => {
-            const segundosRestantes = Math.floor(politica.avisoPrevioMs / 1000);
-            const minutos = Math.floor(segundosRestantes / 60);
-            const segundos = segundosRestantes % 60;
-            mostrarNotificacion(`⏰ Tu sesión expirará en ${minutos}m ${segundos}s por inactividad`, 'warning');
-        }, tiempoAviso);
-    }
-    temporizadorInactividad = setTimeout(() => {
-        mostrarNotificacion('Sesión cerrada por inactividad', 'info');
-        logout();
-    }, politica.inactividadMs);
-}
-
-function detenerTemporizadorInactividad() { if (temporizadorInactividad) { clearTimeout(temporizadorInactividad); temporizadorInactividad = null; } }
-function detenerTemporizadorAviso() { if (temporizadorAviso) { clearTimeout(temporizadorAviso); temporizadorAviso = null; } }
+function reiniciarTemporizadorInactividad() { return; }
+function detenerTemporizadorInactividad() { return; }
+function detenerTemporizadorAviso() { return; }
 
 function mostrarLogin() {
     const loginModal = document.getElementById('login-modal');
