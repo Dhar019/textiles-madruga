@@ -93,6 +93,30 @@ function obtenerTipoTallasDelProductoActual() {
     return producto?.tipoTallas || 'alfabeticas';
 }
 
+// ✅ NUEVA: Renderiza Turnstile en el modal de login
+function renderizarTurnstileLogin() {
+    const contenedor = document.getElementById('turnstile-container-login');
+    if (!contenedor) return;
+
+    // Si ya está renderizado, no hacer nada
+    if (contenedor.querySelector('iframe')) return;
+
+    if (typeof TURNSTILE_SITE_KEY !== 'undefined' && typeof turnstile !== 'undefined') {
+        try {
+            turnstile.render(contenedor, {
+                sitekey: TURNSTILE_SITE_KEY,
+                callback: (token) => { window.__turnstileTokenLogin = token; },
+                'error-callback': () => { window.__turnstileTokenLogin = null; }
+            });
+        } catch (e) {
+            console.warn('Error al renderizar Turnstile en Login:', e);
+        }
+    } else {
+        // Si el script de Cloudflare aún no está listo, reintentar
+        setTimeout(renderizarTurnstileLogin, 200);
+    }
+}
+
 // RENDERIZADO
 function renderizarOfertas(ofertasIds, datos) {
     const contenedor = document.querySelector('#ofertas-ropa .grid-productos');
@@ -414,18 +438,23 @@ function filtrarCategoria(catId) {
     const productosCat = (datosGlobales.productos[catId] || []);
     const categoria = categoriasGlobales.find(c => c.id === catId);
     
+    // 1. Filtrar por buscador
     let productosFiltrados = productosCat.filter(p => p.nombre.toLowerCase().includes(buscador));
 
+    // 2. Renderizar según la vista
     if (vistaActual === 'todo' || !categoria || !categoria.subcategorias || categoria.subcategorias.length === 0) {
+        // Vista "Todo": un solo grid
         if (productosFiltrados.length === 0) {
             grid.innerHTML = '<p style="text-align:center;padding:20px;color:var(--color-gris);font-style:italic;">No se encontraron productos.</p>';
         } else {
             renderizarProductosEnGrid(productosFiltrados, grid, datosGlobales);
         }
     } else {
+        // Vista "Por Subcategoría": agrupamos
         let html = '';
         let hayProductos = false;
         
+        // A. Recorremos las subcategorías de la categoría
         categoria.subcategorias.forEach(sub => {
             const productosSub = productosFiltrados.filter(p => String(p.subcategoria) === String(sub.id));
             if (productosSub.length > 0) {
@@ -439,6 +468,7 @@ function filtrarCategoria(catId) {
             }
         });
         
+        // B. Productos SIN subcategoría o con subcategoría NO listada
         const idsSubcats = (categoria.subcategorias || []).map(s => String(s.id));
         const productosSinSub = productosFiltrados.filter(p => !p.subcategoria || !idsSubcats.includes(String(p.subcategoria)));
         
@@ -457,6 +487,7 @@ function filtrarCategoria(catId) {
         } else {
             grid.innerHTML = html;
             
+            // C. Llenar los sub-grids
             categoria.subcategorias.forEach(sub => {
                 const subGrid = document.getElementById(`grid-${catId}-${sub.id}`);
                 if (subGrid) {
@@ -465,6 +496,7 @@ function filtrarCategoria(catId) {
                 }
             });
             
+            // D. Llenar el grid de "Otros"
             const otrosGrid = document.getElementById(`grid-${catId}-otros`);
             if (otrosGrid) {
                 renderizarProductosEnGrid(productosSinSub, otrosGrid, datosGlobales);
@@ -951,7 +983,6 @@ function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit, conTurnstile 
                     console.warn('Turnstile ya estaba renderizado o hubo un error:', e);
                 }
             } else {
-                // Si aún no está listo, reintentar en 200ms
                 setTimeout(intentarRenderizar, 200);
             }
         };
@@ -961,7 +992,6 @@ function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit, conTurnstile 
     modal.className = 'login-visible';
     scrollModalAlTop(modal);
 
-    // 5. Función para cerrar el modal y limpiar Turnstile
     const cerrarModal = () => { 
         modal.className = 'login-oculto'; 
         form.reset();
@@ -973,7 +1003,6 @@ function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit, conTurnstile 
     cerrar.onclick = cerrarModal;
     overlay.onclick = cerrarModal;
 
-    // 6. Manejar el envío del formulario
     form.onsubmit = async (e) => {
         e.preventDefault();
         const datos = {};

@@ -67,8 +67,15 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('btn-acceder')?.addEventListener('click', function(e) {
         e.preventDefault();
         const session = getSession();
-        if (session) { if (isAdmin()) abrirAdmin(); else mostrarNotificacion('Sesión activa como: ' + session.username, 'info'); }
-        else mostrarLogin();
+        if (session) { 
+            if (isAdmin()) abrirAdmin(); 
+            else mostrarNotificacion('Sesión activa como: ' + session.username, 'info'); 
+        }
+        else {
+            mostrarLogin();
+            // ✅ Renderizar el captcha cuando se abre el login
+            setTimeout(renderizarTurnstileLogin, 100); 
+        }
     });
 
     // ✅ CIERRE DEL LOGIN CON DELEGACIÓN DE EVENTOS (a prueba de balas)
