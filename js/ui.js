@@ -913,6 +913,8 @@ function cerrarModalBienvenida() {
     document.body.classList.remove('bienvenida-abierta');
 }
 
+// ... (todas las funciones anteriores de ui.js se mantienen igual)
+
 function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit }) {
     const modal = document.getElementById('modal-generico');
     const overlay = document.getElementById('modal-generico-overlay');
@@ -925,6 +927,9 @@ function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit }) {
     document.getElementById('modal-generico-subtitulo').textContent = subtitulo;
 
     let html = '';
+    // ✅ Añadimos el contenedor de Turnstile si el formulario lo requiere
+    let necesitaTurnstile = false;
+    
     campos.forEach(campo => {
         if (campo.type === 'select') {
             html += `<div class="login-group"><label>${campo.label}</label><select id="${campo.id}">${campo.opciones.map(o => `<option value="${o.value}">${o.label}</option>`).join('')}</select></div>`;
@@ -933,9 +938,24 @@ function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit }) {
         } else {
             html += `<div class="login-group"><label>${campo.label}</label><input type="${campo.type || 'text'}" id="${campo.id}" placeholder="${campo.placeholder || ''}" ${campo.required ? 'required' : ''}></div>`;
         }
+        if (campo.id === 'turnstile-container') necesitaTurnstile = true;
     });
+
+    // ✅ Si necesita Turnstile, lo renderizamos
+    if (necesitaTurnstile && typeof turnstile !== 'undefined' && TURNSTILE_SITE_KEY) {
+        html += `<div id="turnstile-container" style="margin: 10px 0;"></div>`;
+    }
+
     camposContainer.innerHTML = html;
     submitBtn.textContent = 'Aceptar';
+
+    // ✅ Renderizar Turnstile si existe el contenedor
+    if (necesitaTurnstile && typeof turnstile !== 'undefined' && TURNSTILE_SITE_KEY) {
+        turnstile.render('#turnstile-container', {
+            sitekey: TURNSTILE_SITE_KEY,
+            callback: (token) => { window.__turnstileToken = token; }
+        });
+    }
 
     camposContainer.querySelectorAll('.toggle-password').forEach(button => {
         button.addEventListener('click', function() {
@@ -950,7 +970,14 @@ function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit }) {
     modal.className = 'login-visible';
     scrollModalAlTop(modal);
 
-    const cerrarModal = () => { modal.className = 'login-oculto'; form.reset(); };
+    const cerrarModal = () => { 
+        modal.className = 'login-oculto'; 
+        form.reset();
+        window.__turnstileToken = null; // Limpiar el token
+        if (necesitaTurnstile && typeof turnstile !== 'undefined') {
+            try { turnstile.reset('#turnstile-container'); } catch (e) {}
+        }
+    };
     cerrar.onclick = cerrarModal;
     overlay.onclick = cerrarModal;
 

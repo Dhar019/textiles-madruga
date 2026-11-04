@@ -131,7 +131,8 @@ async function login(username, password) {
     }
 }
 
-async function registerUser(username, password, email = '', name = '') {
+// ✅ MODIFICADO: Acepta turnstileToken para el registro
+async function registerUser(username, password, email = '', name = '', turnstileToken = '') {
     try {
         if (username.length > 40) return { success: false, message: 'El nombre no puede tener más de 40 caracteres.' };
         if (username.length < 3) return { success: false, message: 'El nombre debe tener al menos 3 caracteres.' };
@@ -140,7 +141,7 @@ async function registerUser(username, password, email = '', name = '') {
         const respuesta = await fetch(`${API_URL}/auth/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password, role: 'user', email, name })
+            body: JSON.stringify({ username, password, role: 'user', email, name, turnstileToken })
         });
         const data = await respuesta.json();
         if (!respuesta.ok) {
@@ -176,7 +177,6 @@ async function guardarSubcategoria(subcat) {
     } catch (e) { return false; }
 }
 
-// ✅ NUEVO: Cargar categorías desde el Worker
 async function cargarCategorias() {
     try {
         const respuesta = await fetch(`${API_URL}/categorias`);

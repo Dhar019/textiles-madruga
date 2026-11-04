@@ -37,7 +37,13 @@ document.addEventListener('DOMContentLoaded', function() {
             categoriasGlobales = categorias;
             console.log('✅ Categorías cargadas:', categoriasGlobales.length);
         } else {
-            console.warn('⚠️ No se pudieron cargar las categorías');
+            console.warn('⚠️ No se pudieron cargar las categorías, usando por defecto');
+            categoriasGlobales = [
+                { id: 'hombre', nombre: 'Hombre', subcategorias: [] },
+                { id: 'mujer', nombre: 'Mujer', subcategorias: [] },
+                { id: 'telas', nombre: 'Telas', subcategorias: [] },
+                { id: 'objetos', nombre: 'Otros', subcategorias: [] }
+            ];
         }
 
         if (datos) {
@@ -46,14 +52,12 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('📊 Datos recibidos:', datos);
             
             renderizarOfertas(datos.ofertas, datos);
-            
-            // ✅ Telas y Otros se renderizan en sus contenedores fijos
             renderizarTelasYOtros(datos);
-            
-            // ✅ Esto sigue renderizando Hombre y Mujer en la sección de subcategorías
             renderizarSeccionesDinamicas(datos); 
             
             console.log('✅ Productos cargados correctamente');
+        } else {
+            console.warn('⚠️ No hay productos. La web funcionará sin catálogo.');
         }
     })();
 
@@ -101,9 +105,15 @@ document.addEventListener('DOMContentLoaded', function() {
         cerrarLogin();
         abrirModalGenerico({
             titulo: 'Crear Cuenta', subtitulo: 'Es rápido, gratis y seguro',
-            campos: [{ id: 'username', label: 'Usuario', type: 'text', required: true }, { id: 'password', label: 'Contraseña', type: 'password', required: true }, { id: 'email', label: 'Gmail', type: 'email', required: true }],
+            campos: [
+                { id: 'username', label: 'Usuario', type: 'text', required: true },
+                { id: 'password', label: 'Contraseña', type: 'password', required: true },
+                { id: 'email', label: 'Gmail', type: 'email', required: true },
+                { id: 'turnstile-container', type: 'hidden' } // ✅ Contenedor de Turnstile
+            ],
             onSubmit: async (datos) => {
-                const result = await registerUser(datos.username, datos.password, datos.email, datos.username);
+                // ✅ Pasamos el token de Turnstile
+                const result = await registerUser(datos.username, datos.password, datos.email, datos.username, window.__turnstileToken);
                 if (result.success) { actualizarBotonAcceder(); mostrarNotificacion('Usuario creado. Sesión iniciada.', 'success'); }
                 else { mostrarNotificacion(result.message, 'error'); return false; }
             }
@@ -223,7 +233,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 { id: 'email', label: 'Gmail', type: 'email', placeholder: 'tucorreo@gmail.com', required: true }
             ],
             onSubmit: async (datos) => {
-                const result = await registerUser(datos.username, datos.password, datos.email, datos.username);
+                // ✅ Pasamos el token de Turnstile
+                const result = await registerUser(datos.username, datos.password, datos.email, datos.username, window.__turnstileToken);
                 if (result.success) {
                     actualizarBotonAcceder();
                     mostrarNotificacion('¡Bienvenido a Textiles Madruga!', 'success');

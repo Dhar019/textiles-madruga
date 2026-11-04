@@ -1,6 +1,6 @@
 // ============================================
 // WORKER - TEXTILES MADRUGA API
-// Versión 6.0 - Categorías Anidadas
+// Versión 6.0 - Categorías Anidadas + Turnstile
 // ============================================
 
 // ============================================
@@ -370,6 +370,29 @@ async function registrarAuditoria(env, user, action, details = {}) {
 }
 
 // ============================================
+// TURNSTILE (NUEVO)
+// ============================================
+async function verificarTurnstile(env, token, ip) {
+    if (!env.TURNSTILE_SECRET_KEY) return true; // Si no hay secret, no validamos
+    if (!token) return false;
+    try {
+        const formData = new FormData();
+        formData.append('secret', env.TURNSTILE_SECRET_KEY);
+        formData.append('response', token);
+        formData.append('remoteip', ip);
+        const result = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await result.json();
+        return data.success === true;
+    } catch (e) {
+        console.warn('⚠️ Error verificando Turnstile:', e);
+        return false;
+    }
+}
+
+// ============================================
 // WORKER PRINCIPAL
 // ============================================
 export default {
@@ -391,7 +414,7 @@ export default {
                     message: 'API de Textiles Madruga funcionando',
                     db: 'kv',
                     version: '6.0',
-                    features: ['IDs alfanuméricos', 'Ofertas', 'Categorías Anidadas', 'Sistema de pedidos', 'Tallas', 'Sesión Única'],
+                    features: ['IDs alfanuméricos', 'Ofertas', 'Categorías Anidadas', 'Sistema de pedidos', 'Tallas', 'Sesión Única', 'Turnstile'],
                     timestamp: new Date().toISOString()
                 }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
@@ -904,11 +927,22 @@ export default {
             }
 
             if (path === '/api/auth/register' && method === 'POST') {
+                const body = await request.json();
+                const { username, password, role, email, name, turnstileToken } = body;
+                
+                // ✅ VERIFICAR TURNSTILE (si está configurado)
+                if (env.TURNSTILE_SECRET_KEY) {
+                    const turnstileOk = await verificarTurnstile(env, turnstileToken, ip);
+                    if (!turnstileOk) {
+                        return addCors(new Response(JSON.stringify({ error: 'Por favor, completa el captcha para continuar.' }), { status: 400, headers: { 'Content-Type': 'application/json' } }), request);
+                    }
+                }
+                
                 const user = await verificarToken(request, env);
                 if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
                     return addCors(new Response(JSON.stringify({ error: 'No autorizado' }), { status: 403, headers: { 'Content-Type': 'application/json' } }), request);
                 }
-                const { username, password, role, email, name } = await request.json();
+                
                 const usuarios = await leerUsuarios(env);
                 if (usuarios.find(u => u.username === username)) {
                     return addCors(new Response(JSON.stringify({ error: 'El usuario ya existe' }), { status: 400, headers: { 'Content-Type': 'application/json' } }), request);
