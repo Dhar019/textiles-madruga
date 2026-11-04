@@ -913,9 +913,7 @@ function cerrarModalBienvenida() {
     document.body.classList.remove('bienvenida-abierta');
 }
 
-// ... (todas las funciones anteriores de ui.js se mantienen igual)
-
-function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit }) {
+function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit, conTurnstile = false }) {
     const modal = document.getElementById('modal-generico');
     const overlay = document.getElementById('modal-generico-overlay');
     const cerrar = document.getElementById('modal-generico-cerrar');
@@ -927,9 +925,8 @@ function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit }) {
     document.getElementById('modal-generico-subtitulo').textContent = subtitulo;
 
     let html = '';
-    // ✅ Añadimos el contenedor de Turnstile si el formulario lo requiere
-    let necesitaTurnstile = false;
     
+    // 1. Construir los campos normales
     campos.forEach(campo => {
         if (campo.type === 'select') {
             html += `<div class="login-group"><label>${campo.label}</label><select id="${campo.id}">${campo.opciones.map(o => `<option value="${o.value}">${o.label}</option>`).join('')}</select></div>`;
@@ -938,25 +935,38 @@ function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit }) {
         } else {
             html += `<div class="login-group"><label>${campo.label}</label><input type="${campo.type || 'text'}" id="${campo.id}" placeholder="${campo.placeholder || ''}" ${campo.required ? 'required' : ''}></div>`;
         }
-        if (campo.id === 'turnstile-container') necesitaTurnstile = true;
     });
 
-    // ✅ Si necesita Turnstile, lo renderizamos
-    if (necesitaTurnstile && typeof turnstile !== 'undefined' && TURNSTILE_SITE_KEY) {
-        html += `<div id="turnstile-container" style="margin: 10px 0;"></div>`;
+    // 2. Añadir el contenedor de Turnstile si es necesario
+    if (conTurnstile) {
+        html += `<div id="turnstile-container" style="margin: 15px 0; display: flex; justify-content: center;"></div>`;
     }
 
     camposContainer.innerHTML = html;
     submitBtn.textContent = 'Aceptar';
 
-    // ✅ Renderizar Turnstile si existe el contenedor
-    if (necesitaTurnstile && typeof turnstile !== 'undefined' && TURNSTILE_SITE_KEY) {
-        turnstile.render('#turnstile-container', {
-            sitekey: TURNSTILE_SITE_KEY,
-            callback: (token) => { window.__turnstileToken = token; }
-        });
+    // 3. Renderizar Turnstile de forma segura (esperando a que cargue el script)
+    if (conTurnstile && typeof TURNSTILE_SITE_KEY !== 'undefined') {
+        const intentarRenderizar = () => {
+            if (typeof turnstile !== 'undefined') {
+                try {
+                    turnstile.render('#turnstile-container', {
+                        sitekey: TURNSTILE_SITE_KEY,
+                        callback: (token) => { window.__turnstileToken = token; },
+                        'error-callback': () => { window.__turnstileToken = null; }
+                    });
+                } catch (e) {
+                    console.warn('Turnstile ya estaba renderizado o hubo un error:', e);
+                }
+            } else {
+                // Si aún no está listo, reintentar en 200ms
+                setTimeout(intentarRenderizar, 200);
+            }
+        };
+        intentarRenderizar();
     }
 
+    // 4. Lógica del ojito para las contraseñas
     camposContainer.querySelectorAll('.toggle-password').forEach(button => {
         button.addEventListener('click', function() {
             const input = this.parentElement.querySelector('input[type="password"], input[type="text"]');
@@ -970,17 +980,19 @@ function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit }) {
     modal.className = 'login-visible';
     scrollModalAlTop(modal);
 
+    // 5. Función para cerrar el modal y limpiar Turnstile
     const cerrarModal = () => { 
         modal.className = 'login-oculto'; 
         form.reset();
-        window.__turnstileToken = null; // Limpiar el token
-        if (necesitaTurnstile && typeof turnstile !== 'undefined') {
+        window.__turnstileToken = null;
+        if (conTurnstile && typeof turnstile !== 'undefined') {
             try { turnstile.reset('#turnstile-container'); } catch (e) {}
         }
     };
     cerrar.onclick = cerrarModal;
     overlay.onclick = cerrarModal;
 
+    // 6. Manejar el envío del formulario
     form.onsubmit = async (e) => {
         e.preventDefault();
         const datos = {};
