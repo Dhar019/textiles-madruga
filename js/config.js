@@ -4,9 +4,8 @@
 const API_URL = 'https://textiles-madruga-api.eldani000219.workers.dev/api';
 const SESSION_KEY = 'tm_session';
 
-// ✅ TURNSTILE (Site Key de Cloudflare)
-// ⚠️ IMPORTANTE: Reemplaza esto con tu Site Key real
-const TURNSTILE_SITE_KEY = '1x00000000000000000000AA'; // 👈 Tu Site Key aquí
+// TURNSTILE (Site Key de Cloudflare)
+const TURNSTILE_SITE_KEY = '0x4AAAAAAFzpGg4HE_L8ARxe';
 
 const NEGOCIO = {
     whatsapp: '+5354108544',
