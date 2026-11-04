@@ -93,30 +93,6 @@ function obtenerTipoTallasDelProductoActual() {
     return producto?.tipoTallas || 'alfabeticas';
 }
 
-// ✅ NUEVA: Renderiza Turnstile en el modal de login
-function renderizarTurnstileLogin() {
-    const contenedor = document.getElementById('turnstile-container-login');
-    if (!contenedor) return;
-
-    // Si ya está renderizado, no hacer nada
-    if (contenedor.querySelector('iframe')) return;
-
-    if (typeof TURNSTILE_SITE_KEY !== 'undefined' && typeof turnstile !== 'undefined') {
-        try {
-            turnstile.render(contenedor, {
-                sitekey: TURNSTILE_SITE_KEY,
-                callback: (token) => { window.__turnstileTokenLogin = token; },
-                'error-callback': () => { window.__turnstileTokenLogin = null; }
-            });
-        } catch (e) {
-            console.warn('Error al renderizar Turnstile en Login:', e);
-        }
-    } else {
-        // Si el script de Cloudflare aún no está listo, reintentar
-        setTimeout(renderizarTurnstileLogin, 200);
-    }
-}
-
 // RENDERIZADO
 function renderizarOfertas(ofertasIds, datos) {
     const contenedor = document.querySelector('#ofertas-ropa .grid-productos');
@@ -961,6 +937,16 @@ function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit, conTurnstile 
         }
     });
 
+    // Enlace para volver al login (solo en modales de registro)
+    if (titulo === 'Crear Cuenta') {
+        html += `
+            <div style="text-align: center; margin-top: 15px; font-size: 0.8rem; color: var(--color-gris);">
+                ¿Ya tienes una cuenta? 
+                <a href="#" id="volver-al-login" style="color: var(--color-naranja); font-weight: 600; text-decoration: none;">Inicia sesión aquí</a>
+            </div>
+        `;
+    }
+
     // 2. Añadir el contenedor de Turnstile si es necesario
     if (conTurnstile) {
         html += `<div id="turnstile-container" style="margin: 15px 0; display: flex; justify-content: center;"></div>`;
@@ -1002,6 +988,18 @@ function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit, conTurnstile 
     };
     cerrar.onclick = cerrarModal;
     overlay.onclick = cerrarModal;
+
+    // Listener para volver al login
+    const btnVolverLogin = document.getElementById('volver-al-login');
+    if (btnVolverLogin) {
+        btnVolverLogin.addEventListener('click', (e) => {
+            e.preventDefault();
+            cerrarModal(); // Cierra el modal de registro
+            setTimeout(() => {
+                mostrarLogin(); // Abre el modal de login
+            }, 100);
+        });
+    }
 
     form.onsubmit = async (e) => {
         e.preventDefault();
