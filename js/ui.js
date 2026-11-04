@@ -958,17 +958,6 @@ function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit, conTurnstile 
         intentarRenderizar();
     }
 
-    // 4. Lógica del ojito para las contraseñas
-    camposContainer.querySelectorAll('.toggle-password').forEach(button => {
-        button.addEventListener('click', function() {
-            const input = this.parentElement.querySelector('input[type="password"], input[type="text"]');
-            if (!input) return;
-            const isPassword = input.type === 'password';
-            input.type = isPassword ? 'text' : 'password';
-            this.classList.toggle('visible');
-        });
-    });
-
     modal.className = 'login-visible';
     scrollModalAlTop(modal);
 
