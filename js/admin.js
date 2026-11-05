@@ -183,7 +183,6 @@ function cambiarTipoTallas(tipo) {
     const sinTallas = document.getElementById('tallas-sin');
     if (!alfabeticas || !numericas || !sinTallas) return;
     
-    // ✅ NO HACEMOS SCROLL. Solo cambiamos la visibilidad.
     alfabeticas.style.display = 'none'; 
     numericas.style.display = 'none'; 
     sinTallas.style.display = 'none';

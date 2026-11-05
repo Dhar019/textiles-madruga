@@ -114,6 +114,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.getElementById('login-form')?.addEventListener('submit', async function(e) {
         e.preventDefault();
+        
+        // LIMPIAR SESIÓN VIEJA ANTES DE LOGIN
+        localStorage.removeItem(SESSION_KEY);
+        
         const username = document.getElementById('login-user').value.trim();
         const password = document.getElementById('login-pass').value;
         

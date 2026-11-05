@@ -115,11 +115,6 @@ async function login(username, password) {
             body: JSON.stringify({ username, password })
         });
 
-        if (respuesta.status === 409) {
-            const data = await respuesta.json();
-            return { success: false, message: data.error || 'Ya hay una sesión activa. Usa "Forzar cierre de sesión".' };
-        }
-
         if (respuesta.status === 429) {
             const data = await respuesta.json();
             return { success: false, message: data.error || 'Demasiados intentos fallidos' };

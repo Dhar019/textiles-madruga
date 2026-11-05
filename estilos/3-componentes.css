@@ -773,15 +773,18 @@
     display: none;
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: 20px 30px 40px 30px;
     scrollbar-width: thin;
     scrollbar-color: var(--color-naranja) transparent;
     min-height: 0;
     scroll-behavior: auto;
+    overscroll-behavior: contain; /* Evita que el scroll se propague */
 }
 
 .admin-tab-content.active {
-    display: block;
+    display: block; /* No Flex */
+    animation: fadeIn 0.25s ease;
 }
 
 .admin-tab-content::-webkit-scrollbar { width: 8px; }
