@@ -6,8 +6,13 @@ function actualizarBotonAcceder() {
     const session = getSession();
     const btnAcceder = document.getElementById('btn-acceder');
     if (btnAcceder) {
-        if (session) { btnAcceder.textContent = 'Sesión activa'; btnAcceder.classList.add('activo'); }
-        else { btnAcceder.textContent = 'Acceder a la cuenta'; btnAcceder.classList.remove('activo'); }
+        if (session) {
+            btnAcceder.textContent = 'Sesión activa';
+            btnAcceder.classList.add('activo');
+        } else {
+            btnAcceder.textContent = 'Acceder a la cuenta';
+            btnAcceder.classList.remove('activo');
+        }
     }
     actualizarBotonCerrarSesion();
 }
@@ -15,7 +20,13 @@ function actualizarBotonAcceder() {
 function actualizarBotonCerrarSesion() {
     const session = getSession();
     const btnCerrarSesion = document.getElementById('btn-cerrar-sesion');
-    if (btnCerrarSesion) { if (session) btnCerrarSesion.classList.add('visible'); else btnCerrarSesion.classList.remove('visible'); }
+    if (btnCerrarSesion) {
+        if (session) {
+            btnCerrarSesion.classList.add('visible');
+        } else {
+            btnCerrarSesion.classList.remove('visible');
+        }
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -68,15 +79,29 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         const session = getSession();
         if (session) { 
-            if (isAdmin()) abrirAdmin(); 
-            else mostrarNotificacion('Sesión activa como: ' + session.username, 'info'); 
+            if (isAdmin()) {
+                abrirAdmin();
+                // ✅ Verificar si el panel se abrió. Si no, limpiar sesión zombi.
+                setTimeout(() => {
+                    const adminPanel = document.getElementById('admin-panel');
+                    if (!adminPanel || adminPanel.className === 'admin-oculto') {
+                        console.warn('⚠️ Sesión local inválida. Limpiando...');
+                        localStorage.removeItem(SESSION_KEY);
+                        actualizarBotonAcceder();
+                        mostrarLogin();
+                        mostrarNotificacion('Tu sesión anterior expiró. Inicia sesión de nuevo.', 'warning');
+                    }
+                }, 500);
+            } else {
+                mostrarNotificacion('Sesión activa como: ' + session.username, 'info');
+            }
         }
         else {
             mostrarLogin();
         }
     });
 
-    // ✅ CIERRE DEL LOGIN CON DELEGACIÓN DE EVENTOS (a prueba de balas)
+    // ✅ CIERRE DEL LOGIN CON DELEGACIÓN DE EVENTOS
     document.addEventListener('click', function(e) {
         if (e.target.closest('#login-cerrar') || e.target.closest('#login-overlay')) {
             console.log('🔒 Cerrando login (delegación)');
@@ -86,7 +111,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.getElementById('btn-cerrar-sesion')?.addEventListener('click', async function(e) {
         e.preventDefault();
-        const confirmado = await confirmar({ titulo: '¿Cerrar sesión?', mensaje: 'Tendrás que volver a iniciar sesión para acceder al panel.', tipo: 'info', textoAceptar: 'Sí, cerrar sesión', textoCancelar: 'Cancelar' });
+        const confirmado = await confirmar({ 
+            titulo: '¿Cerrar sesión?', 
+            mensaje: 'Tendrás que volver a iniciar sesión para acceder al panel.', 
+            tipo: 'info', 
+            textoAceptar: 'Sí, cerrar sesión', 
+            textoCancelar: 'Cancelar' 
+        });
         if (confirmado) logout();
     });
 
@@ -98,8 +129,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (result.success) {
             cerrarLogin();
             actualizarBotonAcceder();
-            if (isAdmin()) { mostrarNotificacion('Bienvenido administrador', 'success'); abrirAdmin(); }
-            else { mostrarNotificacion('Bienvenido ' + username, 'success'); }
+            if (isAdmin()) { 
+                mostrarNotificacion('Bienvenido administrador', 'success'); 
+                abrirAdmin(); 
+            } else { 
+                mostrarNotificacion('Bienvenido ' + username, 'success'); 
+            }
         } else { 
             mostrarNotificacion(result.message, 'error'); 
         }
@@ -119,7 +154,7 @@ document.addEventListener('DOMContentLoaded', function() {
             ],
             conTurnstile: true,
             onSubmit: async (datos) => {
-                const result = await registerUser(datos.username, datos.password, datos.email, datos.username);
+                const result = await registerUser(datos.username, datos.password, datos.email, datos.username, window.__turnstileToken);
                 if (result.success) { 
                     actualizarBotonAcceder(); 
                     mostrarNotificacion('Usuario creado. Sesión iniciada.', 'success'); 
@@ -136,16 +171,38 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         cerrarLogin();
         abrirModalGenerico({
-            titulo: 'Forzar cierre de sesión', subtitulo: 'Introduce tus credenciales para desbloquear tu cuenta',
-            campos: [{ id: 'username', label: 'Usuario', type: 'text', required: true }, { id: 'password', label: 'Contraseña', type: 'password', required: true }],
+            titulo: 'Forzar cierre de sesión', 
+            subtitulo: 'Introduce tus credenciales para desbloquear tu cuenta',
+            campos: [
+                { id: 'username', label: 'Usuario', type: 'text', required: true }, 
+                { id: 'password', label: 'Contraseña', type: 'password', required: true }
+            ],
             onSubmit: async (datos) => {
-                if (!datos.username || !datos.password) { mostrarNotificacion('Completa ambos campos', 'error'); return false; }
+                if (!datos.username || !datos.password) { 
+                    mostrarNotificacion('Completa ambos campos', 'error'); 
+                    return false; 
+                }
                 try {
-                    const respuesta = await fetch(`${API_URL}/auth/force-logout`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: datos.username, password: datos.password }) });
+                    const respuesta = await fetch(`${API_URL}/auth/force-logout`, { 
+                        method: 'POST', 
+                        headers: { 'Content-Type': 'application/json' }, 
+                        body: JSON.stringify({ username: datos.username, password: datos.password }) 
+                    });
                     const data = await respuesta.json();
-                    if (respuesta.ok) { mostrarNotificacion('Sesión cerrada. Ya puedes iniciar sesión.', 'success'); localStorage.removeItem(SESSION_KEY); sessionStorage.removeItem('tm_pestana_activa'); setTimeout(() => mostrarLogin(), 800); }
-                    else { mostrarNotificacion(data.error || 'Error al forzar cierre', 'error'); return false; }
-                } catch (error) { mostrarNotificacion('Error de conexión', 'error'); return false; }
+                    if (respuesta.ok) { 
+                        mostrarNotificacion('Sesión cerrada. Ya puedes iniciar sesión.', 'success'); 
+                        localStorage.removeItem(SESSION_KEY); 
+                        sessionStorage.removeItem('tm_pestana_activa'); 
+                        setTimeout(() => mostrarLogin(), 800); 
+                    }
+                    else { 
+                        mostrarNotificacion(data.error || 'Error al forzar cierre', 'error'); 
+                        return false; 
+                    }
+                } catch (error) { 
+                    mostrarNotificacion('Error de conexión', 'error'); 
+                    return false; 
+                }
             }
         });
     });
@@ -154,9 +211,23 @@ document.addEventListener('DOMContentLoaded', function() {
     const hamburguesa = document.getElementById('menu-hamburguesa');
     const nav = document.getElementById('nav-principal');
     if (hamburguesa && nav) {
-        hamburguesa.addEventListener('click', function(event) { event.stopPropagation(); this.classList.toggle('activo'); nav.classList.toggle('activo'); });
-        nav.querySelectorAll('a').forEach(enlace => { enlace.addEventListener('click', () => { hamburguesa.classList.remove('activo'); nav.classList.remove('activo'); }); });
-        document.addEventListener('click', function(event) { if (!nav.contains(event.target) && !hamburguesa.contains(event.target)) { hamburguesa.classList.remove('activo'); nav.classList.remove('activo'); } });
+        hamburguesa.addEventListener('click', function(event) { 
+            event.stopPropagation(); 
+            this.classList.toggle('activo'); 
+            nav.classList.toggle('activo'); 
+        });
+        nav.querySelectorAll('a').forEach(enlace => { 
+            enlace.addEventListener('click', () => { 
+                hamburguesa.classList.remove('activo'); 
+                nav.classList.remove('activo'); 
+            }); 
+        });
+        document.addEventListener('click', function(event) { 
+            if (!nav.contains(event.target) && !hamburguesa.contains(event.target)) { 
+                hamburguesa.classList.remove('activo'); 
+                nav.classList.remove('activo'); 
+            } 
+        });
     }
 
     // Modales de detalle y lightbox
@@ -197,8 +268,15 @@ document.addEventListener('DOMContentLoaded', function() {
             if (e.target.files.length > 0) {
                 const reader = new FileReader();
                 reader.onload = (ev) => {
-                    const prev = document.getElementById('drop-zone-preview'); const cont = document.getElementById('drop-zone-content'); const hidden = document.getElementById('prod-imagen');
-                    if (prev && cont && hidden) { prev.src = ev.target.result; prev.style.display = 'block'; cont.style.display = 'none'; hidden.value = ev.target.result; }
+                    const prev = document.getElementById('drop-zone-preview'); 
+                    const cont = document.getElementById('drop-zone-content'); 
+                    const hidden = document.getElementById('prod-imagen');
+                    if (prev && cont && hidden) { 
+                        prev.src = ev.target.result; 
+                        prev.style.display = 'block'; 
+                        cont.style.display = 'none'; 
+                        hidden.value = ev.target.result; 
+                    }
                 };
                 reader.readAsDataURL(e.target.files[0]);
             }
@@ -234,7 +312,7 @@ document.addEventListener('DOMContentLoaded', function() {
         btnVolver.addEventListener('click', cerrarModalAyuda);
     }
 
-    // REGISTRO DESDE EL MODAL DE BIENVENIDA
+    // ✅ REGISTRO DESDE EL MODAL DE BIENVENIDA (CON TURNSTILE)
     document.getElementById('modal-bienvenida-crear')?.addEventListener('click', function() {
         cerrarModalBienvenida();
         abrirModalGenerico({
@@ -247,7 +325,7 @@ document.addEventListener('DOMContentLoaded', function() {
             ],
             conTurnstile: true,
             onSubmit: async (datos) => {
-                const result = await registerUser(datos.username, datos.password, datos.email, datos.username);
+                const result = await registerUser(datos.username, datos.password, datos.email, datos.username, window.__turnstileToken);
                 if (result.success) {
                     actualizarBotonAcceder();
                     mostrarNotificacion('¡Bienvenido a Textiles Madruga!', 'success');
@@ -295,30 +373,63 @@ document.addEventListener('DOMContentLoaded', function() {
         const descripcion = document.getElementById('prod-descripcion').value.trim();
         let idEditable = document.getElementById('prod-id').value.trim();
         if (idEditable === 'sin-id') idEditable = '';
-        if (!nombre || !precio) { mostrarNotificacion('Completa nombre y precio', 'error'); return; }
+        
+        if (!nombre || !precio) { 
+            mostrarNotificacion('Completa nombre y precio', 'error'); 
+            return; 
+        }
         const { tipoTallas, tallasDisponibles } = obtenerTallasSeleccionadas();
-        if (tipoTallas !== 'sin_tallas' && tallasDisponibles.length === 0) { mostrarNotificacion('Selecciona al menos una talla o marca "Sin tallas"', 'error'); return; }
+        if (tipoTallas !== 'sin_tallas' && tallasDisponibles.length === 0) { 
+            mostrarNotificacion('Selecciona al menos una talla o marca "Sin tallas"', 'error'); 
+            return; 
+        }
         if (!imagen) imagen = 'assets/img/placeholder.webp';
         const session = getSession();
-        if (!session) { mostrarNotificacion('No hay sesión activa', 'error'); return; }
+        if (!session) { 
+            mostrarNotificacion('No hay sesión activa', 'error'); 
+            return; 
+        }
         
         const idProductoGuardado = modoEdicion || idEditable;
         
         try {
             const productoData = { nombre, precio, imagen, categoria, subcategoria, descripcion, tipoTallas, tallasDisponibles };
             if (idEditable && !modoEdicion) productoData.id = idEditable;
+            
             let respuesta;
-            if (modoEdicion) respuesta = await fetch(`${API_URL}/products/${modoEdicion}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.token}` }, body: JSON.stringify(productoData) });
-            else respuesta = await fetch(`${API_URL}/products`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.token}` }, body: JSON.stringify(productoData) });
-            if (!respuesta.ok) { const errorData = await respuesta.json().catch(() => ({})); throw new Error(errorData.error || 'Error al guardar'); }
+            if (modoEdicion) {
+                respuesta = await fetch(`${API_URL}/products/${modoEdicion}`, { 
+                    method: 'PUT', 
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.token}` }, 
+                    body: JSON.stringify(productoData) 
+                });
+            } else {
+                respuesta = await fetch(`${API_URL}/products`, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.token}` }, 
+                    body: JSON.stringify(productoData) 
+                });
+            }
+            
+            if (!respuesta.ok) { 
+                const errorData = await respuesta.json().catch(() => ({})); 
+                throw new Error(errorData.error || 'Error al guardar'); 
+            }
+            
             modoEdicion = null;
             const formProducto = document.getElementById('form-producto');
             formProducto.className = 'form-oculto';
             this.reset();
             resetearTallasForm();
+            
             const preview = document.getElementById('drop-zone-preview');
             const content = document.getElementById('drop-zone-content');
-            if (preview && content) { preview.style.display = 'none'; preview.src = ''; content.style.display = 'flex'; }
+            if (preview && content) { 
+                preview.style.display = 'none'; 
+                preview.src = ''; 
+                content.style.display = 'flex'; 
+            }
+            
             document.getElementById('prod-id').value = '';
             document.querySelector('#producto-form button[type="submit"]').textContent = 'Crear';
             document.getElementById('form-title').textContent = 'Nuevo Producto';
@@ -347,7 +458,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }, 300);
             
-        } catch (error) { console.error('Error guardar:', error); mostrarNotificacion(error.message || 'Error al guardar producto', 'error'); }
+        } catch (error) { 
+            console.error('Error guardar:', error); 
+            mostrarNotificacion(error.message || 'Error al guardar producto', 'error'); 
+        }
     });
 
     document.getElementById('btn-cancelar-form')?.addEventListener('click', function() {
@@ -358,7 +472,11 @@ document.addEventListener('DOMContentLoaded', function() {
         resetearTallasForm();
         const preview = document.getElementById('drop-zone-preview');
         const content = document.getElementById('drop-zone-content');
-        if (preview && content) { preview.style.display = 'none'; preview.src = ''; content.style.display = 'flex'; }
+        if (preview && content) { 
+            preview.style.display = 'none'; 
+            preview.src = ''; 
+            content.style.display = 'flex'; 
+        }
     });
 
     document.getElementById('btn-nuevo-producto')?.addEventListener('click', function() {
@@ -368,7 +486,11 @@ document.addEventListener('DOMContentLoaded', function() {
         resetearTallasForm();
         const preview = document.getElementById('drop-zone-preview');
         const content = document.getElementById('drop-zone-content');
-        if (preview && content) { preview.style.display = 'none'; preview.src = ''; content.style.display = 'flex'; }
+        if (preview && content) { 
+            preview.style.display = 'none'; 
+            preview.src = ''; 
+            content.style.display = 'flex'; 
+        }
         const formProducto = document.getElementById('form-producto');
         formProducto.className = 'form-visible';
         document.querySelector('#producto-form button[type="submit"]').textContent = 'Crear';
@@ -380,9 +502,13 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('admin-overlay')?.addEventListener('click', cerrarAdmin);
 
     document.getElementById('btn-nuevo-usuario')?.addEventListener('click', function() {
-        if (!isSuperAdmin()) { mostrarNotificacion('Solo el SuperAdministrador puede crear usuarios', 'error'); return; }
+        if (!isSuperAdmin()) { 
+            mostrarNotificacion('Solo el SuperAdministrador puede crear usuarios', 'error'); 
+            return; 
+        }
         abrirModalGenerico({
-            titulo: 'Nuevo Usuario', subtitulo: 'Crea una cuenta con rol de admin o usuario',
+            titulo: 'Nuevo Usuario', 
+            subtitulo: 'Crea una cuenta con rol de admin o usuario',
             campos: [
                 { id: 'username', label: 'Usuario', type: 'text', placeholder: 'Nombre de usuario', required: true },
                 { id: 'password', label: 'Contraseña', type: 'password', placeholder: 'Mínimo 6 caracteres', required: true },
@@ -390,15 +516,31 @@ document.addEventListener('DOMContentLoaded', function() {
                 { id: 'role', label: 'Rol', type: 'select', opciones: [{ value: 'user', label: 'Usuario' }, { value: 'admin', label: 'Administrador' }] }
             ],
             onSubmit: async (datos) => {
-                if (!datos.username || datos.username.length < 3) { mostrarNotificacion('Nombre inválido (mínimo 3 caracteres)', 'error'); return false; }
-                if (!datos.password || datos.password.length < 6) { mostrarNotificacion('Contraseña inválida (mínimo 6 caracteres)', 'error'); return false; }
+                if (!datos.username || datos.username.length < 3) { 
+                    mostrarNotificacion('Nombre inválido (mínimo 3 caracteres)', 'error'); 
+                    return false; 
+                }
+                if (!datos.password || datos.password.length < 6) { 
+                    mostrarNotificacion('Contraseña inválida (mínimo 6 caracteres)', 'error'); 
+                    return false; 
+                }
                 try {
                     const session = getSession();
-                    const respuesta = await fetch(`${API_URL}/auth/register`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.token}` }, body: JSON.stringify({ username: datos.username, password: datos.password, role: datos.role, email: datos.email || '', name: datos.username }) });
-                    if (!respuesta.ok) { const data = await respuesta.json(); throw new Error(data.error || 'Error al crear usuario'); }
+                    const respuesta = await fetch(`${API_URL}/auth/register`, { 
+                        method: 'POST', 
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.token}` }, 
+                        body: JSON.stringify({ username: datos.username, password: datos.password, role: datos.role, email: datos.email || '', name: datos.username }) 
+                    });
+                    if (!respuesta.ok) { 
+                        const data = await respuesta.json(); 
+                        throw new Error(data.error || 'Error al crear usuario'); 
+                    }
                     mostrarNotificacion(`Usuario "${datos.username}" creado`, 'success');
                     renderizarUsuariosAdmin();
-                } catch (error) { mostrarNotificacion(error.message, 'error'); return false; }
+                } catch (error) { 
+                    mostrarNotificacion(error.message, 'error'); 
+                    return false; 
+                }
             }
         });
     });
@@ -453,6 +595,9 @@ document.addEventListener('click', function(e) {
     if (e.target.closest('.toggle-password')) {
         const btn = e.target.closest('.toggle-password');
         const input = btn.parentElement.querySelector('input');
-        if (input) { input.type = input.type === 'password' ? 'text' : 'password'; btn.classList.toggle('visible'); }
+        if (input) { 
+            input.type = input.type === 'password' ? 'text' : 'password'; 
+            btn.classList.toggle('visible'); 
+        }
     }
 });
