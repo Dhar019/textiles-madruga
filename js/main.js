@@ -26,7 +26,7 @@ function actualizarBotonCerrarSesion() {
             btnCerrarSesion.style.display = 'inline-block'; // Forzar visibilidad
         } else {
             btnCerrarSesion.classList.remove('visible');
-            btnCerrarSesion.style.display = 'none'; // Forzar ocultación
+            btnCerrarSesion.style.display = 'none';
         }
     }
 }
@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (session && (session.role === 'admin' || session.role === 'superadmin')) {
                 mostrarNotificacion('Bienvenido administrador', 'success');
                 
-                // Abrir panel manualmente (sin pasar por abrirAdmin)
+                // Abrir panel manualmente y cargar datos
                 const adminPanel = document.getElementById('admin-panel');
                 if (adminPanel) {
                     adminPanel.className = 'admin-visible';
