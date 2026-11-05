@@ -2,91 +2,6 @@
 // COMUNICACIÓN CON EL WORKER (API)
 // ============================================
 
-async function logout() {
-    try {
-        const session = getSession();
-        if (session && session.token) {
-            await fetch(`${API_URL}/auth/logout`, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${session.token}` }
-            });
-        }
-    } catch (error) {
-        console.warn('⚠️ No se pudo cerrar la sesión en el servidor:', error);
-    }
-
-    // LIMPIEZA TOTAL
-    localStorage.removeItem(SESSION_KEY);
-    sessionStorage.removeItem('tm_pestana_activa');
-    
-    // Cerrar panel de admin si está abierto
-    const adminPanel = document.getElementById('admin-panel');
-    if (adminPanel) adminPanel.className = 'admin-oculto';
-    document.body.classList.remove('admin-abierto');
-
-    // Actualizar botones y recargar
-    actualizarBotonAcceder();
-    actualizarBotonCerrarSesion();
-    mostrarNotificacion('Sesión cerrada correctamente', 'info');
-    setTimeout(() => location.reload(), 500);
-}
-
-async function login(username, password) {
-    try {
-        const respuesta = await fetch(`${API_URL}/auth/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                username, 
-                password
-            })
-        });
-
-        if (respuesta.status === 409) {
-            const data = await respuesta.json();
-            return { success: false, message: data.error || 'Ya hay una sesión activa en otro dispositivo' };
-        }
-
-        if (respuesta.status === 429) {
-            const data = await respuesta.json();
-            return { success: false, message: data.error || 'Demasiados intentos fallidos' };
-        }
-
-        const data = await respuesta.json();
-        if (!respuesta.ok) {
-            return { success: false, message: data.error || 'Error al iniciar sesión' };
-        }
-        const session = createSession(data.token, data.user);
-        return { success: true, session };
-    } catch (error) {
-        console.error('Error en login:', error);
-        return { success: false, message: 'Error de conexión con el servidor' };
-    }
-}
-
-// Para el registro
-async function registerUser(username, password, email = '', name = '') {
-    try {
-        if (username.length > 40) return { success: false, message: 'El nombre no puede tener más de 40 caracteres.' };
-        if (username.length < 3) return { success: false, message: 'El nombre debe tener al menos 3 caracteres.' };
-        if (password.length < 6) return { success: false, message: 'La contraseña debe tener al menos 6 caracteres.' };
-
-        const respuesta = await fetch(`${API_URL}/auth/register`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password, role: 'user', email, name })
-        });
-        const data = await respuesta.json();
-        if (!respuesta.ok) {
-            return { success: false, message: data.error || 'Error al registrar usuario' };
-        }
-        const session = createSession(data.token, data.user);
-        return { success: true, session };
-    } catch (error) {
-        return { success: false, message: 'Error de conexión con el servidor' };
-    }
-}
-
 async function cargarProductos(intentos = 3) {
     console.log(`🔄 Cargando productos... (Intento ${4 - intentos}/3)`);
     
@@ -128,12 +43,11 @@ async function cargarProductos(intentos = 3) {
             }
         };
 
-        // ✅ INTENTO DE GUARDAR EN CACHÉ (A PRUEBA DE FALLOS)
+        // ✅ INTENTO DE GUARDAR EN CACHÉ (A PRUEBA DE FALLOS POR TAMAÑO)
         try {
             localStorage.setItem('productos_data', JSON.stringify(datos));
         } catch (e) {
             console.warn('⚠️ No se pudo guardar en caché (probablemente por tamaño), pero los datos están en memoria.');
-            // Si falla, no pasa nada, seguimos usando los datos en memoria
         }
         
         return datos;
@@ -193,6 +107,58 @@ function obtenerProductoPorNombre(nombre) {
     return null;
 }
 
+async function login(username, password) {
+    try {
+        const respuesta = await fetch(`${API_URL}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+
+        if (respuesta.status === 409) {
+            const data = await respuesta.json();
+            return { success: false, message: data.error || 'Ya hay una sesión activa. Usa "Forzar cierre de sesión".' };
+        }
+
+        if (respuesta.status === 429) {
+            const data = await respuesta.json();
+            return { success: false, message: data.error || 'Demasiados intentos fallidos' };
+        }
+
+        const data = await respuesta.json();
+        if (!respuesta.ok) {
+            return { success: false, message: data.error || 'Error al iniciar sesión' };
+        }
+        const session = createSession(data.token, data.user);
+        return { success: true, session };
+    } catch (error) {
+        console.error('Error en login:', error);
+        return { success: false, message: 'Error de conexión con el servidor' };
+    }
+}
+
+async function registerUser(username, password, email = '', name = '', turnstileToken = '') {
+    try {
+        if (username.length > 40) return { success: false, message: 'El nombre no puede tener más de 40 caracteres.' };
+        if (username.length < 3) return { success: false, message: 'El nombre debe tener al menos 3 caracteres.' };
+        if (password.length < 6) return { success: false, message: 'La contraseña debe tener al menos 6 caracteres.' };
+
+        const respuesta = await fetch(`${API_URL}/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password, role: 'user', email, name, turnstileToken })
+        });
+        const data = await respuesta.json();
+        if (!respuesta.ok) {
+            return { success: false, message: data.error || 'Error al registrar usuario' };
+        }
+        const session = createSession(data.token, data.user);
+        return { success: true, session };
+    } catch (error) {
+        return { success: false, message: 'Error de conexión con el servidor' };
+    }
+}
+
 async function obtenerSubcategorias() {
     try {
         const respuesta = await fetch(`${API_URL}/subcategorias`);
@@ -225,6 +191,35 @@ async function cargarCategorias() {
         console.warn('No se pudieron cargar las categorías', e);
         return [];
     }
+}
+
+async function logout() {
+    try {
+        const session = getSession();
+        if (session && session.token) {
+            await fetch(`${API_URL}/auth/logout`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${session.token}` }
+            });
+        }
+    } catch (error) {
+        console.warn('⚠️ No se pudo cerrar la sesión en el servidor:', error);
+    }
+
+    // LIMPIEZA TOTAL
+    localStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem('tm_pestana_activa');
+    
+    // Cerrar panel de admin si está abierto
+    const adminPanel = document.getElementById('admin-panel');
+    if (adminPanel) adminPanel.className = 'admin-oculto';
+    document.body.classList.remove('admin-abierto');
+
+    // Actualizar botones y recargar
+    actualizarBotonAcceder();
+    actualizarBotonCerrarSesion();
+    mostrarNotificacion('Sesión cerrada correctamente', 'info');
+    setTimeout(() => location.reload(), 500);
 }
 
 async function editarSubcategoria(id, datos) {

@@ -1,6 +1,6 @@
 // ============================================
 // WORKER - TEXTILES MADRUGA API
-// Versión 6.1 - Categorías Anidadas + Turnstile + Sesión Única Estricta + Reset Password
+// Versión 6.2 - Categorías Anidadas + Sesión Única Estricta + Reset Password
 // ============================================
 
 // ============================================
@@ -31,7 +31,6 @@ function addCors(response, request) {
 // HELPERS KV Y MIGRACIÓN
 // ============================================
 
-// Estructura por defecto si no hay nada
 const CATEGORIAS_POR_DEFECTO = [
     {
         id: 'hombre',
@@ -74,30 +73,18 @@ const CATEGORIAS_POR_DEFECTO = [
 async function leerCatalogo(env) {
     const catalogoStr = await env.PRODUCTOS_KV.get('catalogo_completo');
     if (!catalogoStr) {
-        // Si no hay catálogo, creamos uno vacío con las categorías por defecto
         return { productos: {}, categorias: JSON.parse(JSON.stringify(CATEGORIAS_POR_DEFECTO)) };
     }
     
     const data = JSON.parse(catalogoStr);
     
-    // ✅ MIGRACIÓN AUTOMÁTICA: Si no tiene categorías, las creamos
     if (!data.categorias) {
         console.log('🔄 Migrando catálogo a nueva estructura de categorías...');
         data.categorias = JSON.parse(JSON.stringify(CATEGORIAS_POR_DEFECTO));
-        
-        // Opcional: Migrar productos antiguos (si tienen subcategoria, se mantiene)
-        if (data.productos) {
-            Object.values(data.productos).forEach(prod => {
-                // Aquí podrías añadir lógica extra si fuera necesario
-            });
-        }
-        
-        // Guardamos la migración
         await guardarCatalogo(env, data);
     }
     
     if (!data.productos) data.productos = {};
-    
     return data;
 }
 
@@ -212,9 +199,6 @@ async function enviarGmailNotificacion(env, pedido) {
         `;
 
         console.log('📧 Enviando Gmail para pedido:', pedido.id);
-        console.log('📧 Asunto:', asunto);
-        console.log('📧 Destinatario:', env.GMAIL_USER);
-        
         return true;
     } catch (error) {
         console.error('❌ Error al enviar Gmail:', error);
@@ -268,7 +252,7 @@ async function verificarPassword(password, hash) {
 // ============================================
 // SESIÓN ÚNICA CON TIMEOUT
 // ============================================
-const MAX_INACTIVIDAD_MS = 2 * 60 * 60 * 1000;
+const MAX_INACTIVIDAD_MS = 24 * 60 * 60 * 1000;
 
 async function crearSesionUnica(env, userId) {
     const sessionId = crypto.randomUUID();
@@ -390,8 +374,8 @@ export default {
                     status: 'ok',
                     message: 'API de Textiles Madruga funcionando',
                     db: 'kv',
-                    version: '6.1',
-                    features: ['IDs alfanuméricos', 'Ofertas', 'Categorías Anidadas', 'Sistema de pedidos', 'Tallas', 'Sesión Única Estricta', 'Turnstile', 'Reset Password'],
+                    version: '6.2',
+                    features: ['IDs alfanuméricos', 'Ofertas', 'Categorías Anidadas', 'Sistema de pedidos', 'Tallas', 'Sesión Única Estricta', 'Reset Password'],
                     timestamp: new Date().toISOString()
                 }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
@@ -410,7 +394,7 @@ export default {
                 if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
                     return addCors(new Response(JSON.stringify({ error: 'No autorizado' }), { status: 403, headers: { 'Content-Type': 'application/json' } }), request);
                 }
-                const body = await request.json(); // { id, nombre }
+                const body = await request.json();
                 const catalogo = await leerCatalogo(env);
 
                 if (catalogo.categorias.find(c => c.id === body.id)) {
@@ -435,7 +419,6 @@ export default {
                 
                 catalogo.categorias = catalogo.categorias.filter(c => c.id !== catId);
                 
-                // Opcional: Desasignar la categoría de los productos
                 Object.values(catalogo.productos).forEach(prod => {
                     if (prod.categoria === catId) delete prod.categoria;
                     if (prod.subcategoria && !catalogo.categorias.some(c => c.subcategorias.some(s => s.id === prod.subcategoria))) {
@@ -452,7 +435,6 @@ export default {
             // ============================================
             // SUBCATEGORÍAS
             // ============================================
-            // ✅ NUEVO: Listar todas las subcategorías (con su categoría padre)
             if (path === '/api/subcategorias' && method === 'GET') {
                 const catalogo = await leerCatalogo(env);
                 const subcategorias = [];
@@ -466,13 +448,12 @@ export default {
                 return addCors(new Response(JSON.stringify(subcategorias), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
-            // Crear una subcategoría dentro de una categoría
             if (path === '/api/subcategorias' && method === 'POST') {
                 const user = await verificarToken(request, env);
                 if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
                     return addCors(new Response(JSON.stringify({ error: 'No autorizado' }), { status: 403, headers: { 'Content-Type': 'application/json' } }), request);
                 }
-                const body = await request.json(); // { id, nombre, categoriaPadre }
+                const body = await request.json();
                 const catalogo = await leerCatalogo(env);
 
                 const categoriaPadre = catalogo.categorias.find(c => c.id === body.categoriaPadre);
@@ -491,20 +472,18 @@ export default {
                 return addCors(new Response(JSON.stringify({ success: true, subcategoria: body }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
-            // ✅ NUEVO: Editar una subcategoría
             if (path.startsWith('/api/subcategorias/') && method === 'PUT') {
                 const user = await verificarToken(request, env);
                 if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
                     return addCors(new Response(JSON.stringify({ error: 'No autorizado' }), { status: 403, headers: { 'Content-Type': 'application/json' } }), request);
                 }
                 const subcatId = path.split('/')[3];
-                const body = await request.json(); // { nombre, categoriaPadre }
+                const body = await request.json();
                 const catalogo = await leerCatalogo(env);
 
                 let subcatEncontrada = null;
                 let categoriaOriginal = null;
 
-                // Buscar la subcategoría en todas las categorías
                 catalogo.categorias.forEach(cat => {
                     const sub = cat.subcategorias.find(s => s.id === subcatId);
                     if (sub) {
@@ -517,13 +496,11 @@ export default {
                     return addCors(new Response(JSON.stringify({ error: 'Subcategoría no encontrada' }), { status: 404, headers: { 'Content-Type': 'application/json' } }), request);
                 }
 
-                // Si se cambia de categoría padre
                 if (body.categoriaPadre && body.categoriaPadre !== categoriaOriginal.id) {
                     const nuevaCategoria = catalogo.categorias.find(c => c.id === body.categoriaPadre);
                     if (!nuevaCategoria) {
                         return addCors(new Response(JSON.stringify({ error: 'Categoría padre no encontrada' }), { status: 404, headers: { 'Content-Type': 'application/json' } }), request);
                     }
-                    // Quitar de la original y añadir a la nueva
                     categoriaOriginal.subcategorias = categoriaOriginal.subcategorias.filter(s => s.id !== subcatId);
                     nuevaCategoria.subcategorias.push({ id: subcatId, nombre: body.nombre });
                 } else if (body.nombre) {
@@ -536,7 +513,6 @@ export default {
                 return addCors(new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
-            // Eliminar una subcategoría
             if (path.startsWith('/api/subcategorias/') && method === 'DELETE') {
                 const user = await verificarToken(request, env);
                 if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
@@ -549,7 +525,6 @@ export default {
                     cat.subcategorias = cat.subcategorias.filter(s => s.id !== subcatId);
                 });
                 
-                // Desasignar de productos
                 Object.values(catalogo.productos).forEach(prod => {
                     if (prod.subcategoria === subcatId) delete prod.subcategoria;
                 });
@@ -828,16 +803,14 @@ export default {
                     return addCors(new Response(JSON.stringify({ error: `Demasiados intentos fallidos. Intenta en ${rateLimit.minutosRestantes} minutos.` }), { status: 429, headers: { 'Content-Type': 'application/json' } }), request);
                 }
                 
-                let username, password, turnstileToken;
+                let username, password;
                 if (method === 'POST') {
                     const body = await request.json();
                     username = body.username;
                     password = body.password;
-                    turnstileToken = body.turnstileToken;
                 } else {
                     username = url.searchParams.get('username');
                     password = url.searchParams.get('password');
-                    turnstileToken = url.searchParams.get('turnstileToken');
                 }
                 
                 const usuarios = await leerUsuarios(env);
@@ -851,15 +824,15 @@ export default {
                 }
                 
                 const sesionExistente = await verificarSesionActiva(env, user.id);
-                
+
                 if (sesionExistente) {
-                    // SESIÓN ÚNICA ESTRICTA: Si hay una sesión activa, rechazar el login.
-                    // El usuario debe usar "Forzar cierre de sesión" o esperar a que expire.
+                    // SESIÓN ÚNICA ESTRICTA: Si hay una sesión activa, BLOQUEAR el login.
                     return addCors(new Response(JSON.stringify({
-                        error: 'Ya tienes una sesión activa en otro dispositivo. Cierra sesión allí o usa "Forzar cierre de sesión" para desbloquear esta cuenta.'
+                        error: 'Ya hay una sesión activa. Usa "Forzar cierre de sesión" para desbloquear esta cuenta.'
                     }), { status: 409, headers: { 'Content-Type': 'application/json' } }), request);
                 }
-                
+
+                // Si no hay sesión, crear la nueva (UNA SOLA VEZ)
                 await resetearRateLimit(env, ip);
                 const sessionId = await crearSesionUnica(env, user.id);
                 const token = btoa(JSON.stringify({ id: user.id, username: user.username, role: user.role, email: user.email, sessionId: sessionId }));
@@ -904,7 +877,8 @@ export default {
 
             if (path === '/api/auth/register' && method === 'POST') {
                 const body = await request.json();
-                const { username, password, role, email, name, turnstileToken } = body;
+                const { username, password, role, email, name } = body;
+                
                 const user = await verificarToken(request, env);
                 if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
                     return addCors(new Response(JSON.stringify({ error: 'No autorizado' }), { status: 403, headers: { 'Content-Type': 'application/json' } }), request);

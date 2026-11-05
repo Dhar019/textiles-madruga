@@ -23,7 +23,7 @@ function actualizarBotonCerrarSesion() {
     if (btnCerrarSesion) {
         if (session) {
             btnCerrarSesion.classList.add('visible');
-            btnCerrarSesion.style.display = 'inline-block'; // Forzar visibilidad
+            btnCerrarSesion.style.display = 'inline-block';
         } else {
             btnCerrarSesion.classList.remove('visible');
             btnCerrarSesion.style.display = 'none';
@@ -83,17 +83,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (session) { 
             if (isAdmin()) {
                 abrirAdmin();
-                // ✅ Verificar si el panel se abrió. Si no, limpiar sesión zombi.
-                setTimeout(() => {
-                    const adminPanel = document.getElementById('admin-panel');
-                    if (!adminPanel || adminPanel.className === 'admin-oculto') {
-                        console.warn('⚠️ Sesión local inválida. Limpiando...');
-                        localStorage.removeItem(SESSION_KEY);
-                        actualizarBotonAcceder();
-                        mostrarLogin();
-                        mostrarNotificacion('Tu sesión anterior expiró. Inicia sesión de nuevo.', 'warning');
-                    }
-                }, 500);
             } else {
                 mostrarNotificacion('Sesión activa como: ' + session.username, 'info');
             }
@@ -127,35 +116,32 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         const username = document.getElementById('login-user').value.trim();
         const password = document.getElementById('login-pass').value;
-        
         const result = await login(username, password);
         
         if (result.success) {
             cerrarLogin();
             actualizarBotonAcceder();
             
-            // Verificar rol directamente desde la sesión creada
             const session = getSession();
             if (session && (session.role === 'admin' || session.role === 'superadmin')) {
                 mostrarNotificacion('Bienvenido administrador', 'success');
                 
-                // Abrir panel manualmente y cargar datos
                 const adminPanel = document.getElementById('admin-panel');
                 if (adminPanel) {
                     adminPanel.className = 'admin-visible';
                     document.body.classList.add('admin-abierto');
                     cargarAdminProductos();
                     cargarPedidosAdmin();
-                    iniciarVerificadorSesion();
                 }
             } else {
                 mostrarNotificacion('Bienvenido ' + username, 'success');
             }
-        } else {
-            mostrarNotificacion(result.message, 'error');
+        } else { 
+            mostrarNotificacion(result.message, 'error'); 
         }
     });
-    // ÚNICO LISTENER PARA login-registro-link (con Turnstile)
+
+    // ✅ ÚNICO LISTENER PARA login-registro-link (con Turnstile)
     document.getElementById('login-registro-link')?.addEventListener('click', function(e) {
         e.preventDefault();
         cerrarLogin();

@@ -2,44 +2,9 @@
 // LÓGICA DEL PANEL DE ADMINISTRACIÓN
 // ============================================
 
-function iniciarVerificadorSesion() {
-    detenerVerificadorSesion();
-    const session = getSession();
-    if (!session || !session.token) return;
-    console.log('🔍 Iniciando verificador de sesión');
-    verificadorSesion = setInterval(async () => {
-        const sessionActual = getSession();
-        if (!sessionActual || !sessionActual.token) { 
-            detenerVerificadorSesion(); 
-            return; 
-        }
-        try {
-            const respuesta = await fetch(`${API_URL}/users`, { headers: { 'Authorization': `Bearer ${sessionActual.token}` } });
-            if (respuesta.status === 401 || respuesta.status === 403) {
-                console.log('🔒 Sesión reemplazada en otro dispositivo');
-                detenerVerificadorSesion();
-                mostrarNotificacion('Tu sesión fue cerrada desde otro dispositivo', 'warning');
-                logout();
-            }
-        } catch (error) { 
-            console.warn('⚠️ Verificación de sesión falló:', error.message); 
-        }
-    }, 60000);
-}
-
-function detenerVerificadorSesion() {
-    if (verificadorSesion) {
-        clearInterval(verificadorSesion);
-        verificadorSesion = null;
-        console.log('🛑 Verificador de sesión detenido');
-    }
-}
-
-function reiniciarTemporizadorInactividad() {
-    // ✅ DESACTIVADO: Ya no se cierra por inactividad
-    return;
-}
-
+function iniciarVerificadorSesion() { return; } // ✅ Desactivado
+function detenerVerificadorSesion() { return; }
+function reiniciarTemporizadorInactividad() { return; } // ✅ Desactivado
 function detenerTemporizadorInactividad() { return; }
 function detenerTemporizadorAviso() { return; }
 
@@ -64,8 +29,6 @@ function abrirAdmin() {
     adminPanel.className = 'admin-visible';
     document.body.classList.add('admin-abierto');
     cargarAdminProductos();
-    reiniciarTemporizadorInactividad();
-    iniciarVerificadorSesion();
     cargarPedidosAdmin();
     scrollModalAlTop(adminPanel);
     document.getElementById('admin-cerrar').onclick = cerrarAdmin;
