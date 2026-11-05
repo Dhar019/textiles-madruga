@@ -40,8 +40,7 @@ async function login(username, password) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
                 username, 
-                password,
-                turnstileToken: window.__turnstileTokenLogin || '' // ✅ Enviar token de Turnstile
+                password
             })
         });
 
@@ -67,8 +66,8 @@ async function login(username, password) {
     }
 }
 
-// ✅ MODIFICADO: Acepta turnstileToken para el registro
-async function registerUser(username, password, email = '', name = '', turnstileToken = '') {
+// Para el registro
+async function registerUser(username, password, email = '', name = '') {
     try {
         if (username.length > 40) return { success: false, message: 'El nombre no puede tener más de 40 caracteres.' };
         if (username.length < 3) return { success: false, message: 'El nombre debe tener al menos 3 caracteres.' };
@@ -77,7 +76,7 @@ async function registerUser(username, password, email = '', name = '', turnstile
         const respuesta = await fetch(`${API_URL}/auth/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password, role: 'user', email, name, turnstileToken })
+            body: JSON.stringify({ username, password, role: 'user', email, name })
         });
         const data = await respuesta.json();
         if (!respuesta.ok) {

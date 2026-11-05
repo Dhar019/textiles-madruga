@@ -947,33 +947,8 @@ function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit, conTurnstile 
         `;
     }
 
-    // 2. Añadir el contenedor de Turnstile si es necesario
-    if (conTurnstile) {
-        html += `<div id="turnstile-container" style="margin: 15px 0; display: flex; justify-content: center;"></div>`;
-    }
-
     camposContainer.innerHTML = html;
     submitBtn.textContent = 'Aceptar';
-
-    // 3. Renderizar Turnstile de forma segura (esperando a que cargue el script)
-    if (conTurnstile && typeof TURNSTILE_SITE_KEY !== 'undefined') {
-        const intentarRenderizar = () => {
-            if (typeof turnstile !== 'undefined') {
-                try {
-                    turnstile.render('#turnstile-container', {
-                        sitekey: TURNSTILE_SITE_KEY,
-                        callback: (token) => { window.__turnstileToken = token; },
-                        'error-callback': () => { window.__turnstileToken = null; }
-                    });
-                } catch (e) {
-                    console.warn('Turnstile ya estaba renderizado o hubo un error:', e);
-                }
-            } else {
-                setTimeout(intentarRenderizar, 200);
-            }
-        };
-        intentarRenderizar();
-    }
 
     modal.className = 'login-visible';
     scrollModalAlTop(modal);
@@ -981,10 +956,6 @@ function abrirModalGenerico({ titulo, subtitulo, campos, onSubmit, conTurnstile 
     const cerrarModal = () => { 
         modal.className = 'login-oculto'; 
         form.reset();
-        window.__turnstileToken = null;
-        if (conTurnstile && typeof turnstile !== 'undefined') {
-            try { turnstile.reset('#turnstile-container'); } catch (e) {}
-        }
     };
     cerrar.onclick = cerrarModal;
     overlay.onclick = cerrarModal;

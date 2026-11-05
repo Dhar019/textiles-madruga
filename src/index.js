@@ -370,29 +370,6 @@ async function registrarAuditoria(env, user, action, details = {}) {
 }
 
 // ============================================
-// TURNSTILE
-// ============================================
-async function verificarTurnstile(env, token, ip) {
-    if (!env.TURNSTILE_SECRET_KEY) return true; // Si no hay secret, no validamos
-    if (!token) return false;
-    try {
-        const formData = new FormData();
-        formData.append('secret', env.TURNSTILE_SECRET_KEY);
-        formData.append('response', token);
-        formData.append('remoteip', ip);
-        const result = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-            method: 'POST',
-            body: formData
-        });
-        const data = await result.json();
-        return data.success === true;
-    } catch (e) {
-        console.warn('⚠️ Error verificando Turnstile:', e);
-        return false;
-    }
-}
-
-// ============================================
 // WORKER PRINCIPAL
 // ============================================
 export default {
@@ -876,7 +853,7 @@ export default {
                 const sesionExistente = await verificarSesionActiva(env, user.id);
                 
                 if (sesionExistente) {
-                    // ✅ SESIÓN ÚNICA ESTRICTA: Si hay una sesión activa, rechazar el login.
+                    // SESIÓN ÚNICA ESTRICTA: Si hay una sesión activa, rechazar el login.
                     // El usuario debe usar "Forzar cierre de sesión" o esperar a que expire.
                     return addCors(new Response(JSON.stringify({
                         error: 'Ya tienes una sesión activa en otro dispositivo. Cierra sesión allí o usa "Forzar cierre de sesión" para desbloquear esta cuenta.'
@@ -928,15 +905,6 @@ export default {
             if (path === '/api/auth/register' && method === 'POST') {
                 const body = await request.json();
                 const { username, password, role, email, name, turnstileToken } = body;
-                
-                // ✅ VERIFICAR TURNSTILE (si está configurado)
-                if (env.TURNSTILE_SECRET_KEY) {
-                    const turnstileOk = await verificarTurnstile(env, turnstileToken, ip);
-                    if (!turnstileOk) {
-                        return addCors(new Response(JSON.stringify({ error: 'Por favor, completa el captcha para continuar.' }), { status: 400, headers: { 'Content-Type': 'application/json' } }), request);
-                    }
-                }
-                
                 const user = await verificarToken(request, env);
                 if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
                     return addCors(new Response(JSON.stringify({ error: 'No autorizado' }), { status: 403, headers: { 'Content-Type': 'application/json' } }), request);
@@ -964,7 +932,7 @@ export default {
                 return addCors(new Response(JSON.stringify(usuariosSinPass), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
-            // ✅ NUEVO: Cambiar contraseña de un usuario (solo SuperAdmin)
+            // Cambiar contraseña de un usuario (solo SuperAdmin)
             if (path.startsWith('/api/users/') && path.endsWith('/password') && method === 'PATCH') {
                 const user = await verificarToken(request, env);
                 if (!user || user.role !== 'superadmin') {

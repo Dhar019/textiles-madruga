@@ -4,9 +4,6 @@
 const API_URL = 'https://textiles-madruga-api.eldani000219.workers.dev/api';
 const SESSION_KEY = 'tm_session';
 
-// TURNSTILE (Site Key de Cloudflare)
-const TURNSTILE_SITE_KEY = '0x4AAAAAAFzpGg4HE_L8ARxe';
-
 const NEGOCIO = {
     whatsapp: '+5354108544',
     email: 'textilesmadruga@gmail.com',
@@ -28,13 +25,13 @@ let categoriasGlobales = [];
 
 const POLITICAS_SEGURIDAD = {
     cliente: {
-        inactividadMs: 2 * 60 * 60 * 1000,
+        inactividadMs: 0,
         abandonoMovilMs: 4 * 60 * 60 * 1000,
         tokenExpiryMs: 7 * 24 * 60 * 60 * 1000,
         avisoPrevioMs: 2 * 60 * 1000
     },
     admin: {
-        inactividadMs: 15 * 60 * 1000,
+        inactividadMs: 0,
         abandonoMovilMs: 15 * 60 * 1000,
         tokenExpiryMs: 8 * 60 * 60 * 1000,
         avisoPrevioMs: 1 * 60 * 1000

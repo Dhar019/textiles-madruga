@@ -119,7 +119,7 @@ document.addEventListener('DOMContentLoaded', function() {
             ],
             conTurnstile: true,
             onSubmit: async (datos) => {
-                const result = await registerUser(datos.username, datos.password, datos.email, datos.username, window.__turnstileToken);
+                const result = await registerUser(datos.username, datos.password, datos.email, datos.username);
                 if (result.success) { 
                     actualizarBotonAcceder(); 
                     mostrarNotificacion('Usuario creado. Sesión iniciada.', 'success'); 
@@ -234,7 +234,7 @@ document.addEventListener('DOMContentLoaded', function() {
         btnVolver.addEventListener('click', cerrarModalAyuda);
     }
 
-    // ✅ REGISTRO DESDE EL MODAL DE BIENVENIDA (CON TURNSTILE)
+    // REGISTRO DESDE EL MODAL DE BIENVENIDA
     document.getElementById('modal-bienvenida-crear')?.addEventListener('click', function() {
         cerrarModalBienvenida();
         abrirModalGenerico({
@@ -247,7 +247,7 @@ document.addEventListener('DOMContentLoaded', function() {
             ],
             conTurnstile: true,
             onSubmit: async (datos) => {
-                const result = await registerUser(datos.username, datos.password, datos.email, datos.username, window.__turnstileToken);
+                const result = await registerUser(datos.username, datos.password, datos.email, datos.username);
                 if (result.success) {
                     actualizarBotonAcceder();
                     mostrarNotificacion('¡Bienvenido a Textiles Madruga!', 'success');
