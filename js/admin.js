@@ -183,10 +183,7 @@ function cambiarTipoTallas(tipo) {
     const sinTallas = document.getElementById('tallas-sin');
     if (!alfabeticas || !numericas || !sinTallas) return;
     
-    // ✅ GUARDAR LA POSICIÓN ACTUAL DEL SCROLL
-    const contenedor = document.querySelector('.admin-tab-content.active');
-    const scrollPos = contenedor ? contenedor.scrollTop : 0;
-
+    // ✅ NO HACEMOS SCROLL. Solo cambiamos la visibilidad.
     alfabeticas.style.display = 'none'; 
     numericas.style.display = 'none'; 
     sinTallas.style.display = 'none';
@@ -195,9 +192,6 @@ function cambiarTipoTallas(tipo) {
     if (tipo === 'alfabeticas') alfabeticas.style.display = 'flex';
     else if (tipo === 'numericas') numericas.style.display = 'flex';
     else sinTallas.style.display = 'flex';
-
-    // ✅ RESTAURAR LA POSICIÓN DEL SCROLL
-    if (contenedor) contenedor.scrollTop = scrollPos;
 }
 
 function cargarTallasProducto(producto) {
@@ -268,8 +262,6 @@ function editarProductoAdmin(id) {
     form.className = 'form-visible';
     document.querySelector('#producto-form button[type="submit"]').textContent = 'Actualizar';
     document.getElementById('form-title').textContent = 'Editar Producto';
-    
-    form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 async function cargarPedidosAdmin() {

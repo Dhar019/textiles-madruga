@@ -116,16 +116,19 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         const username = document.getElementById('login-user').value.trim();
         const password = document.getElementById('login-pass').value;
+        
         const result = await login(username, password);
         
         if (result.success) {
             cerrarLogin();
             actualizarBotonAcceder();
             
+            // Verificar rol directamente desde la sesión creada
             const session = getSession();
             if (session && (session.role === 'admin' || session.role === 'superadmin')) {
                 mostrarNotificacion('Bienvenido administrador', 'success');
                 
+                // Abrir panel manualmente (sin pasar por abrirAdmin)
                 const adminPanel = document.getElementById('admin-panel');
                 if (adminPanel) {
                     adminPanel.className = 'admin-visible';
@@ -136,12 +139,12 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 mostrarNotificacion('Bienvenido ' + username, 'success');
             }
-        } else { 
-            mostrarNotificacion(result.message, 'error'); 
+        } else {
+            mostrarNotificacion(result.message, 'error');
         }
     });
 
-    // ✅ ÚNICO LISTENER PARA login-registro-link (con Turnstile)
+    // ÚNICO LISTENER PARA login-registro-link (con Turnstile)
     document.getElementById('login-registro-link')?.addEventListener('click', function(e) {
         e.preventDefault();
         cerrarLogin();
