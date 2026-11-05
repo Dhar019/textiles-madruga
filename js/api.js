@@ -15,18 +15,16 @@ async function logout() {
         console.warn('⚠️ No se pudo cerrar la sesión en el servidor:', error);
     }
 
-    detenerTemporizadorInactividad();
-    detenerTemporizadorAviso();
-    detenerVerificadorSesion();
-
+    // LIMPIEZA TOTAL
     localStorage.removeItem(SESSION_KEY);
     sessionStorage.removeItem('tm_pestana_activa');
-
+    
+    // Cerrar panel de admin si está abierto
     const adminPanel = document.getElementById('admin-panel');
     if (adminPanel) adminPanel.className = 'admin-oculto';
-
     document.body.classList.remove('admin-abierto');
 
+    // Actualizar botones y recargar
     actualizarBotonAcceder();
     actualizarBotonCerrarSesion();
     mostrarNotificacion('Sesión cerrada correctamente', 'info');
