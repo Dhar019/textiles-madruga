@@ -130,7 +130,14 @@ async function cargarProductos(intentos = 3) {
             }
         };
 
-        localStorage.setItem('productos_data', JSON.stringify(datos));
+        // ✅ INTENTO DE GUARDAR EN CACHÉ (A PRUEBA DE FALLOS)
+        try {
+            localStorage.setItem('productos_data', JSON.stringify(datos));
+        } catch (e) {
+            console.warn('⚠️ No se pudo guardar en caché (probablemente por tamaño), pero los datos están en memoria.');
+            // Si falla, no pasa nada, seguimos usando los datos en memoria
+        }
+        
         return datos;
 
     } catch (error) {
