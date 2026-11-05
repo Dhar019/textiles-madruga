@@ -459,3 +459,26 @@
     flex-wrap: wrap;
     text-align: center;
 }
+
+@media (max-width: 768px) {
+    .admin-header {
+        padding: 12px 15px;
+    }
+    .admin-tabs {
+        padding: 8px 15px;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+    }
+    .admin-tab {
+        font-size: 0.75rem;
+        padding: 6px 12px;
+        white-space: nowrap;
+    }
+    .admin-tab-content {
+        padding: 15px 15px 30px 15px;
+    }
+    /* Ajustar el formulario de producto en móvil */
+    .admin-form-grid {
+        grid-template-columns: 1fr;
+    }
+}
