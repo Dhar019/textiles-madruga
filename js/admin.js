@@ -178,20 +178,22 @@ function cambiarTipoTallas(tipo) {
     const sinTallas = document.getElementById('tallas-sin');
     if (!alfabeticas || !numericas || !sinTallas) return;
     
-    // Guardar la posición actual del scroll del contenedor
+    // GUARDAR LA POSICIÓN ACTUAL DEL SCROLL
     const contenedor = document.querySelector('.admin-tab-content.active');
     const scrollPos = contenedor ? contenedor.scrollTop : 0;
 
+    // Ocultar todos
     alfabeticas.style.display = 'none'; 
     numericas.style.display = 'none'; 
     sinTallas.style.display = 'none';
     document.querySelectorAll('.talla-checkbox').forEach(cb => cb.checked = false);
     
+    // Mostrar el seleccionado
     if (tipo === 'alfabeticas') alfabeticas.style.display = 'flex';
     else if (tipo === 'numericas') numericas.style.display = 'flex';
     else sinTallas.style.display = 'flex';
 
-    // Restaurar la posición del scroll
+    // RESTAURAR LA POSICIÓN DEL SCROLL
     if (contenedor) contenedor.scrollTop = scrollPos;
 }
 
