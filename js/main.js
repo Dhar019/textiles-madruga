@@ -6,13 +6,8 @@ function actualizarBotonAcceder() {
     const session = getSession();
     const btnAcceder = document.getElementById('btn-acceder');
     if (btnAcceder) {
-        if (session) {
-            btnAcceder.textContent = 'Sesión activa';
-            btnAcceder.classList.add('activo');
-        } else {
-            btnAcceder.textContent = 'Acceder a la cuenta';
-            btnAcceder.classList.remove('activo');
-        }
+        if (session) { btnAcceder.textContent = 'Sesión activa'; btnAcceder.classList.add('activo'); }
+        else { btnAcceder.textContent = 'Acceder a la cuenta'; btnAcceder.classList.remove('activo'); }
     }
     actualizarBotonCerrarSesion();
 }
@@ -81,11 +76,8 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         const session = getSession();
         if (session) { 
-            if (isAdmin()) {
-                abrirAdmin();
-            } else {
-                mostrarNotificacion('Sesión activa como: ' + session.username, 'info');
-            }
+            if (isAdmin()) abrirAdmin(); 
+            else mostrarNotificacion('Sesión activa como: ' + session.username, 'info'); 
         }
         else {
             mostrarLogin();
@@ -102,22 +94,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.getElementById('btn-cerrar-sesion')?.addEventListener('click', async function(e) {
         e.preventDefault();
-        const confirmado = await confirmar({ 
-            titulo: '¿Cerrar sesión?', 
-            mensaje: 'Tendrás que volver a iniciar sesión para acceder al panel.', 
-            tipo: 'info', 
-            textoAceptar: 'Sí, cerrar sesión', 
-            textoCancelar: 'Cancelar' 
-        });
+        const confirmado = await confirmar({ titulo: '¿Cerrar sesión?', mensaje: 'Tendrás que volver a iniciar sesión para acceder al panel.', tipo: 'info', textoAceptar: 'Sí, cerrar sesión', textoCancelar: 'Cancelar' });
         if (confirmado) logout();
     });
 
     document.getElementById('login-form')?.addEventListener('submit', async function(e) {
         e.preventDefault();
-        
-        // LIMPIAR SESIÓN VIEJA ANTES DE LOGIN
-        localStorage.removeItem(SESSION_KEY);
-        
         const username = document.getElementById('login-user').value.trim();
         const password = document.getElementById('login-pass').value;
         
@@ -127,7 +109,7 @@ document.addEventListener('DOMContentLoaded', function() {
             cerrarLogin();
             actualizarBotonAcceder();
             
-            // Abrir panel de admin directamente (sin validaciones)
+            // ✅ Abrir panel directamente
             const session = getSession();
             if (session && (session.role === 'admin' || session.role === 'superadmin')) {
                 mostrarNotificacion('Bienvenido administrador', 'success');
@@ -146,7 +128,8 @@ document.addEventListener('DOMContentLoaded', function() {
             mostrarNotificacion(result.message, 'error');
         }
     });
-    // ÚNICO LISTENER PARA login-registro-link (con Turnstile)
+
+    // ✅ REGISTRO DESDE EL LINK DEL LOGIN (SIN TURNSTILE)
     document.getElementById('login-registro-link')?.addEventListener('click', function(e) {
         e.preventDefault();
         cerrarLogin();
@@ -158,9 +141,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 { id: 'password', label: 'Contraseña', type: 'password', required: true },
                 { id: 'email', label: 'Gmail', type: 'email', required: true }
             ],
-            conTurnstile: true,
             onSubmit: async (datos) => {
-                const result = await registerUser(datos.username, datos.password, datos.email, datos.username, window.__turnstileToken);
+                const result = await registerUser(datos.username, datos.password, datos.email, datos.username);
                 if (result.success) { 
                     actualizarBotonAcceder(); 
                     mostrarNotificacion('Usuario creado. Sesión iniciada.', 'success'); 
@@ -177,38 +159,16 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         cerrarLogin();
         abrirModalGenerico({
-            titulo: 'Forzar cierre de sesión', 
-            subtitulo: 'Introduce tus credenciales para desbloquear tu cuenta',
-            campos: [
-                { id: 'username', label: 'Usuario', type: 'text', required: true }, 
-                { id: 'password', label: 'Contraseña', type: 'password', required: true }
-            ],
+            titulo: 'Forzar cierre de sesión', subtitulo: 'Introduce tus credenciales para desbloquear tu cuenta',
+            campos: [{ id: 'username', label: 'Usuario', type: 'text', required: true }, { id: 'password', label: 'Contraseña', type: 'password', required: true }],
             onSubmit: async (datos) => {
-                if (!datos.username || !datos.password) { 
-                    mostrarNotificacion('Completa ambos campos', 'error'); 
-                    return false; 
-                }
+                if (!datos.username || !datos.password) { mostrarNotificacion('Completa ambos campos', 'error'); return false; }
                 try {
-                    const respuesta = await fetch(`${API_URL}/auth/force-logout`, { 
-                        method: 'POST', 
-                        headers: { 'Content-Type': 'application/json' }, 
-                        body: JSON.stringify({ username: datos.username, password: datos.password }) 
-                    });
+                    const respuesta = await fetch(`${API_URL}/auth/force-logout`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: datos.username, password: datos.password }) });
                     const data = await respuesta.json();
-                    if (respuesta.ok) { 
-                        mostrarNotificacion('Sesión cerrada. Ya puedes iniciar sesión.', 'success'); 
-                        localStorage.removeItem(SESSION_KEY); 
-                        sessionStorage.removeItem('tm_pestana_activa'); 
-                        setTimeout(() => mostrarLogin(), 800); 
-                    }
-                    else { 
-                        mostrarNotificacion(data.error || 'Error al forzar cierre', 'error'); 
-                        return false; 
-                    }
-                } catch (error) { 
-                    mostrarNotificacion('Error de conexión', 'error'); 
-                    return false; 
-                }
+                    if (respuesta.ok) { mostrarNotificacion('Sesión cerrada. Ya puedes iniciar sesión.', 'success'); localStorage.removeItem(SESSION_KEY); sessionStorage.removeItem('tm_pestana_activa'); setTimeout(() => mostrarLogin(), 800); }
+                    else { mostrarNotificacion(data.error || 'Error al forzar cierre', 'error'); return false; }
+                } catch (error) { mostrarNotificacion('Error de conexión', 'error'); return false; }
             }
         });
     });
@@ -217,23 +177,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const hamburguesa = document.getElementById('menu-hamburguesa');
     const nav = document.getElementById('nav-principal');
     if (hamburguesa && nav) {
-        hamburguesa.addEventListener('click', function(event) { 
-            event.stopPropagation(); 
-            this.classList.toggle('activo'); 
-            nav.classList.toggle('activo'); 
-        });
-        nav.querySelectorAll('a').forEach(enlace => { 
-            enlace.addEventListener('click', () => { 
-                hamburguesa.classList.remove('activo'); 
-                nav.classList.remove('activo'); 
-            }); 
-        });
-        document.addEventListener('click', function(event) { 
-            if (!nav.contains(event.target) && !hamburguesa.contains(event.target)) { 
-                hamburguesa.classList.remove('activo'); 
-                nav.classList.remove('activo'); 
-            } 
-        });
+        hamburguesa.addEventListener('click', function(event) { event.stopPropagation(); this.classList.toggle('activo'); nav.classList.toggle('activo'); });
+        nav.querySelectorAll('a').forEach(enlace => { enlace.addEventListener('click', () => { hamburguesa.classList.remove('activo'); nav.classList.remove('activo'); }); });
+        document.addEventListener('click', function(event) { if (!nav.contains(event.target) && !hamburguesa.contains(event.target)) { hamburguesa.classList.remove('activo'); nav.classList.remove('activo'); } });
     }
 
     // Modales de detalle y lightbox
@@ -289,7 +235,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // ✅ LISTENERS DE UI (Movidos desde ui.js)
+    // ✅ LISTENERS DE UI
     const btnAyuda = document.getElementById('btn-ayuda-pedido');
     const modalAyuda = document.getElementById('modal-ayuda-pedido');
     const cerrarAyuda = document.getElementById('modal-ayuda-pedido-cerrar');
@@ -318,7 +264,7 @@ document.addEventListener('DOMContentLoaded', function() {
         btnVolver.addEventListener('click', cerrarModalAyuda);
     }
 
-    // ✅ REGISTRO DESDE EL MODAL DE BIENVENIDA (CON TURNSTILE)
+    // ✅ REGISTRO DESDE EL MODAL DE BIENVENIDA (SIN TURNSTILE)
     document.getElementById('modal-bienvenida-crear')?.addEventListener('click', function() {
         cerrarModalBienvenida();
         abrirModalGenerico({
@@ -329,9 +275,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 { id: 'password', label: 'Contraseña', type: 'password', placeholder: 'Mínimo 6 caracteres', required: true },
                 { id: 'email', label: 'Gmail', type: 'email', placeholder: 'tucorreo@gmail.com', required: true }
             ],
-            conTurnstile: true,
             onSubmit: async (datos) => {
-                const result = await registerUser(datos.username, datos.password, datos.email, datos.username, window.__turnstileToken);
+                const result = await registerUser(datos.username, datos.password, datos.email, datos.username);
                 if (result.success) {
                     actualizarBotonAcceder();
                     mostrarNotificacion('¡Bienvenido a Textiles Madruga!', 'success');
@@ -351,7 +296,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('modal-bienvenida-cerrar')?.addEventListener('click', cerrarModalBienvenida);
     document.getElementById('modal-bienvenida-overlay')?.addEventListener('click', cerrarModalBienvenida);
 
-    // ✅ LISTENERS DE ADMIN (Movidos desde admin.js)
+    // ✅ LISTENERS DE ADMIN
     document.querySelectorAll('.admin-tab').forEach(tab => {
         tab.addEventListener('click', function() {
             const tabName = this.dataset.tab;

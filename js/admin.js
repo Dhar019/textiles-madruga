@@ -2,9 +2,9 @@
 // LÓGICA DEL PANEL DE ADMINISTRACIÓN
 // ============================================
 
-function iniciarVerificadorSesion() { return; } // ✅ Desactivado
+function iniciarVerificadorSesion() { return; }
 function detenerVerificadorSesion() { return; }
-function reiniciarTemporizadorInactividad() { return; } // ✅ Desactivado
+function reiniciarTemporizadorInactividad() { return; }
 function detenerTemporizadorInactividad() { return; }
 function detenerTemporizadorAviso() { return; }
 
@@ -41,7 +41,6 @@ function cerrarAdmin() {
     document.body.classList.remove('admin-abierto');
     const formProducto = document.getElementById('form-producto');
     if (formProducto) formProducto.className = 'form-oculto';
-    // ✅ NO hacemos logout aquí. Solo cerramos el panel visualmente.
 }
 
 function cargarAdminProductos() {
@@ -114,12 +113,7 @@ async function toggleOfertaAdmin(id) {
         const respuesta = await fetch(`${API_URL}/offers/toggle/${id}`, { 
             method: 'PATCH', 
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.token}` }, 
-            body: JSON.stringify({ 
-                enOferta: nuevaOferta, 
-                tipoOferta: producto.tipoOferta || 'descuento', 
-                descuento: producto.descuento || 15, 
-                promocion: producto.promocion || '' 
-            }) 
+            body: JSON.stringify({ enOferta: nuevaOferta, tipoOferta: producto.tipoOferta || 'descuento', descuento: producto.descuento || 15, promocion: producto.promocion || '' }) 
         });
         if (!respuesta.ok) throw new Error('Error al actualizar oferta');
         mostrarNotificacion(nuevaOferta ? 'Añadido a ofertas' : 'Quitado de ofertas', 'success');
@@ -261,6 +255,8 @@ function editarProductoAdmin(id) {
     form.className = 'form-visible';
     document.querySelector('#producto-form button[type="submit"]').textContent = 'Actualizar';
     document.getElementById('form-title').textContent = 'Editar Producto';
+    
+    form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 async function cargarPedidosAdmin() {
@@ -535,7 +531,6 @@ async function renderizarUsuariosAdmin() {
         users.forEach(user => {
             const rolClase = user.role === 'superadmin' ? 'superadmin' : user.role === 'admin' ? 'admin' : 'user';
             const rolTexto = user.role === 'superadmin' ? 'SuperAdmin' : user.role === 'admin' ? 'Admin' : 'Usuario';
-            // ✅ AÑADIR CORREO
             const emailTexto = user.email ? `<span style="font-size:0.75rem;color:var(--color-gris);">${user.email}</span>` : '<span style="font-size:0.75rem;color:var(--color-gris);font-style:italic;">Sin correo</span>';
             
             html += `<div class="usuario-item">

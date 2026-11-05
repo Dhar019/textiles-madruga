@@ -43,11 +43,10 @@ async function cargarProductos(intentos = 3) {
             }
         };
 
-        // ✅ INTENTO DE GUARDAR EN CACHÉ (A PRUEBA DE FALLOS POR TAMAÑO)
         try {
             localStorage.setItem('productos_data', JSON.stringify(datos));
         } catch (e) {
-            console.warn('⚠️ No se pudo guardar en caché (probablemente por tamaño), pero los datos están en memoria.');
+            console.warn('⚠️ No se pudo guardar en caché (probablemente por tamaño).');
         }
         
         return datos;
@@ -132,7 +131,7 @@ async function login(username, password) {
     }
 }
 
-async function registerUser(username, password, email = '', name = '', turnstileToken = '') {
+async function registerUser(username, password, email = '', name = '') {
     try {
         if (username.length > 40) return { success: false, message: 'El nombre no puede tener más de 40 caracteres.' };
         if (username.length < 3) return { success: false, message: 'El nombre debe tener al menos 3 caracteres.' };
@@ -141,7 +140,7 @@ async function registerUser(username, password, email = '', name = '', turnstile
         const respuesta = await fetch(`${API_URL}/auth/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password, role: 'user', email, name, turnstileToken })
+            body: JSON.stringify({ username, password, role: 'user', email, name })
         });
         const data = await respuesta.json();
         if (!respuesta.ok) {
@@ -201,16 +200,13 @@ async function logout() {
         console.warn('⚠️ No se pudo cerrar la sesión en el servidor:', error);
     }
 
-    // LIMPIEZA TOTAL
     localStorage.removeItem(SESSION_KEY);
     sessionStorage.removeItem('tm_pestana_activa');
     
-    // Cerrar panel de admin si está abierto
     const adminPanel = document.getElementById('admin-panel');
     if (adminPanel) adminPanel.className = 'admin-oculto';
     document.body.classList.remove('admin-abierto');
 
-    // Actualizar botones y recargar
     actualizarBotonAcceder();
     actualizarBotonCerrarSesion();
     mostrarNotificacion('Sesión cerrada correctamente', 'info');

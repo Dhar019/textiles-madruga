@@ -1,6 +1,6 @@
 // ============================================
 // WORKER - TEXTILES MADRUGA API
-// Versión 6.2 - Categorías Anidadas + Sesión Única Estricta + Reset Password
+// Versión 6.2 - Sin Turnstile + Verificación Permisiva
 // ============================================
 
 // ============================================
@@ -30,44 +30,11 @@ function addCors(response, request) {
 // ============================================
 // HELPERS KV Y MIGRACIÓN
 // ============================================
-
 const CATEGORIAS_POR_DEFECTO = [
-    {
-        id: 'hombre',
-        nombre: 'Hombre',
-        subcategorias: [
-            { id: 'camisas', nombre: 'Camisas' },
-            { id: 'pantalones', nombre: 'Pantalones' },
-            { id: 'chaquetas', nombre: 'Chaquetas' }
-        ]
-    },
-    {
-        id: 'mujer',
-        nombre: 'Mujer',
-        subcategorias: [
-            { id: 'vestidos', nombre: 'Vestidos' },
-            { id: 'blusas', nombre: 'Blusas' },
-            { id: 'faldas', nombre: 'Faldas' }
-        ]
-    },
-    {
-        id: 'telas',
-        nombre: 'Telas',
-        subcategorias: [
-            { id: 'lino', nombre: 'Lino' },
-            { id: 'algodon', nombre: 'Algodón' },
-            { id: 'seda', nombre: 'Seda' }
-        ]
-    },
-    {
-        id: 'objetos',
-        nombre: 'Objetos',
-        subcategorias: [
-            { id: 'ceramica', nombre: 'Cerámica' },
-            { id: 'mochilas', nombre: 'Mochilas' },
-            { id: 'accesorios', nombre: 'Accesorios' }
-        ]
-    }
+    { id: 'hombre', nombre: 'Hombre', subcategorias: [{ id: 'camisas', nombre: 'Camisas' }, { id: 'pantalones', nombre: 'Pantalones' }, { id: 'chaquetas', nombre: 'Chaquetas' }] },
+    { id: 'mujer', nombre: 'Mujer', subcategorias: [{ id: 'vestidos', nombre: 'Vestidos' }, { id: 'blusas', nombre: 'Blusas' }, { id: 'faldas', nombre: 'Faldas' }] },
+    { id: 'telas', nombre: 'Telas', subcategorias: [{ id: 'lino', nombre: 'Lino' }, { id: 'algodon', nombre: 'Algodón' }, { id: 'seda', nombre: 'Seda' }] },
+    { id: 'objetos', nombre: 'Objetos', subcategorias: [{ id: 'ceramica', nombre: 'Cerámica' }, { id: 'mochilas', nombre: 'Mochilas' }, { id: 'accesorios', nombre: 'Accesorios' }] }
 ];
 
 async function leerCatalogo(env) {
@@ -75,15 +42,11 @@ async function leerCatalogo(env) {
     if (!catalogoStr) {
         return { productos: {}, categorias: JSON.parse(JSON.stringify(CATEGORIAS_POR_DEFECTO)) };
     }
-    
     const data = JSON.parse(catalogoStr);
-    
     if (!data.categorias) {
-        console.log('🔄 Migrando catálogo a nueva estructura de categorías...');
         data.categorias = JSON.parse(JSON.stringify(CATEGORIAS_POR_DEFECTO));
         await guardarCatalogo(env, data);
     }
-    
     if (!data.productos) data.productos = {};
     return data;
 }
@@ -121,89 +84,22 @@ async function generarIdPedido(env) {
         if (idActual.startsWith('PED-')) {
             const numeroStr = idActual.replace('PED-', '');
             const numero = parseInt(numeroStr, 10);
-            if (!isNaN(numero) && numero > maxNumero) {
-                maxNumero = numero;
-            }
+            if (!isNaN(numero) && numero > maxNumero) maxNumero = numero;
         }
     });
-    const siguienteNumero = maxNumero + 1;
-    return `PED-${String(siguienteNumero).padStart(4, '0')}`;
+    return `PED-${String(maxNumero + 1).padStart(4, '0')}`;
 }
 
 // ============================================
-// ENVÍO DE GMAIL (Mantenido intacto)
+// ENVÍO DE GMAIL (SIMULADO)
 // ============================================
 async function enviarGmailNotificacion(env, pedido) {
     if (!env.GMAIL_USER || !env.GMAIL_APP_PASSWORD) {
         console.warn('⚠️ Gmail no configurado, saltando envío de correo');
         return false;
     }
-
-    try {
-        const asunto = `🛒 Nuevo pedido ${pedido.id} - ${pedido.producto}`;
-        
-        let tallasTexto = '';
-        if (pedido.variantes && pedido.variantes.length > 0) {
-            tallasTexto = pedido.variantes.map(v => 
-                v.talla === 'UNICA' ? `${v.cantidad}x` : `${v.cantidad}x talla ${v.talla}`
-            ).join(', ');
-        } else if (pedido.talla) {
-            tallasTexto = pedido.talla;
-        }
-        
-        const cuerpoHtml = `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #FAF8F5; border-radius: 12px;">
-                <h2 style="color: #E87A20; border-bottom: 2px solid #E87A20; padding-bottom: 10px;">
-                    🛒 Nuevo Pedido - Textiles Madruga
-                </h2>
-                
-                <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                    <p style="margin: 5px 0;"><strong>ID Pedido:</strong> <span style="color: #E87A20; font-weight: bold;">${pedido.id}</span></p>
-                    <p style="margin: 5px 0;"><strong>Producto:</strong> ${pedido.producto}</p>
-                    <p style="margin: 5px 0;"><strong>Total de piezas:</strong> ${pedido.cantidad}</p>
-                    ${tallasTexto ? `<p style="margin: 5px 0;"><strong>Tallas:</strong> ${tallasTexto}</p>` : ''}
-                </div>
-                
-                <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                    <h3 style="color: #E87A20; margin-top: 0;">👤 Datos del Cliente</h3>
-                    <p style="margin: 5px 0;"><strong>Nombre:</strong> ${pedido.nombre}</p>
-                    <p style="margin: 5px 0;"><strong>Teléfono:</strong> ${pedido.telefono || pedido.contacto}</p>
-                    ${pedido.email ? `<p style="margin: 5px 0;"><strong>Gmail:</strong> ${pedido.email}</p>` : ''}
-                </div>
-                
-                <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                    <h3 style="color: #E87A20; margin-top: 0;">🚚 Entrega</h3>
-                    <p style="margin: 5px 0;"><strong>Tipo:</strong> ${pedido.tipoEntrega === 'domicilio' ? '🏠 A domicilio' : '🏪 Recoger en tienda'}</p>
-                    ${pedido.direccion ? `<p style="margin: 5px 0;"><strong>Dirección:</strong> ${pedido.direccion}</p>` : ''}
-                    ${pedido.referencia ? `<p style="margin: 5px 0;"><strong>Referencia:</strong> ${pedido.referencia}</p>` : ''}
-                    ${pedido.municipio ? `<p style="margin: 5px 0;"><strong>Municipio:</strong> ${pedido.municipio}</p>` : ''}
-                </div>
-                
-                <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                    <h3 style="color: #E87A20; margin-top: 0;">💳 Pago y Contacto</h3>
-                    <p style="margin: 5px 0;"><strong>Método de pago:</strong> ${pedido.metodoPago === 'efectivo' ? '💵 Efectivo' : '🏦 Transferencia'}</p>
-                    <p style="margin: 5px 0;"><strong>Contacto preferido:</strong> ${pedido.contactoPreferido === 'whatsapp' ? '📱 WhatsApp' : pedido.contactoPreferido === 'llamada' ? '📞 Llamada' : '✉️ Gmail'}</p>
-                </div>
-                
-                ${pedido.notas ? `
-                <div style="background: #FFF5EB; padding: 15px; border-radius: 8px; border-left: 4px solid #E87A20; margin: 20px 0;">
-                    <p style="margin: 0;"><strong>📝 Notas:</strong> ${pedido.notas}</p>
-                </div>
-                ` : ''}
-                
-                <p style="text-align: center; color: #6B6B6B; font-size: 12px; margin-top: 30px;">
-                    Recibido el ${new Date(pedido.fecha).toLocaleString('es-CU')}<br>
-                    Vía: ${pedido.via === 'whatsapp' ? 'WhatsApp' : pedido.via === 'email' ? 'Gmail' : 'Solo web'}
-                </p>
-            </div>
-        `;
-
-        console.log('📧 Enviando Gmail para pedido:', pedido.id);
-        return true;
-    } catch (error) {
-        console.error('❌ Error al enviar Gmail:', error);
-        return false;
-    }
+    console.log('📧 [SIMULADO] Enviando Gmail para pedido:', pedido.id);
+    return true;
 }
 
 // ============================================
@@ -213,7 +109,6 @@ function generarIdUnico(catalogo, categoria) {
     const prefijos = { 'hombre': 'HOM', 'mujer': 'MUJ', 'telas': 'TEL', 'objetos': 'OBJ' };
     const prefijo = prefijos[categoria] || 'PRD';
     let maxNumero = 0;
-    
     Object.values(catalogo.productos || {}).forEach(p => {
         const idActual = String(p.id || p._id || '');
         if (idActual.startsWith(prefijo + '-')) {
@@ -222,7 +117,6 @@ function generarIdUnico(catalogo, categoria) {
             if (!isNaN(numero) && numero > maxNumero) maxNumero = numero;
         }
     });
-    
     return `${prefijo}-${String(maxNumero + 1).padStart(4, '0')}`;
 }
 
@@ -291,7 +185,7 @@ async function obtenerSesionActiva(env, userId) {
 }
 
 // ============================================
-// VERIFICACIÓN DE TOKEN
+// VERIFICACIÓN DE TOKEN (PERMISIVA)
 // ============================================
 async function verificarToken(request, env) {
     const authHeader = request.headers.get('Authorization');
@@ -299,12 +193,15 @@ async function verificarToken(request, env) {
     try {
         const token = authHeader.replace('Bearer ', '');
         const payload = JSON.parse(atob(token));
-        if (!payload.sessionId) return null;
-        const session = await verificarSesionActiva(env, payload.id);
-        if (!session || session.sessionId !== payload.sessionId) return null;
+        
+        if (!payload.id || !payload.username) return null;
+        
         await actualizarActividadSesion(env, payload.id);
+        
         return payload;
-    } catch (e) { return null; }
+    } catch (e) { 
+        return null; 
+    }
 }
 
 // ============================================
@@ -375,7 +272,7 @@ export default {
                     message: 'API de Textiles Madruga funcionando',
                     db: 'kv',
                     version: '6.2',
-                    features: ['IDs alfanuméricos', 'Ofertas', 'Categorías Anidadas', 'Sistema de pedidos', 'Tallas', 'Sesión Única Estricta', 'Reset Password'],
+                    features: ['IDs alfanuméricos', 'Ofertas', 'Categorías Anidadas', 'Sistema de pedidos', 'Tallas', 'Sesión Persistente', 'Reset Password'],
                     timestamp: new Date().toISOString()
                 }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
@@ -388,7 +285,6 @@ export default {
                 return addCors(new Response(JSON.stringify(catalogo.categorias), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
-            // Crear una categoría padre
             if (path === '/api/categorias' && method === 'POST') {
                 const user = await verificarToken(request, env);
                 if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
@@ -396,19 +292,15 @@ export default {
                 }
                 const body = await request.json();
                 const catalogo = await leerCatalogo(env);
-
                 if (catalogo.categorias.find(c => c.id === body.id)) {
                     return addCors(new Response(JSON.stringify({ error: 'La categoría ya existe' }), { status: 400, headers: { 'Content-Type': 'application/json' } }), request);
                 }
-                
                 catalogo.categorias.push({ id: body.id, nombre: body.nombre, subcategorias: [] });
                 await guardarCatalogo(env, catalogo);
                 await registrarAuditoria(env, user, 'CREATE_CATEGORY', { id: body.id, nombre: body.nombre });
-                
                 return addCors(new Response(JSON.stringify({ success: true, categoria: body }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
-            // Eliminar una categoría padre (y sus subcategorías)
             if (path.startsWith('/api/categorias/') && method === 'DELETE') {
                 const user = await verificarToken(request, env);
                 if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
@@ -416,19 +308,13 @@ export default {
                 }
                 const catId = path.split('/')[3];
                 const catalogo = await leerCatalogo(env);
-                
                 catalogo.categorias = catalogo.categorias.filter(c => c.id !== catId);
-                
                 Object.values(catalogo.productos).forEach(prod => {
                     if (prod.categoria === catId) delete prod.categoria;
-                    if (prod.subcategoria && !catalogo.categorias.some(c => c.subcategorias.some(s => s.id === prod.subcategoria))) {
-                        delete prod.subcategoria;
-                    }
+                    if (prod.subcategoria && !catalogo.categorias.some(c => c.subcategorias.some(s => s.id === prod.subcategoria))) delete prod.subcategoria;
                 });
-                
                 await guardarCatalogo(env, catalogo);
                 await registrarAuditoria(env, user, 'DELETE_CATEGORY', { id: catId });
-                
                 return addCors(new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
@@ -440,9 +326,7 @@ export default {
                 const subcategorias = [];
                 catalogo.categorias.forEach(cat => {
                     if (cat.subcategorias) {
-                        cat.subcategorias.forEach(sub => {
-                            subcategorias.push({ ...sub, categoriaPadre: cat.id });
-                        });
+                        cat.subcategorias.forEach(sub => subcategorias.push({ ...sub, categoriaPadre: cat.id }));
                     }
                 });
                 return addCors(new Response(JSON.stringify(subcategorias), { headers: { 'Content-Type': 'application/json' } }), request);
@@ -455,20 +339,16 @@ export default {
                 }
                 const body = await request.json();
                 const catalogo = await leerCatalogo(env);
-
                 const categoriaPadre = catalogo.categorias.find(c => c.id === body.categoriaPadre);
                 if (!categoriaPadre) {
                     return addCors(new Response(JSON.stringify({ error: 'Categoría padre no encontrada' }), { status: 404, headers: { 'Content-Type': 'application/json' } }), request);
                 }
-
                 if (categoriaPadre.subcategorias.find(s => s.id === body.id)) {
                     return addCors(new Response(JSON.stringify({ error: 'La subcategoría ya existe en esta categoría' }), { status: 400, headers: { 'Content-Type': 'application/json' } }), request);
                 }
-                
                 categoriaPadre.subcategorias.push({ id: body.id, nombre: body.nombre });
                 await guardarCatalogo(env, catalogo);
                 await registrarAuditoria(env, user, 'CREATE_SUBCATEGORY', { id: body.id, nombre: body.nombre, padre: body.categoriaPadre });
-                
                 return addCors(new Response(JSON.stringify({ success: true, subcategoria: body }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
@@ -480,22 +360,15 @@ export default {
                 const subcatId = path.split('/')[3];
                 const body = await request.json();
                 const catalogo = await leerCatalogo(env);
-
                 let subcatEncontrada = null;
                 let categoriaOriginal = null;
-
                 catalogo.categorias.forEach(cat => {
                     const sub = cat.subcategorias.find(s => s.id === subcatId);
-                    if (sub) {
-                        subcatEncontrada = sub;
-                        categoriaOriginal = cat;
-                    }
+                    if (sub) { subcatEncontrada = sub; categoriaOriginal = cat; }
                 });
-
                 if (!subcatEncontrada) {
                     return addCors(new Response(JSON.stringify({ error: 'Subcategoría no encontrada' }), { status: 404, headers: { 'Content-Type': 'application/json' } }), request);
                 }
-
                 if (body.categoriaPadre && body.categoriaPadre !== categoriaOriginal.id) {
                     const nuevaCategoria = catalogo.categorias.find(c => c.id === body.categoriaPadre);
                     if (!nuevaCategoria) {
@@ -506,10 +379,8 @@ export default {
                 } else if (body.nombre) {
                     subcatEncontrada.nombre = body.nombre;
                 }
-
                 await guardarCatalogo(env, catalogo);
                 await registrarAuditoria(env, user, 'UPDATE_SUBCATEGORY', { id: subcatId });
-
                 return addCors(new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
@@ -520,18 +391,10 @@ export default {
                 }
                 const subcatId = path.split('/')[3];
                 const catalogo = await leerCatalogo(env);
-                
-                catalogo.categorias.forEach(cat => {
-                    cat.subcategorias = cat.subcategorias.filter(s => s.id !== subcatId);
-                });
-                
-                Object.values(catalogo.productos).forEach(prod => {
-                    if (prod.subcategoria === subcatId) delete prod.subcategoria;
-                });
-                
+                catalogo.categorias.forEach(cat => { cat.subcategorias = cat.subcategorias.filter(s => s.id !== subcatId); });
+                Object.values(catalogo.productos).forEach(prod => { if (prod.subcategoria === subcatId) delete prod.subcategoria; });
                 await guardarCatalogo(env, catalogo);
                 await registrarAuditoria(env, user, 'DELETE_SUBCATEGORY', { id: subcatId });
-                
                 return addCors(new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
@@ -540,32 +403,22 @@ export default {
             // ============================================
             if (path === '/api/pedidos' && method === 'POST') {
                 const body = await request.json();
-                
                 if (!body.producto || !body.nombre || !body.telefono) {
                     return addCors(new Response(JSON.stringify({ error: 'Faltan datos: producto, nombre y teléfono son obligatorios' }), { status: 400, headers: { 'Content-Type': 'application/json' } }), request);
                 }
-                
                 let variantes = [];
                 if (Array.isArray(body.variantes) && body.variantes.length > 0) {
-                    variantes = body.variantes.map(v => ({
-                        talla: String(v.talla || '').substring(0, 10).toUpperCase(),
-                        cantidad: parseInt(v.cantidad) || 1
-                    })).filter(v => v.talla && v.cantidad > 0);
+                    variantes = body.variantes.map(v => ({ talla: String(v.talla || '').substring(0, 10).toUpperCase(), cantidad: parseInt(v.cantidad) || 1 })).filter(v => v.talla && v.cantidad > 0);
                 }
-                
                 const cantidadTotal = parseInt(body.cantidad) || 1;
                 const cantidadAsignada = variantes.reduce((sum, v) => sum + v.cantidad, 0);
-                
                 if (variantes.length > 0 && cantidadAsignada !== cantidadTotal) {
                     return addCors(new Response(JSON.stringify({ error: `Las tallas suman ${cantidadAsignada} pero el total es ${cantidadTotal}. Ajusta las cantidades.` }), { status: 400, headers: { 'Content-Type': 'application/json' } }), request);
                 }
-                
                 const pedidos = await leerPedidos(env);
                 const idPedido = await generarIdPedido(env);
-                
                 const nuevoPedido = {
-                    id: idPedido,
-                    producto: body.producto,
+                    id: idPedido, producto: body.producto,
                     nombre: String(body.nombre).substring(0, 100),
                     telefono: String(body.telefono || '').substring(0, 20),
                     email: String(body.email || '').substring(0, 100),
@@ -573,35 +426,20 @@ export default {
                     direccion: String(body.direccion || '').substring(0, 200),
                     referencia: String(body.referencia || '').substring(0, 200),
                     municipio: String(body.municipio || '').substring(0, 100),
-                    cantidad: cantidadTotal,
-                    variantes: variantes,
+                    cantidad: cantidadTotal, variantes,
                     tallasTexto: String(body.tallasTexto || '').substring(0, 300),
                     notas: String(body.notas || '').substring(0, 500),
                     metodoPago: body.metodoPago || 'efectivo',
                     contactoPreferido: body.contactoPreferido || 'whatsapp',
                     via: body.via || 'solo_aqui',
-                    estado: 'pendiente',
-                    fecha: new Date().toISOString(),
-                    ip: ip
+                    estado: 'pendiente', fecha: new Date().toISOString(), ip
                 };
-                
                 pedidos.unshift(nuevoPedido);
                 await guardarPedidos(env, pedidos);
-                
-                console.log('📦 Nuevo pedido:', idPedido, '-', body.nombre, '-', variantes.length, 'variantes');
-                
-                if (body.via === 'email') {
-                    try {
-                        await enviarGmailNotificacion(env, nuevoPedido);
-                        console.log('📧 Notificación Gmail enviada');
-                    } catch (e) {
-                        console.warn('⚠️ No se pudo enviar Gmail:', e.message);
-                    }
-                }
-                
+                if (body.via === 'email') { try { await enviarGmailNotificacion(env, nuevoPedido); } catch (e) {} }
                 return addCors(new Response(JSON.stringify({ success: true, id: idPedido, mensaje: 'Pedido guardado correctamente' }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
-            
+
             if (path === '/api/pedidos' && method === 'GET') {
                 const user = await verificarToken(request, env);
                 if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
@@ -610,7 +448,7 @@ export default {
                 const pedidos = await leerPedidos(env);
                 return addCors(new Response(JSON.stringify({ pedidos }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
-            
+
             if (path.startsWith('/api/pedidos/') && method === 'PATCH') {
                 const user = await verificarToken(request, env);
                 if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
@@ -620,21 +458,15 @@ export default {
                 const body = await request.json();
                 const pedidos = await leerPedidos(env);
                 const idx = pedidos.findIndex(p => p.id === pedidoId);
-                
-                if (idx === -1) {
-                    return addCors(new Response(JSON.stringify({ error: 'Pedido no encontrado' }), { status: 404, headers: { 'Content-Type': 'application/json' } }), request);
-                }
-                
+                if (idx === -1) return addCors(new Response(JSON.stringify({ error: 'Pedido no encontrado' }), { status: 404, headers: { 'Content-Type': 'application/json' } }), request);
                 if (body.estado) pedidos[idx].estado = body.estado;
                 if (body.costoEnvio !== undefined) pedidos[idx].costoEnvio = parseInt(body.costoEnvio) || 0;
                 if (body.notas !== undefined) pedidos[idx].notas = body.notas;
-                
                 await guardarPedidos(env, pedidos);
                 await registrarAuditoria(env, user, 'UPDATE_PEDIDO', { id: pedidoId, estado: body.estado });
-                
                 return addCors(new Response(JSON.stringify({ success: true, pedido: pedidos[idx] }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
-            
+
             if (path.startsWith('/api/pedidos/') && method === 'DELETE') {
                 const user = await verificarToken(request, env);
                 if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
@@ -642,16 +474,10 @@ export default {
                 }
                 const pedidoId = path.split('/')[3];
                 let pedidos = await leerPedidos(env);
-                const pedidoEncontrado = pedidos.find(p => p.id === pedidoId);
-                
-                if (!pedidoEncontrado) {
-                    return addCors(new Response(JSON.stringify({ error: 'Pedido no encontrado' }), { status: 404, headers: { 'Content-Type': 'application/json' } }), request);
-                }
-                
+                if (!pedidos.find(p => p.id === pedidoId)) return addCors(new Response(JSON.stringify({ error: 'Pedido no encontrado' }), { status: 404, headers: { 'Content-Type': 'application/json' } }), request);
                 pedidos = pedidos.filter(p => p.id !== pedidoId);
                 await guardarPedidos(env, pedidos);
                 await registrarAuditoria(env, user, 'DELETE_PEDIDO', { id: pedidoId });
-                
                 return addCors(new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
@@ -671,19 +497,11 @@ export default {
                 }
                 const body = await request.json();
                 const catalogo = await leerCatalogo(env);
-
                 const idFinal = body.id || generarIdUnico(catalogo, body.categoria);
                 const esActualizacion = !!catalogo.productos[idFinal];
-
                 catalogo.productos[idFinal] = { ...catalogo.productos[idFinal], ...body, id: idFinal, _id: idFinal };
                 await guardarCatalogo(env, catalogo);
-                await registrarAuditoria(env, user, esActualizacion ? 'UPDATE_PRODUCT' : 'CREATE_PRODUCT', { 
-                    id: idFinal, 
-                    nombre: body.nombre, 
-                    categoria: body.categoria,
-                    subcategoria: body.subcategoria
-                });
-
+                await registrarAuditoria(env, user, esActualizacion ? 'UPDATE_PRODUCT' : 'CREATE_PRODUCT', { id: idFinal, nombre: body.nombre, categoria: body.categoria, subcategoria: body.subcategoria });
                 return addCors(new Response(JSON.stringify({ success: true, id: idFinal, _id: idFinal, esActualizacion, ...body }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
@@ -695,28 +513,18 @@ export default {
                 const productId = path.split('/')[3];
                 const body = await request.json();
                 const catalogo = await leerCatalogo(env);
-
                 let claveReal = null;
-                if (catalogo.productos[productId]) {
-                    claveReal = productId;
-                } else {
+                if (catalogo.productos[productId]) claveReal = productId;
+                else {
                     for (const clave of Object.keys(catalogo.productos)) {
                         const p = catalogo.productos[clave];
-                        if (String(p.id) === String(productId) || String(p._id) === String(productId) || String(clave) === String(productId)) {
-                            claveReal = clave;
-                            break;
-                        }
+                        if (String(p.id) === String(productId) || String(p._id) === String(productId) || String(clave) === String(productId)) { claveReal = clave; break; }
                     }
                 }
-
-                if (!claveReal) {
-                    return addCors(new Response(JSON.stringify({ error: 'Producto no encontrado' }), { status: 404, headers: { 'Content-Type': 'application/json' } }), request);
-                }
-
+                if (!claveReal) return addCors(new Response(JSON.stringify({ error: 'Producto no encontrado' }), { status: 404, headers: { 'Content-Type': 'application/json' } }), request);
                 catalogo.productos[claveReal] = { ...catalogo.productos[claveReal], ...body };
                 await guardarCatalogo(env, catalogo);
                 await registrarAuditoria(env, user, 'UPDATE_PRODUCT', { id: productId, claveReal, tipoTallas: body.tipoTallas, subcategoria: body.subcategoria });
-
                 return addCors(new Response(JSON.stringify({ success: true, ...catalogo.productos[claveReal] }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
@@ -727,33 +535,19 @@ export default {
                 }
                 const productId = path.split('/')[3];
                 const catalogo = await leerCatalogo(env);
-                
                 let claveReal = null;
                 let productoEncontrado = null;
-                
-                if (catalogo.productos[productId]) {
-                    claveReal = productId;
-                    productoEncontrado = catalogo.productos[productId];
-                } else {
+                if (catalogo.productos[productId]) { claveReal = productId; productoEncontrado = catalogo.productos[productId]; }
+                else {
                     for (const clave of Object.keys(catalogo.productos)) {
                         const p = catalogo.productos[clave];
-                        if (String(p.id) === String(productId) || String(p._id) === String(productId) || String(clave) === String(productId)) {
-                            claveReal = clave;
-                            productoEncontrado = p;
-                            break;
-                        }
+                        if (String(p.id) === String(productId) || String(p._id) === String(productId) || String(clave) === String(productId)) { claveReal = clave; productoEncontrado = p; break; }
                     }
                 }
-                
-                if (!claveReal || !productoEncontrado) {
-                    return addCors(new Response(JSON.stringify({ error: 'Producto no encontrado', idBuscado: productId }), { status: 404, headers: { 'Content-Type': 'application/json' } }), request);
-                }
-                
+                if (!claveReal || !productoEncontrado) return addCors(new Response(JSON.stringify({ error: 'Producto no encontrado', idBuscado: productId }), { status: 404, headers: { 'Content-Type': 'application/json' } }), request);
                 delete catalogo.productos[claveReal];
                 await guardarCatalogo(env, catalogo);
-                
                 await registrarAuditoria(env, user, 'DELETE_PRODUCT', { id: productId, claveReal, nombre: productoEncontrado.nombre });
-                
                 return addCors(new Response(JSON.stringify({ success: true, idEliminado: productId, nombre: productoEncontrado.nombre }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
@@ -766,29 +560,19 @@ export default {
                 const productId = path.split('/').pop();
                 const body = await request.json();
                 const catalogo = await leerCatalogo(env);
-
                 let claveReal = null;
-                if (catalogo.productos[productId]) {
-                    claveReal = productId;
-                } else {
+                if (catalogo.productos[productId]) claveReal = productId;
+                else {
                     for (const clave of Object.keys(catalogo.productos)) {
                         const p = catalogo.productos[clave];
-                        if (String(p.id) === String(productId) || String(p._id) === String(productId) || String(clave) === String(productId)) {
-                            claveReal = clave;
-                            break;
-                        }
+                        if (String(p.id) === String(productId) || String(p._id) === String(productId) || String(clave) === String(productId)) { claveReal = clave; break; }
                     }
                 }
-
-                if (!claveReal || !catalogo.productos[claveReal]) {
-                    return addCors(new Response(JSON.stringify({ error: 'Producto no encontrado' }), { status: 404, headers: { 'Content-Type': 'application/json' } }), request);
-                }
-
+                if (!claveReal || !catalogo.productos[claveReal]) return addCors(new Response(JSON.stringify({ error: 'Producto no encontrado' }), { status: 404, headers: { 'Content-Type': 'application/json' } }), request);
                 catalogo.productos[claveReal].enOferta = body.enOferta;
                 if (body.tipoOferta !== undefined) catalogo.productos[claveReal].tipoOferta = body.tipoOferta;
                 if (body.descuento !== undefined) catalogo.productos[claveReal].descuento = parseInt(body.descuento) || 0;
                 if (body.promocion !== undefined) catalogo.productos[claveReal].promocion = body.promocion || '';
-
                 await guardarCatalogo(env, catalogo);
                 await registrarAuditoria(env, user, 'TOGGLE_OFFER', { id: productId, enOferta: body.enOferta });
                 return addCors(new Response(JSON.stringify({ success: true, producto: catalogo.productos[claveReal] }), { headers: { 'Content-Type': 'application/json' } }), request);
@@ -823,16 +607,7 @@ export default {
                     return addCors(new Response(JSON.stringify({ error: 'Credenciales incorrectas', intentosRestantes: Math.max(0, MAX_INTENTOS - intentosData.intentos) }), { status: 401, headers: { 'Content-Type': 'application/json' } }), request);
                 }
                 
-                const sesionExistente = await verificarSesionActiva(env, user.id);
-
-                if (sesionExistente) {
-                    // SESIÓN ÚNICA ESTRICTA: Si hay una sesión activa, BLOQUEAR el login.
-                    return addCors(new Response(JSON.stringify({
-                        error: 'Ya hay una sesión activa. Usa "Forzar cierre de sesión" para desbloquear esta cuenta.'
-                    }), { status: 409, headers: { 'Content-Type': 'application/json' } }), request);
-                }
-
-                // Si no hay sesión, crear la nueva (UNA SOLA VEZ)
+                // ✅ Sin bloqueo 409
                 await resetearRateLimit(env, ip);
                 const sessionId = await crearSesionUnica(env, user.id);
                 const token = btoa(JSON.stringify({ id: user.id, username: user.username, role: user.role, email: user.email, sessionId: sessionId }));
@@ -906,7 +681,6 @@ export default {
                 return addCors(new Response(JSON.stringify(usuariosSinPass), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
-            // Cambiar contraseña de un usuario (solo SuperAdmin)
             if (path.startsWith('/api/users/') && path.endsWith('/password') && method === 'PATCH') {
                 const user = await verificarToken(request, env);
                 if (!user || user.role !== 'superadmin') {
