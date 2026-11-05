@@ -4,7 +4,6 @@
 
 /**
  * Helper para manejar respuestas de autenticación fallida (401/403).
- * Si el Worker rechaza el token, limpia la sesión y muestra el login.
  */
 function manejarErrorAutenticacion(status) {
     if (status === 401 || status === 403) {
@@ -12,12 +11,10 @@ function manejarErrorAutenticacion(status) {
         localStorage.removeItem(SESSION_KEY);
         sessionStorage.removeItem('tm_pestana_activa');
         
-        // Cerrar el panel admin si está abierto
         const adminPanel = document.getElementById('admin-panel');
         if (adminPanel) adminPanel.className = 'admin-oculto';
         document.body.classList.remove('admin-abierto');
         
-        // Actualizar botones y mostrar login
         if (typeof actualizarBotonAcceder === 'function') actualizarBotonAcceder();
         if (typeof mostrarNotificacion === 'function') {
             mostrarNotificacion('Tu sesión expiró. Inicia sesión de nuevo.', 'warning');
@@ -28,6 +25,35 @@ function manejarErrorAutenticacion(status) {
         return true;
     }
     return false;
+}
+
+/**
+ * ✅ NUEVA FUNCIÓN: Verifica que la sesión sea válida en el Worker.
+ * Hace una petición ligera al endpoint de pedidos (que requiere auth).
+ * Si el Worker rechaza (401/403), limpia la sesión local y devuelve false.
+ */
+async function verificarSesionReal() {
+    const session = getSession();
+    if (!session || !session.token) return false;
+
+    try {
+        const respuesta = await fetch(`${API_URL}/pedidos`, {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${session.token}` }
+        });
+
+        if (respuesta.status === 401 || respuesta.status === 403) {
+            console.warn('🔒 Sesión rechazada por el Worker. Limpiando...');
+            localStorage.removeItem(SESSION_KEY);
+            sessionStorage.removeItem('tm_pestana_activa');
+            return false;
+        }
+
+        return respuesta.ok;
+    } catch (error) {
+        console.error('Error verificando sesión:', error);
+        return false;
+    }
 }
 
 async function cargarProductos(intentos = 3) {

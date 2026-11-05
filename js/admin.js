@@ -23,8 +23,22 @@ function cerrarLogin() {
     }
 }
 
-function abrirAdmin() {
+async function abrirAdmin() {
     if (!protegerAdmin()) return;
+
+    // ✅ Verificar que la sesión es válida en el Worker
+    const sesionValida = await verificarSesionReal();
+    if (!sesionValida) {
+        mostrarNotificacion('Tu sesión expiró o fue reemplazada. Inicia sesión de nuevo.', 'warning');
+        const adminPanel = document.getElementById('admin-panel');
+        if (adminPanel) adminPanel.className = 'admin-oculto';
+        document.body.classList.remove('admin-abierto');
+        actualizarBotonAcceder();
+        mostrarLogin();
+        return;
+    }
+
+    // Si la sesión es válida, abrir el panel normalmente
     const adminPanel = document.getElementById('admin-panel');
     adminPanel.className = 'admin-visible';
     document.body.classList.add('admin-abierto');
@@ -272,7 +286,23 @@ async function cargarPedidosAdmin() {
             return; 
         }
         const respuesta = await fetch(`${API_URL}/pedidos`, { headers: { 'Authorization': `Bearer ${session.token}` } });
-        if (manejarErrorAutenticacion(respuesta.status)) return;
+        
+        // ✅ Si el Worker rechaza la sesión, limpiamos y cerramos
+        if (respuesta.status === 401 || respuesta.status === 403) {
+            console.warn('🔒 Sesión rechazada por el Worker al cargar pedidos. Limpiando...');
+            localStorage.removeItem(SESSION_KEY);
+            sessionStorage.removeItem('tm_pestana_activa');
+            
+            const adminPanel = document.getElementById('admin-panel');
+            if (adminPanel) adminPanel.className = 'admin-oculto';
+            document.body.classList.remove('admin-abierto');
+            
+            actualizarBotonAcceder();
+            mostrarNotificacion('Tu sesión expiró. Inicia sesión de nuevo.', 'warning');
+            setTimeout(() => mostrarLogin(), 300);
+            return;
+        }
+
         if (!respuesta.ok) throw new Error('Error al cargar pedidos');
         const data = await respuesta.json();
         pedidosGlobales = data.pedidos || [];
@@ -399,6 +429,14 @@ function filtrarPedidosAdmin(termino) {
 async function cargarOfertasAdmin() {
     const container = document.getElementById('lista-ofertas-admin');
     if (!container) return;
+
+    // ✅ Verificar sesión antes de cargar
+    const sesionValida = await verificarSesionReal();
+    if (!sesionValida) {
+        container.innerHTML = '<p style="text-align:center;padding:40px;color:var(--color-gris);">Sesión expirada. Recarga la página.</p>';
+        return;
+    }
+
     container.innerHTML = '<p style="text-align:center;padding:40px;color:var(--color-gris);">Cargando ofertas...</p>';
     try {
         const respuesta = await fetch(`${API_URL}/productos`);
@@ -528,7 +566,20 @@ async function renderizarUsuariosAdmin() {
     try {
         const session = getSession();
         const respuesta = await fetch(`${API_URL}/users`, { headers: { 'Authorization': `Bearer ${session.token}` } });
-        if (manejarErrorAutenticacion(respuesta.status)) return;
+        
+        // ✅ Manejar 401/403
+        if (respuesta.status === 401 || respuesta.status === 403) {
+            localStorage.removeItem(SESSION_KEY);
+            sessionStorage.removeItem('tm_pestana_activa');
+            const adminPanel = document.getElementById('admin-panel');
+            if (adminPanel) adminPanel.className = 'admin-oculto';
+            document.body.classList.remove('admin-abierto');
+            actualizarBotonAcceder();
+            mostrarNotificacion('Tu sesión expiró. Inicia sesión de nuevo.', 'warning');
+            setTimeout(() => mostrarLogin(), 300);
+            return;
+        }
+
         if (!respuesta.ok) throw new Error('Error al cargar usuarios');
         const users = await respuesta.json();
         if (users.length === 0) { 
