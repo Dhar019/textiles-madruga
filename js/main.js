@@ -129,7 +129,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // ✅ REGISTRO DESDE EL LINK DEL LOGIN (SIN TURNSTILE)
+    // ✅ REGISTRO DESDE EL LINK DEL LOGIN
     document.getElementById('login-registro-link')?.addEventListener('click', function(e) {
         e.preventDefault();
         cerrarLogin();
@@ -264,7 +264,7 @@ document.addEventListener('DOMContentLoaded', function() {
         btnVolver.addEventListener('click', cerrarModalAyuda);
     }
 
-    // ✅ REGISTRO DESDE EL MODAL DE BIENVENIDA (SIN TURNSTILE)
+    // ✅ REGISTRO DESDE EL MODAL DE BIENVENIDA
     document.getElementById('modal-bienvenida-crear')?.addEventListener('click', function() {
         cerrarModalBienvenida();
         abrirModalGenerico({
@@ -361,6 +361,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     body: JSON.stringify(productoData) 
                 });
             }
+            
+            if (manejarErrorAutenticacion(respuesta.status)) return;
             
             if (!respuesta.ok) { 
                 const errorData = await respuesta.json().catch(() => ({})); 
@@ -482,6 +484,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.token}` }, 
                         body: JSON.stringify({ username: datos.username, password: datos.password, role: datos.role, email: datos.email || '', name: datos.username }) 
                     });
+                    if (manejarErrorAutenticacion(respuesta.status)) return false;
                     if (!respuesta.ok) { 
                         const data = await respuesta.json(); 
                         throw new Error(data.error || 'Error al crear usuario'); 

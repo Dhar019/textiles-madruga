@@ -2,6 +2,34 @@
 // COMUNICACIÓN CON EL WORKER (API)
 // ============================================
 
+/**
+ * Helper para manejar respuestas de autenticación fallida (401/403).
+ * Si el Worker rechaza el token, limpia la sesión y muestra el login.
+ */
+function manejarErrorAutenticacion(status) {
+    if (status === 401 || status === 403) {
+        console.warn('🔒 Sesión inválida o expirada. Limpiando y mostrando login...');
+        localStorage.removeItem(SESSION_KEY);
+        sessionStorage.removeItem('tm_pestana_activa');
+        
+        // Cerrar el panel admin si está abierto
+        const adminPanel = document.getElementById('admin-panel');
+        if (adminPanel) adminPanel.className = 'admin-oculto';
+        document.body.classList.remove('admin-abierto');
+        
+        // Actualizar botones y mostrar login
+        if (typeof actualizarBotonAcceder === 'function') actualizarBotonAcceder();
+        if (typeof mostrarNotificacion === 'function') {
+            mostrarNotificacion('Tu sesión expiró. Inicia sesión de nuevo.', 'warning');
+        }
+        if (typeof mostrarLogin === 'function') {
+            setTimeout(() => mostrarLogin(), 300);
+        }
+        return true;
+    }
+    return false;
+}
+
 async function cargarProductos(intentos = 3) {
     console.log(`🔄 Cargando productos... (Intento ${4 - intentos}/3)`);
     
@@ -167,11 +195,13 @@ async function obtenerSubcategorias() {
 async function guardarSubcategoria(subcat) {
     try {
         const session = getSession();
+        if (!session) return false;
         const respuesta = await fetch(`${API_URL}/subcategorias`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.token}` },
             body: JSON.stringify(subcat)
         });
+        if (manejarErrorAutenticacion(respuesta.status)) return false;
         return respuesta.ok;
     } catch (e) { return false; }
 }
@@ -216,11 +246,13 @@ async function logout() {
 async function editarSubcategoria(id, datos) {
     try {
         const session = getSession();
+        if (!session) return false;
         const respuesta = await fetch(`${API_URL}/subcategorias/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.token}` },
             body: JSON.stringify(datos)
         });
+        if (manejarErrorAutenticacion(respuesta.status)) return false;
         return respuesta.ok;
     } catch (e) { return false; }
 }

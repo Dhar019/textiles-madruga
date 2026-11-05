@@ -115,6 +115,7 @@ async function toggleOfertaAdmin(id) {
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.token}` }, 
             body: JSON.stringify({ enOferta: nuevaOferta, tipoOferta: producto.tipoOferta || 'descuento', descuento: producto.descuento || 15, promocion: producto.promocion || '' }) 
         });
+        if (manejarErrorAutenticacion(respuesta.status)) return;
         if (!respuesta.ok) throw new Error('Error al actualizar oferta');
         mostrarNotificacion(nuevaOferta ? 'Añadido a ofertas' : 'Quitado de ofertas', 'success');
         const datosActualizados = await cargarProductos();
@@ -147,6 +148,7 @@ async function eliminarProductoAdmin(id) {
             method: 'DELETE', 
             headers: { 'Authorization': `Bearer ${session.token}`, 'Content-Type': 'application/json' } 
         });
+        if (manejarErrorAutenticacion(respuesta.status)) return;
         if (!respuesta.ok) { 
             const errorData = await respuesta.json().catch(() => ({})); 
             console.error('Error del servidor:', respuesta.status, errorData); 
@@ -270,6 +272,7 @@ async function cargarPedidosAdmin() {
             return; 
         }
         const respuesta = await fetch(`${API_URL}/pedidos`, { headers: { 'Authorization': `Bearer ${session.token}` } });
+        if (manejarErrorAutenticacion(respuesta.status)) return;
         if (!respuesta.ok) throw new Error('Error al cargar pedidos');
         const data = await respuesta.json();
         pedidosGlobales = data.pedidos || [];
@@ -346,6 +349,7 @@ async function cambiarEstadoPedido(pedidoId, nuevoEstado) {
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.token}` }, 
             body: JSON.stringify({ estado: nuevoEstado }) 
         });
+        if (manejarErrorAutenticacion(respuesta.status)) return;
         if (!respuesta.ok) throw new Error('Error al cambiar estado');
         mostrarNotificacion(`Pedido marcado como ${nuevoEstado}`, 'success');
         await cargarPedidosAdmin();
@@ -370,6 +374,7 @@ async function eliminarPedidoAdmin(pedidoId) {
             method: 'DELETE', 
             headers: { 'Authorization': `Bearer ${session.token}` } 
         });
+        if (manejarErrorAutenticacion(respuesta.status)) return;
         if (!respuesta.ok) throw new Error('Error al eliminar');
         mostrarNotificacion('Pedido eliminado', 'success');
         await cargarPedidosAdmin();
@@ -471,6 +476,7 @@ async function guardarOferta(id) {
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.token}` }, 
             body: JSON.stringify({ enOferta: true, tipoOferta, descuento, promocion }) 
         });
+        if (manejarErrorAutenticacion(respuesta.status)) return;
         if (!respuesta.ok) throw new Error('Error al guardar oferta');
         mostrarNotificacion('Oferta guardada', 'success');
         const datosActualizados = await cargarProductos();
@@ -498,11 +504,12 @@ async function quitarOferta(productoId) {
     if (!confirmado) return;
     try {
         const session = getSession();
-        await fetch(`${API_URL}/offers/toggle/${productoId}`, { 
+        const respuesta = await fetch(`${API_URL}/offers/toggle/${productoId}`, { 
             method: 'PATCH', 
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.token}` }, 
             body: JSON.stringify({ enOferta: false }) 
         });
+        if (manejarErrorAutenticacion(respuesta.status)) return;
         mostrarNotificacion('Oferta eliminada', 'success'); 
         cargarOfertasAdmin();
     } catch (error) { 
@@ -521,6 +528,7 @@ async function renderizarUsuariosAdmin() {
     try {
         const session = getSession();
         const respuesta = await fetch(`${API_URL}/users`, { headers: { 'Authorization': `Bearer ${session.token}` } });
+        if (manejarErrorAutenticacion(respuesta.status)) return;
         if (!respuesta.ok) throw new Error('Error al cargar usuarios');
         const users = await respuesta.json();
         if (users.length === 0) { 
@@ -560,6 +568,7 @@ async function cambiarRolUsuario(userId, nuevoRol) {
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.token}` }, 
             body: JSON.stringify({ role: nuevoRol }) 
         });
+        if (manejarErrorAutenticacion(respuesta.status)) return;
         if (!respuesta.ok) throw new Error('Error');
         mostrarNotificacion('Rol actualizado', 'success');
         renderizarUsuariosAdmin();
@@ -583,10 +592,11 @@ async function eliminarUsuario(userId) {
     if (!confirmado) return;
     try {
         const session = getSession();
-        await fetch(`${API_URL}/users/${userId}`, { 
+        const respuesta = await fetch(`${API_URL}/users/${userId}`, { 
             method: 'DELETE', 
             headers: { 'Authorization': `Bearer ${session.token}` } 
         });
+        if (manejarErrorAutenticacion(respuesta.status)) return;
         mostrarNotificacion('Usuario eliminado', 'success');
         renderizarUsuariosAdmin();
     } catch (error) { 
@@ -704,10 +714,11 @@ async function eliminarSubcategoria(id) {
     
     try {
         const session = getSession();
-        await fetch(`${API_URL}/subcategorias/${id}`, {
+        const respuesta = await fetch(`${API_URL}/subcategorias/${id}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${session.token}` }
         });
+        if (manejarErrorAutenticacion(respuesta.status)) return;
         mostrarNotificacion('Subcategoría eliminada', 'success');
         cargarSubcategoriasAdmin();
     } catch (e) { 

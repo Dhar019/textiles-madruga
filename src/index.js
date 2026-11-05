@@ -1,6 +1,6 @@
 // ============================================
 // WORKER - TEXTILES MADRUGA API
-// Versión 6.2 - Sin Turnstile + Verificación Permisiva
+// Versión 6.4 - Verificación Permisiva + Sesión Estable
 // ============================================
 
 // ============================================
@@ -180,13 +180,12 @@ async function actualizarActividadSesion(env, userId) {
     await env.PRODUCTOS_KV.put(`SESSIONS:${userId}`, JSON.stringify(session), { expirationTtl: 8 * 60 * 60 });
 }
 
-async function obtenerSesionActiva(env, userId) {
-    return await verificarSesionActiva(env, userId);
-}
-
 // ============================================
 // VERIFICACIÓN DE TOKEN (PERMISIVA)
 // ============================================
+// Solo validamos que el token tenga los datos mínimos.
+// NO comparamos sessionId, para evitar que un segundo login
+// invalide al primero y cause "sesiones fantasma".
 async function verificarToken(request, env) {
     const authHeader = request.headers.get('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
@@ -194,8 +193,10 @@ async function verificarToken(request, env) {
         const token = authHeader.replace('Bearer ', '');
         const payload = JSON.parse(atob(token));
         
+        // Solo validamos datos mínimos del token
         if (!payload.id || !payload.username) return null;
         
+        // Actualizamos actividad (si la sesión existe)
         await actualizarActividadSesion(env, payload.id);
         
         return payload;
@@ -271,8 +272,8 @@ export default {
                     status: 'ok',
                     message: 'API de Textiles Madruga funcionando',
                     db: 'kv',
-                    version: '6.2',
-                    features: ['IDs alfanuméricos', 'Ofertas', 'Categorías Anidadas', 'Sistema de pedidos', 'Tallas', 'Sesión Persistente', 'Reset Password'],
+                    version: '6.4',
+                    features: ['IDs alfanuméricos', 'Ofertas', 'Categorías Anidadas', 'Sistema de pedidos', 'Tallas', 'Sesión Permisiva'],
                     timestamp: new Date().toISOString()
                 }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
@@ -607,7 +608,7 @@ export default {
                     return addCors(new Response(JSON.stringify({ error: 'Credenciales incorrectas', intentosRestantes: Math.max(0, MAX_INTENTOS - intentosData.intentos) }), { status: 401, headers: { 'Content-Type': 'application/json' } }), request);
                 }
                 
-                // ✅ Sin bloqueo 409
+                // Siempre crear una sesión nueva (el último en entrar gana)
                 await resetearRateLimit(env, ip);
                 const sessionId = await crearSesionUnica(env, user.id);
                 const token = btoa(JSON.stringify({ id: user.id, username: user.username, role: user.role, email: user.email, sessionId: sessionId }));
