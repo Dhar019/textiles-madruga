@@ -4,6 +4,7 @@
 
 /**
  * Helper para manejar respuestas de autenticación fallida (401/403).
+ * Si la sesión es rechazada, la limpia y muestra el login.
  */
 function manejarErrorAutenticacion(status) {
     if (status === 401 || status === 403) {
@@ -17,7 +18,7 @@ function manejarErrorAutenticacion(status) {
         
         if (typeof actualizarBotonAcceder === 'function') actualizarBotonAcceder();
         if (typeof mostrarNotificacion === 'function') {
-            mostrarNotificacion('Tu sesión expiró. Inicia sesión de nuevo.', 'warning');
+            mostrarNotificacion('Tu sesión expiró o fue reemplazada. Inicia sesión de nuevo.', 'warning');
         }
         if (typeof mostrarLogin === 'function') {
             setTimeout(() => mostrarLogin(), 300);
@@ -25,35 +26,6 @@ function manejarErrorAutenticacion(status) {
         return true;
     }
     return false;
-}
-
-/**
- * ✅ NUEVA FUNCIÓN: Verifica que la sesión sea válida en el Worker.
- * Hace una petición ligera al endpoint de pedidos (que requiere auth).
- * Si el Worker rechaza (401/403), limpia la sesión local y devuelve false.
- */
-async function verificarSesionReal() {
-    const session = getSession();
-    if (!session || !session.token) return false;
-
-    try {
-        const respuesta = await fetch(`${API_URL}/pedidos`, {
-            method: 'GET',
-            headers: { 'Authorization': `Bearer ${session.token}` }
-        });
-
-        if (respuesta.status === 401 || respuesta.status === 403) {
-            console.warn('🔒 Sesión rechazada por el Worker. Limpiando...');
-            localStorage.removeItem(SESSION_KEY);
-            sessionStorage.removeItem('tm_pestana_activa');
-            return false;
-        }
-
-        return respuesta.ok;
-    } catch (error) {
-        console.error('Error verificando sesión:', error);
-        return false;
-    }
 }
 
 async function cargarProductos(intentos = 3) {
