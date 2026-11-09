@@ -438,7 +438,9 @@
 }
 
 .modal-visible, .login-visible, .admin-visible, .confirmar-visible, .bienvenida-visible, .lightbox-visible {
-    display: block !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
 }
 
 /* Overlays SIN backdrop-filter blur (evita congelamiento) */
@@ -665,18 +667,23 @@
 }
 
 /* ============================================ */
-/* 5. PANEL ADMIN (CON SCROLL INTERNO)          */
+/* 5. PANEL ADMIN (CON SCROLL INTERNO BLINDADO) */
 /* ============================================ */
 .admin-contenido {
     max-width: 1100px;
-    height: 90vh; /* Altura máxima del modal */
-    max-height: 90vh; /* Asegura que no crezca más */
+    width: 95%;
+    height: 90vh;
+    max-height: 90vh;
     display: flex;
     flex-direction: column;
+    overflow: hidden; /* ✅ el panel no crece */
+    position: relative;
 }
 
-.admin-header, .admin-tabs {
-    flex-shrink: 0; /* Se quedan fijos arriba */
+.admin-header,
+.admin-tabs {
+    flex-shrink: 0; /* ✅ NUNCA se encogen */
+    flex-grow: 0;
 }
 
 .admin-header {
@@ -759,12 +766,14 @@
 
 .admin-tab-content {
     display: none;
-    flex: 1;
-    overflow-y: auto; /* Este SÍ se queda (scroll interno del contenido) */
+    flex: 1 1 auto;           /* ✅ ocupa espacio restante */
+    overflow-y: auto;          /* ✅ único con scroll */
+    overflow-x: hidden;
     padding: 0 35px 30px 35px;
     scrollbar-width: thin;
     scrollbar-color: var(--color-naranja) transparent;
-    min-height: 0;
+    min-height: 0;             /* ✅ CLAVE para flex + overflow */
+    overscroll-behavior: contain;
 }
 
 .admin-tab-content.active {
@@ -775,6 +784,25 @@
 .admin-tab-content::-webkit-scrollbar { width: 8px; }
 .admin-tab-content::-webkit-scrollbar-track { background: transparent; }
 .admin-tab-content::-webkit-scrollbar-thumb { background: var(--color-naranja); border-radius: 4px; }
+
+/* El formulario de producto no empuja el flex */
+#form-producto {
+    flex-shrink: 0;
+    overflow: visible;
+}
+
+#tab-productos {
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Los grupos de tallas no colapsan el layout */
+#tallas-sin,
+#tallas-alfabeticas,
+#tallas-numericas {
+    flex-shrink: 0;
+    overflow: visible;
+}
 
 /* --- Formularios admin --- */
 .form-oculto { display: none; }
@@ -2838,4 +2866,68 @@ body.lightbox-abierto {
 /* FIX: Evitar que el header tape el título de la sección al hacer scroll */
 #telas, #otros, #ropa-hombre, #ropa-mujer {
     scroll-margin-top: 100px;
+}
+
+/* ============================================ */
+/* FIX CRÍTICO: Estabilidad del panel admin     */
+/* ============================================ */
+
+/* El formulario de producto no empuja el flex */
+#form-producto {
+    flex-shrink: 0;
+    overflow: visible;
+}
+
+#tab-productos {
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Los grupos de tallas no colapsan el layout */
+#tallas-sin,
+#tallas-alfabeticas,
+#tallas-numericas {
+    flex-shrink: 0;
+    overflow: visible;
+}
+
+/* El overlay admin bloquea el body sin romper el flex */
+.admin-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    z-index: 9998;
+    overscroll-behavior: contain;
+    touch-action: none;
+}
+
+/* Forzar el flex cuando el admin está visible */
+.admin-visible {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* El body no hace scroll cuando el admin está abierto */
+body.admin-abierto {
+    overflow: hidden !important;
+    overscroll-behavior: none;
+}
+
+/* ============================================ */
+/* FIX: Bloqueo de scroll con admin abierto     */
+/* ============================================ */
+body.admin-abierto {
+    overflow: hidden !important;
+    overscroll-behavior: none;
+}
+
+/* Overlay admin (por si falta) */
+.admin-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    z-index: 9998;
+    overscroll-behavior: contain;
+    touch-action: none;
 }
