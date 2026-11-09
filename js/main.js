@@ -6,8 +6,13 @@ function actualizarBotonAcceder() {
     const session = getSession();
     const btnAcceder = document.getElementById('btn-acceder');
     if (btnAcceder) {
-        if (session) { btnAcceder.textContent = 'Sesión activa'; btnAcceder.classList.add('activo'); }
-        else { btnAcceder.textContent = 'Acceder a la cuenta'; btnAcceder.classList.remove('activo'); }
+        if (session) { 
+            btnAcceder.textContent = 'Sesión activa'; 
+            btnAcceder.classList.add('activo'); 
+        } else { 
+            btnAcceder.textContent = 'Acceder a la cuenta'; 
+            btnAcceder.classList.remove('activo'); 
+        }
     }
     actualizarBotonCerrarSesion();
 }
@@ -26,10 +31,13 @@ function actualizarBotonCerrarSesion() {
     }
 }
 
+// ============================================
+// ÚNICO DOMContentLoaded
+// ============================================
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Iniciando aplicación...');
 
-    // 1. MOSTRAR EL MODAL DE BIENVENIDA INMEDIATAMENTE
+    // 1. MODAL DE BIENVENIDA (solo si no hay sesión)
     if (!isLoggedIn()) {
         mostrarModalBienvenida();
     }
@@ -57,7 +65,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (datos) {
             datosGlobales = datos;
             adminDatos = JSON.parse(JSON.stringify(datos));
-            console.log('📊 Datos recibidos:', datos);
             
             renderizarOfertas(datos.ofertas, datos);
             renderizarTelasYOtros(datos);
@@ -71,22 +78,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
     actualizarBotonAcceder();
 
+    // ============================================
     // 3. LISTENERS GLOBALES
+    // ============================================
+
+    // Botón "Acceder a la cuenta"
     document.getElementById('btn-acceder')?.addEventListener('click', function(e) {
         e.preventDefault();
         const session = getSession();
         
         if (session) {
-            // Si hay sesión, abrimos el panel de admin si es admin
             if (isAdmin()) {
-                const adminPanel = document.getElementById('admin-panel');
-                if (adminPanel) {
-                    adminPanel.className = 'admin-visible';
-                    document.body.classList.add('admin-abierto');
-                    cargarAdminProductos();
-                    cargarPedidosAdmin();
-                    iniciarVerificadorSesion();
-                }
+                abrirAdmin();
             } else {
                 mostrarNotificacion('Sesión activa como: ' + session.username, 'info');
             }
@@ -95,7 +98,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // ✅ CIERRE DEL LOGIN CON DELEGACIÓN DE EVENTOS
+    // Cierre del login con delegación de eventos (a prueba de balas)
     document.addEventListener('click', function(e) {
         if (e.target.closest('#login-cerrar') || e.target.closest('#login-overlay')) {
             console.log('🔒 Cerrando login (delegación)');
@@ -103,13 +106,20 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // Cerrar sesión
     document.getElementById('btn-cerrar-sesion')?.addEventListener('click', async function(e) {
         e.preventDefault();
-        const confirmado = await confirmar({ titulo: '¿Cerrar sesión?', mensaje: 'Tendrás que volver a iniciar sesión para acceder al panel.', tipo: 'info', textoAceptar: 'Sí, cerrar sesión', textoCancelar: 'Cancelar' });
+        const confirmado = await confirmar({ 
+            titulo: '¿Cerrar sesión?', 
+            mensaje: 'Tendrás que volver a iniciar sesión para acceder al panel.', 
+            tipo: 'info', 
+            textoAceptar: 'Sí, cerrar sesión', 
+            textoCancelar: 'Cancelar' 
+        });
         if (confirmado) logout();
     });
 
-    // ✅ FIX: Listener del login con manejo correcto del resultado
+    // Formulario de login
     document.getElementById('login-form')?.addEventListener('submit', async function(e) {
         e.preventDefault();
         const username = document.getElementById('login-user').value.trim();
@@ -118,37 +128,22 @@ document.addEventListener('DOMContentLoaded', function() {
         const result = await login(username, password);
         
         if (result.success) {
-            // La sesión ya se guardó en localStorage dentro de login()
-            // El session.user.role ya está disponible
-            
             cerrarLogin();
             actualizarBotonAcceder();
             
-            // Forzamos la apertura del admin si es admin
             if (isAdmin()) {
                 mostrarNotificacion('Bienvenido administrador', 'success');
-                
-                // Abrimos el panel de admin directamente
-                const adminPanel = document.getElementById('admin-panel');
-                if (adminPanel) {
-                    adminPanel.className = 'admin-visible';
-                    document.body.classList.add('admin-abierto');
-                    
-                    // Cargamos los datos del admin
-                    cargarAdminProductos();
-                    cargarPedidosAdmin();
-                    iniciarVerificadorSesion();
-                }
+                abrirAdmin();
             } else {
                 mostrarNotificacion('Bienvenido ' + username, 'success');
             }
         } else { 
-            // ✅ Si el login falla, NO abrimos el panel y mostramos el error
+            // ✅ Si el login falla (409, 429, credenciales, etc.), NO abre el panel
             mostrarNotificacion(result.message, 'error'); 
         }
     });
 
-    // ✅ REGISTRO DESDE EL LINK DEL LOGIN
+    // Link "Regístrate aquí"
     document.getElementById('login-registro-link')?.addEventListener('click', function(e) {
         e.preventDefault();
         cerrarLogin();
@@ -174,20 +169,43 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    // Link "Forzar cierre de sesión"
     document.getElementById('forzar-cierre-link')?.addEventListener('click', function(e) {
         e.preventDefault();
         cerrarLogin();
         abrirModalGenerico({
-            titulo: 'Forzar cierre de sesión', subtitulo: 'Introduce tus credenciales para desbloquear tu cuenta',
-            campos: [{ id: 'username', label: 'Usuario', type: 'text', required: true }, { id: 'password', label: 'Contraseña', type: 'password', required: true }],
+            titulo: 'Forzar cierre de sesión', 
+            subtitulo: 'Introduce tus credenciales para desbloquear tu cuenta',
+            campos: [
+                { id: 'username', label: 'Usuario', type: 'text', required: true }, 
+                { id: 'password', label: 'Contraseña', type: 'password', required: true }
+            ],
             onSubmit: async (datos) => {
-                if (!datos.username || !datos.password) { mostrarNotificacion('Completa ambos campos', 'error'); return false; }
+                if (!datos.username || !datos.password) { 
+                    mostrarNotificacion('Completa ambos campos', 'error'); 
+                    return false; 
+                }
                 try {
-                    const respuesta = await fetch(`${API_URL}/auth/force-logout`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: datos.username, password: datos.password }) });
+                    const respuesta = await fetch(`${API_URL}/auth/force-logout`, { 
+                        method: 'POST', 
+                        headers: { 'Content-Type': 'application/json' }, 
+                        body: JSON.stringify({ username: datos.username, password: datos.password }) 
+                    });
                     const data = await respuesta.json();
-                    if (respuesta.ok) { mostrarNotificacion('Sesión cerrada. Ya puedes iniciar sesión.', 'success'); localStorage.removeItem(SESSION_KEY); sessionStorage.removeItem('tm_pestana_activa'); setTimeout(() => mostrarLogin(), 800); }
-                    else { mostrarNotificacion(data.error || 'Error al forzar cierre', 'error'); return false; }
-                } catch (error) { mostrarNotificacion('Error de conexión', 'error'); return false; }
+                    if (respuesta.ok) { 
+                        mostrarNotificacion('Sesión cerrada. Ya puedes iniciar sesión.', 'success'); 
+                        localStorage.removeItem(SESSION_KEY); 
+                        sessionStorage.removeItem('tm_pestana_activa'); 
+                        setTimeout(() => mostrarLogin(), 800); 
+                    }
+                    else { 
+                        mostrarNotificacion(data.error || 'Error al forzar cierre', 'error'); 
+                        return false; 
+                    }
+                } catch (error) { 
+                    mostrarNotificacion('Error de conexión', 'error'); 
+                    return false; 
+                }
             }
         });
     });
@@ -196,9 +214,23 @@ document.addEventListener('DOMContentLoaded', function() {
     const hamburguesa = document.getElementById('menu-hamburguesa');
     const nav = document.getElementById('nav-principal');
     if (hamburguesa && nav) {
-        hamburguesa.addEventListener('click', function(event) { event.stopPropagation(); this.classList.toggle('activo'); nav.classList.toggle('activo'); });
-        nav.querySelectorAll('a').forEach(enlace => { enlace.addEventListener('click', () => { hamburguesa.classList.remove('activo'); nav.classList.remove('activo'); }); });
-        document.addEventListener('click', function(event) { if (!nav.contains(event.target) && !hamburguesa.contains(event.target)) { hamburguesa.classList.remove('activo'); nav.classList.remove('activo'); } });
+        hamburguesa.addEventListener('click', function(event) { 
+            event.stopPropagation(); 
+            this.classList.toggle('activo'); 
+            nav.classList.toggle('activo'); 
+        });
+        nav.querySelectorAll('a').forEach(enlace => { 
+            enlace.addEventListener('click', () => { 
+                hamburguesa.classList.remove('activo'); 
+                nav.classList.remove('activo'); 
+            }); 
+        });
+        document.addEventListener('click', function(event) { 
+            if (!nav.contains(event.target) && !hamburguesa.contains(event.target)) { 
+                hamburguesa.classList.remove('activo'); 
+                nav.classList.remove('activo'); 
+            } 
+        });
     }
 
     // Modales de detalle y lightbox
@@ -212,7 +244,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('cantidad-total-restar')?.addEventListener('click', () => cambiarCantidadTotal(-1));
     document.getElementById('btn-añadir-variante')?.addEventListener('click', () => añadirVariante());
 
-    // Recargar Productos
+    // Recargar productos
     document.getElementById('btn-recargar')?.addEventListener('click', async function() {
         this.classList.add('spinning');
         const [datos, categorias] = await Promise.all([
@@ -221,7 +253,8 @@ document.addEventListener('DOMContentLoaded', function() {
         ]);
         if (categorias && categorias.length > 0) categoriasGlobales = categorias;
         if (datos) {
-            datosGlobales = datos; adminDatos = JSON.parse(JSON.stringify(datos));
+            datosGlobales = datos; 
+            adminDatos = JSON.parse(JSON.stringify(datos));
             renderizarOfertas(datos.ofertas, datos);
             renderizarTelasYOtros(datos);
             renderizarSeccionesDinamicas(datos);
@@ -254,7 +287,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // ✅ LISTENERS DE UI
+    // Modal de ayuda para pedidos
     const btnAyuda = document.getElementById('btn-ayuda-pedido');
     const modalAyuda = document.getElementById('modal-ayuda-pedido');
     const cerrarAyuda = document.getElementById('modal-ayuda-pedido-cerrar');
@@ -283,7 +316,7 @@ document.addEventListener('DOMContentLoaded', function() {
         btnVolver.addEventListener('click', cerrarModalAyuda);
     }
 
-    // ✅ REGISTRO DESDE EL MODAL DE BIENVENIDA
+    // Registro desde modal de bienvenida
     document.getElementById('modal-bienvenida-crear')?.addEventListener('click', function() {
         cerrarModalBienvenida();
         abrirModalGenerico({
@@ -315,7 +348,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('modal-bienvenida-cerrar')?.addEventListener('click', cerrarModalBienvenida);
     document.getElementById('modal-bienvenida-overlay')?.addEventListener('click', cerrarModalBienvenida);
 
-    // ✅ LISTENERS DE ADMIN
+    // Tabs del admin
     document.querySelectorAll('.admin-tab').forEach(tab => {
         tab.addEventListener('click', function() {
             const tabName = this.dataset.tab;
@@ -333,6 +366,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    // Formulario de producto (crear/editar)
     document.getElementById('producto-form')?.addEventListener('submit', async function(e) {
         e.preventDefault();
         const nombre = document.getElementById('prod-nombre').value.trim();
@@ -380,8 +414,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     body: JSON.stringify(productoData) 
                 });
             }
-            
-            if (manejarErrorAutenticacion(respuesta.status)) return;
             
             if (!respuesta.ok) { 
                 const errorData = await respuesta.json().catch(() => ({})); 
@@ -470,9 +502,11 @@ document.addEventListener('DOMContentLoaded', function() {
         actualizarSubcategoriasForm();
     });
 
+    // Cierre del admin
     document.getElementById('admin-cerrar')?.addEventListener('click', cerrarAdmin);
     document.getElementById('admin-overlay')?.addEventListener('click', cerrarAdmin);
 
+    // Nuevo usuario
     document.getElementById('btn-nuevo-usuario')?.addEventListener('click', function() {
         if (!isSuperAdmin()) { 
             mostrarNotificacion('Solo el SuperAdministrador puede crear usuarios', 'error'); 
@@ -485,7 +519,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 { id: 'username', label: 'Usuario', type: 'text', placeholder: 'Nombre de usuario', required: true },
                 { id: 'password', label: 'Contraseña', type: 'password', placeholder: 'Mínimo 6 caracteres', required: true },
                 { id: 'email', label: 'Gmail', type: 'email', placeholder: 'usuario@gmail.com' },
-                { id: 'role', label: 'Rol', type: 'select', opciones: [{ value: 'user', label: 'Usuario' }, { value: 'admin', label: 'Administrador' }] }
+                { id: 'role', label: 'Rol', type: 'select', opciones: [
+                    { value: 'user', label: 'Usuario' }, 
+                    { value: 'admin', label: 'Administrador' }
+                ]}
             ],
             onSubmit: async (datos) => {
                 if (!datos.username || datos.username.length < 3) { 
@@ -501,9 +538,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     const respuesta = await fetch(`${API_URL}/auth/register`, { 
                         method: 'POST', 
                         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.token}` }, 
-                        body: JSON.stringify({ username: datos.username, password: datos.password, role: datos.role, email: datos.email || '', name: datos.username }) 
+                        body: JSON.stringify({ 
+                            username: datos.username, 
+                            password: datos.password, 
+                            role: datos.role, 
+                            email: datos.email || '', 
+                            name: datos.username 
+                        }) 
                     });
-                    if (manejarErrorAutenticacion(respuesta.status)) return false;
                     if (!respuesta.ok) { 
                         const data = await respuesta.json(); 
                         throw new Error(data.error || 'Error al crear usuario'); 
@@ -518,7 +560,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // ✅ LISTENERS DE SUBCATEGORÍAS
+    // Subcategorías: nueva
     document.getElementById('btn-nueva-subcategoria')?.addEventListener('click', () => {
         document.getElementById('sub-edit-id').value = '';
         document.getElementById('subcategoria-form').reset();
@@ -526,12 +568,14 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('form-subcategoria').className = 'form-visible';
     });
     
+    // Subcategorías: cancelar
     document.getElementById('btn-cancelar-sub')?.addEventListener('click', () => {
         document.getElementById('form-subcategoria').className = 'form-oculto';
         document.getElementById('subcategoria-form').reset();
         document.getElementById('sub-edit-id').value = '';
     });
 
+    // Subcategorías: guardar
     document.getElementById('subcategoria-form')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const editId = document.getElementById('sub-edit-id').value.trim();
@@ -560,10 +604,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
+    // Al cambiar categoría en el formulario de producto, actualizar subcategorías
     document.getElementById('prod-categoria')?.addEventListener('change', actualizarSubcategoriasForm);
 });
 
-// Ojito de contraseña (delegación global)
+// ============================================
+// OJITO DE CONTRASEÑA (delegación global)
+// ============================================
 document.addEventListener('click', function(e) {
     if (e.target.closest('.toggle-password')) {
         const btn = e.target.closest('.toggle-password');
