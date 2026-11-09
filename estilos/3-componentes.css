@@ -667,15 +667,37 @@
 /* ============================================ */
 /* 5. PANEL ADMIN (CON SCROLL INTERNO BLINDADO) */
 /* ============================================ */
+
+/* FIX: El #admin-panel debe ser fixed y ocupar el viewport */
+#admin-panel {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 9998;
+    overflow: hidden;
+}
+
+/* Cuando está visible, que sea flex */
+#admin-panel.admin-visible {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
 .admin-contenido {
     max-width: 1100px;
-    width: 95%;
     height: 90vh;
     max-height: 90vh;
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* ✅ el panel no crece */
-    position: relative;
+    overflow: hidden;
+    position: fixed;              /* ✅ Asegurar fixed */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
 }
 
 .admin-header,
@@ -2928,4 +2950,30 @@ body.admin-abierto {
     z-index: 9998;
     overscroll-behavior: contain;
     touch-action: none;
+}
+
+/* ============================================ */
+/* FIX: Bloqueo de scroll con admin abierto     */
+/* ============================================ */
+body.admin-abierto {
+    overflow: hidden !important;
+    overscroll-behavior: none;
+}
+
+/* El formulario de producto no empuja el flex */
+#form-producto {
+    flex-shrink: 0;
+    overflow: visible;
+}
+
+#tab-productos {
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+#tallas-sin,
+#tallas-alfabeticas,
+#tallas-numericas {
+    flex-shrink: 0;
+    overflow: visible;
 }
