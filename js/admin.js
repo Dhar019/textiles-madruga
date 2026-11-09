@@ -287,7 +287,7 @@ async function cargarPedidosAdmin() {
         }
         const respuesta = await fetch(`${API_URL}/pedidos`, { headers: { 'Authorization': `Bearer ${session.token}` } });
         
-        // ✅ Si el Worker rechaza la sesión, limpiamos y cerramos
+        // Manejar 401/403 (Sesión rechazada por el Worker)
         if (respuesta.status === 401 || respuesta.status === 403) {
             console.warn('🔒 Sesión rechazada por el Worker al cargar pedidos. Limpiando...');
             localStorage.removeItem(SESSION_KEY);

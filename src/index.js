@@ -1,19 +1,24 @@
 // ============================================
 // WORKER - TEXTILES MADRUGA API
-// Versión 6.6 - Validación Estricta de Sesión
+// Versión 7.1 - Fusión: Base 5.2 + Categorías Anidadas
 // ============================================
 
 // ============================================
-// CORS
+// CORS (Lógica del 5.2, con Credentials)
 // ============================================
 function getCorsHeaders(request) {
     const origin = request.headers.get('Origin') || '*';
-    return {
+    const headers = {
         'Access-Control-Allow-Origin': origin,
         'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS, PATCH',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept, Origin, X-Requested-With',
-        'Access-Control-Max-Age': '86400'
+        'Access-Control-Max-Age': '86400',
+        'Vary': 'Origin'
     };
+    if (origin !== '*') {
+        headers['Access-Control-Allow-Credentials'] = 'true';
+    }
+    return headers;
 }
 
 function addCors(response, request) {
@@ -91,15 +96,29 @@ async function generarIdPedido(env) {
 }
 
 // ============================================
-// ENVÍO DE GMAIL (SIMULADO)
+// ENVÍO DE GMAIL (SIMULADO - Lógica del 5.2)
 // ============================================
 async function enviarGmailNotificacion(env, pedido) {
     if (!env.GMAIL_USER || !env.GMAIL_APP_PASSWORD) {
         console.warn('⚠️ Gmail no configurado, saltando envío de correo');
         return false;
     }
-    console.log('📧 [SIMULADO] Enviando Gmail para pedido:', pedido.id);
-    return true;
+    try {
+        const asunto = `🛒 Nuevo pedido ${pedido.id} - ${pedido.producto}`;
+        let tallasTexto = '';
+        if (pedido.variantes && pedido.variantes.length > 0) {
+            tallasTexto = pedido.variantes.map(v => v.talla === 'UNICA' ? `${v.cantidad}x` : `${v.cantidad}x talla ${v.talla}`).join(', ');
+        } else if (pedido.talla) {
+            tallasTexto = pedido.talla;
+        }
+        const cuerpoHtml = `<div style="font-family: Arial, sans-serif;">...</div>`;
+        console.log('📧 Enviando Gmail para pedido:', pedido.id);
+        console.log('📧 Asunto:', asunto);
+        return true;
+    } catch (error) {
+        console.error('❌ Error al enviar Gmail:', error);
+        return false;
+    }
 }
 
 // ============================================
@@ -144,9 +163,9 @@ async function verificarPassword(password, hash) {
 }
 
 // ============================================
-// SESIÓN ÚNICA CON TIMEOUT
+// SESIÓN ÚNICA CON TIMEOUT (Lógica del 5.2)
 // ============================================
-const MAX_INACTIVIDAD_MS = 24 * 60 * 60 * 1000;
+const MAX_INACTIVIDAD_MS = 2 * 60 * 60 * 1000;
 
 async function crearSesionUnica(env, userId) {
     const sessionId = crypto.randomUUID();
@@ -181,32 +200,26 @@ async function actualizarActividadSesion(env, userId) {
 }
 
 // ============================================
-// VERIFICACIÓN DE TOKEN (ESTRICTA)
+// VERIFICACIÓN DE TOKEN (Lógica del 5.2 - ESTRICTA)
 // ============================================
-// ✅ Ahora SÍ valida que el sessionId del token coincida con el de KV.
 async function verificarToken(request, env) {
     const authHeader = request.headers.get('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
     try {
         const token = authHeader.replace('Bearer ', '');
         const payload = JSON.parse(atob(token));
-        
-        if (!payload.id || !payload.username || !payload.sessionId) return null;
-        
+        if (!payload.sessionId) return null;
         const session = await verificarSesionActiva(env, payload.id);
         if (!session || session.sessionId !== payload.sessionId) {
-            return null;  // ✅ Sesión inválida o reemplazada
+            return null; 
         }
-        
         await actualizarActividadSesion(env, payload.id);
         return payload;
-    } catch (e) { 
-        return null; 
-    }
+    } catch (e) { return null; }
 }
 
 // ============================================
-// RATE LIMITING
+// RATE LIMITING (Lógica del 5.2)
 // ============================================
 const MAX_INTENTOS = 5;
 const BLOQUEO_MINUTOS = 15;
@@ -272,8 +285,8 @@ export default {
                     status: 'ok',
                     message: 'API de Textiles Madruga funcionando',
                     db: 'kv',
-                    version: '6.6',
-                    features: ['IDs alfanuméricos', 'Ofertas', 'Categorías Anidadas', 'Sistema de pedidos', 'Tallas', 'Validación Estricta de Sesión'],
+                    version: '7.1',
+                    features: ['Sesión Estricta', 'Categorías Anidadas', 'Sistema de pedidos', 'Tallas'],
                     timestamp: new Date().toISOString()
                 }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
@@ -351,38 +364,6 @@ export default {
                 await guardarCatalogo(env, catalogo);
                 await registrarAuditoria(env, user, 'CREATE_SUBCATEGORY', { id: body.id, nombre: body.nombre, padre: body.categoriaPadre });
                 return addCors(new Response(JSON.stringify({ success: true, subcategoria: body }), { headers: { 'Content-Type': 'application/json' } }), request);
-            }
-
-            if (path.startsWith('/api/subcategorias/') && method === 'PUT') {
-                const user = await verificarToken(request, env);
-                if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
-                    return addCors(new Response(JSON.stringify({ error: 'No autorizado' }), { status: 403, headers: { 'Content-Type': 'application/json' } }), request);
-                }
-                const subcatId = path.split('/')[3];
-                const body = await request.json();
-                const catalogo = await leerCatalogo(env);
-                let subcatEncontrada = null;
-                let categoriaOriginal = null;
-                catalogo.categorias.forEach(cat => {
-                    const sub = cat.subcategorias.find(s => s.id === subcatId);
-                    if (sub) { subcatEncontrada = sub; categoriaOriginal = cat; }
-                });
-                if (!subcatEncontrada) {
-                    return addCors(new Response(JSON.stringify({ error: 'Subcategoría no encontrada' }), { status: 404, headers: { 'Content-Type': 'application/json' } }), request);
-                }
-                if (body.categoriaPadre && body.categoriaPadre !== categoriaOriginal.id) {
-                    const nuevaCategoria = catalogo.categorias.find(c => c.id === body.categoriaPadre);
-                    if (!nuevaCategoria) {
-                        return addCors(new Response(JSON.stringify({ error: 'Categoría padre no encontrada' }), { status: 404, headers: { 'Content-Type': 'application/json' } }), request);
-                    }
-                    categoriaOriginal.subcategorias = categoriaOriginal.subcategorias.filter(s => s.id !== subcatId);
-                    nuevaCategoria.subcategorias.push({ id: subcatId, nombre: body.nombre });
-                } else if (body.nombre) {
-                    subcatEncontrada.nombre = body.nombre;
-                }
-                await guardarCatalogo(env, catalogo);
-                await registrarAuditoria(env, user, 'UPDATE_SUBCATEGORY', { id: subcatId });
-                return addCors(new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } }), request);
             }
 
             if (path.startsWith('/api/subcategorias/') && method === 'DELETE') {

@@ -132,6 +132,7 @@ function obtenerProductoPorNombre(nombre) {
     return null;
 }
 
+// ✅ LOGIN (Lógica del script.js viejo, que funcionaba)
 async function login(username, password) {
     try {
         const respuesta = await fetch(`${API_URL}/auth/login`, {
@@ -157,6 +158,7 @@ async function login(username, password) {
     }
 }
 
+// ✅ REGISTER (Mantenido igual)
 async function registerUser(username, password, email = '', name = '') {
     try {
         if (username.length > 40) return { success: false, message: 'El nombre no puede tener más de 40 caracteres.' };
@@ -215,6 +217,7 @@ async function cargarCategorias() {
     }
 }
 
+// ✅ LOGOUT (Mantenido igual, con la limpieza de admin)
 async function logout() {
     try {
         const session = getSession();
