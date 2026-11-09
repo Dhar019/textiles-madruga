@@ -109,6 +109,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (confirmado) logout();
     });
 
+    // ✅ FIX: Listener del login con manejo correcto del resultado
     document.getElementById('login-form')?.addEventListener('submit', async function(e) {
         e.preventDefault();
         const username = document.getElementById('login-user').value.trim();
@@ -142,6 +143,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 mostrarNotificacion('Bienvenido ' + username, 'success');
             }
         } else { 
+            // ✅ Si el login falla, NO abrimos el panel y mostramos el error
             mostrarNotificacion(result.message, 'error'); 
         }
     });
