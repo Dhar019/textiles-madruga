@@ -704,6 +704,8 @@
     display: flex !important;
     flex-direction: column !important;
     overflow: hidden !important;
+    overflow-anchor: none !important;      /* evita scroll automático */
+    scroll-behavior: auto !important;      /* sin scroll suave */
     z-index: 2 !important;
     background: #FAF8F5 !important;
     border-radius: 20px !important;

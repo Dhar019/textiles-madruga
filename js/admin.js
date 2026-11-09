@@ -265,6 +265,13 @@ function cambiarTipoTallas(tipo) {
     const sinTallas = document.getElementById('tallas-sin');
     if (!alfabeticas || !numericas || !sinTallas) return;
     
+    // ✅ Guardar posición del scroll ANTES del cambio
+    const contenedor = document.querySelector('.admin-contenido');
+    const scrollAntes = contenedor ? contenedor.scrollTop : 0;
+    const tabContent = document.querySelector('.admin-tab-content.active');
+    const scrollTabAntes = tabContent ? tabContent.scrollTop : 0;
+    
+    // Hacer el cambio de UI
     alfabeticas.style.display = 'none'; 
     numericas.style.display = 'none'; 
     sinTallas.style.display = 'none';
@@ -273,6 +280,12 @@ function cambiarTipoTallas(tipo) {
     if (tipo === 'alfabeticas') alfabeticas.style.display = 'flex';
     else if (tipo === 'numericas') numericas.style.display = 'flex';
     else sinTallas.style.display = 'flex';
+    
+    // Restaurar el scroll (evita el salto automático del navegador)
+    requestAnimationFrame(() => {
+        if (contenedor) contenedor.scrollTop = scrollAntes;
+        if (tabContent) tabContent.scrollTop = scrollTabAntes;
+    });
 }
 
 function cargarTallasProducto(producto) {
