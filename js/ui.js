@@ -138,7 +138,7 @@ function renderizarOfertas(ofertasIds, datos) {
                 <p class="producto-precio">
                     ${mostrarPrecioOferta 
                         ? `<span class="tachado">${producto.precio.toFixed(2)} CUP</span>
-                           <span class="precio-oferta-grande">${precioOferta.toFixed(2)} CUP</span>`
+                            <span class="precio-oferta-grande">${precioOferta.toFixed(2)} CUP</span>`
                         : `${producto.precio.toFixed(2)} CUP`}
                 </p>
                 <button class="btn-secundario btn-detalle" data-id="${producto.id || producto._id}">Ver detalle</button>
