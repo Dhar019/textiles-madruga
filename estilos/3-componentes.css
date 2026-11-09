@@ -665,7 +665,7 @@
 }
 
 /* ============================================ */
-/* 5. PANEL ADMIN (A PANTALLA COMPLETA)         */
+/* 5. PANEL ADMIN (BLINDADO CON STICKY)         */
 /* ============================================ */
 
 /* --- OVERLAY + PADRE FULLSCREEN --- */
@@ -686,9 +686,9 @@
 #admin-panel .admin-overlay {
     position: absolute !important;
     inset: 0 !important;
-    z-index: 0 !important;             
+    z-index: 0 !important;
     background: transparent !important;
-    pointer-events: none !important;    
+    pointer-events: none !important;
 }
 
 /* --- CONTENEDOR PRINCIPAL (casi toda la pantalla) --- */
@@ -704,29 +704,32 @@
     display: flex !important;
     flex-direction: column !important;
     overflow: hidden !important;
-    overflow-anchor: none !important;      /* evita scroll automático */
-    scroll-behavior: auto !important;      /* sin scroll suave */
+    overflow-anchor: none !important;
+    scroll-behavior: auto !important;
     z-index: 2 !important;
     background: #FAF8F5 !important;
     border-radius: 20px !important;
     box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5) !important;
     border: 1px solid rgba(232, 122, 32, 0.2) !important;
-    contain: layout size !important;
 }
 
-/* --- HEADER Y TABS FIJOS --- */
+/* --- HEADER Y TABS: STICKY, FIJOS ARRIBA --- */
 .admin-header,
 .admin-tabs {
+    position: sticky !important;
     flex-shrink: 0 !important;
     flex-grow: 0 !important;
+    z-index: 10 !important;
+    background: #FAF8F5 !important;
 }
 
 .admin-header {
-    padding: 25px 35px 15px 35px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #EDE8E1;
+    top: 0 !important;
+    padding: 25px 35px 15px 35px !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    border-bottom: 1px solid #EDE8E1 !important;
 }
 
 .admin-header-left {
@@ -762,14 +765,13 @@
 }
 
 .admin-tabs {
-    display: flex;
-    gap: 4px;
-    margin: 15px 35px 20px 35px;
-    background: #EDE8E1;
-    border-radius: 12px;
-    padding: 4px;
-    position: relative;
-    z-index: 10;
+    top: 76px !important;  /* Justo debajo del header */
+    display: flex !important;
+    gap: 4px !important;
+    margin: 15px 35px 20px 35px !important;
+    background: #EDE8E1 !important;
+    border-radius: 12px !important;
+    padding: 4px !important;
 }
 
 .admin-tab {
@@ -802,14 +804,14 @@
 /* --- CONTENIDO DE PESTAÑAS (ÚNICO CON SCROLL) --- */
 .admin-tab-content {
     display: none;
-    flex: 1 1 0% !important;        
-    overflow-y: auto !important;    
+    flex: 1 1 0% !important;
+    overflow-y: auto !important;
     overflow-x: hidden !important;
     padding: 0 35px 30px 35px !important;
     scrollbar-width: thin;
     scrollbar-color: var(--color-naranja) transparent;
-    min-height: 0 !important;       
-    max-height: 100% !important;    
+    min-height: 0 !important;
+    max-height: 100% !important;
     overscroll-behavior: contain !important;
 }
 
@@ -821,6 +823,12 @@
 .admin-tab-content::-webkit-scrollbar { width: 8px; }
 .admin-tab-content::-webkit-scrollbar-track { background: transparent; }
 .admin-tab-content::-webkit-scrollbar-thumb { background: var(--color-naranja); border-radius: 4px; }
+
+/* --- BODY: BLOQUEAR SCROLL CUANDO ADMIN ABIERTO --- */
+body.admin-abierto {
+    overflow: hidden !important;
+    overscroll-behavior: none;
+}
 
 /* --- FORMULARIO: NO EMPUJA EL FLEX --- */
 #form-producto {
