@@ -99,9 +99,19 @@ function abrirAdmin() {
     if (!protegerAdmin()) return;
     const adminPanel = document.getElementById('admin-panel');
     adminPanel.className = 'admin-visible';
+    
+    // ✅ FORZAR bloqueo del scroll en html y body desde JS
+    document.documentElement.style.overflow = 'hidden';
+    document.documentElement.style.height = '100vh';
+    document.documentElement.style.position = 'fixed';
+    document.documentElement.style.width = '100%';
+    document.documentElement.style.top = '0';
+    document.documentElement.style.left = '0';
+    document.documentElement.classList.add('admin-abierto-html');
+    
     document.body.style.overflow = 'hidden';
     document.body.classList.add('admin-abierto');
-    document.documentElement.classList.add('admin-abierto-html');
+    
     cargarAdminProductos();
     reiniciarTemporizadorInactividad();
     iniciarVerificadorSesion();
@@ -114,9 +124,19 @@ function abrirAdmin() {
 function cerrarAdmin() {
     const adminPanel = document.getElementById('admin-panel');
     if (adminPanel) adminPanel.className = 'admin-oculto';
-    document.body.style.overflow = 'auto';
-    document.body.classList.remove('admin-abierto');
+    
+    // ✅ LIBERAR el scroll de html y body
+    document.documentElement.style.overflow = '';
+    document.documentElement.style.height = '';
+    document.documentElement.style.position = '';
+    document.documentElement.style.width = '';
+    document.documentElement.style.top = '';
+    document.documentElement.style.left = '';
     document.documentElement.classList.remove('admin-abierto-html');
+    
+    document.body.style.overflow = '';
+    document.body.classList.remove('admin-abierto');
+    
     const formProducto = document.getElementById('form-producto');
     if (formProducto) formProducto.className = 'form-oculto';
     detenerVerificadorSesion();
@@ -267,16 +287,15 @@ function cambiarTipoTallas(tipo) {
     const sinTallas = document.getElementById('tallas-sin');
     if (!alfabeticas || !numericas || !sinTallas) return;
     
-    // Guardar el scroll de TODOS los contenedores antes del cambio
+    // ✅ Guardar el scroll de TODOS los contenedores antes del cambio
     const contenedor = document.querySelector('.admin-contenido');
     const tabContent = document.querySelector('.admin-tab-content.active');
     const scrollContenedor = contenedor ? contenedor.scrollTop : 0;
     const scrollTab = tabContent ? tabContent.scrollTop : 0;
     const scrollWindow = window.scrollY;
     
-    // Desactivar el foco del navegador temporalmente
-    const activeElement = document.activeElement;
-    if (activeElement) activeElement.blur();
+    // ✅ Quitar el foco del radio (evita que el navegador haga scroll al foco)
+    if (document.activeElement) document.activeElement.blur();
     
     // Hacer el cambio de UI
     alfabeticas.style.display = 'none'; 
@@ -288,11 +307,11 @@ function cambiarTipoTallas(tipo) {
     else if (tipo === 'numericas') numericas.style.display = 'flex';
     else sinTallas.style.display = 'flex';
     
-    // Restaurar TODOS los scrolls en el siguiente frame (evita el salto)
+    // ✅ Restaurar TODOS los scrolls en el siguiente frame
     requestAnimationFrame(() => {
+        window.scrollTo(0, scrollWindow);
         if (contenedor) contenedor.scrollTop = scrollContenedor;
         if (tabContent) tabContent.scrollTop = scrollTab;
-        window.scrollTo(0, scrollWindow);
     });
 }
 
@@ -853,3 +872,13 @@ function filtrarUsuariosAdmin(termino) {
         item.style.display = nombre.includes(termino) ? 'flex' : 'none'; 
     });
 }
+
+// ============================================
+// FIX: el .admin-contenido NUNCA debe scrollear
+// ============================================
+document.addEventListener('scroll', function(e) {
+    const contenedor = document.querySelector('.admin-contenido');
+    if (contenedor && contenedor.scrollTop !== 0) {
+        contenedor.scrollTop = 0;
+    }
+}, true);
