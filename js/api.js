@@ -2,32 +2,9 @@
 // COMUNICACIÓN CON EL WORKER (API)
 // ============================================
 
-/**
- * Helper para manejar respuestas de autenticación fallida (401/403).
- * Si la sesión es rechazada, la limpia y muestra el login.
- */
-function manejarErrorAutenticacion(status) {
-    if (status === 401 || status === 403) {
-        console.warn('🔒 Sesión inválida o expirada. Limpiando y mostrando login...');
-        localStorage.removeItem(SESSION_KEY);
-        sessionStorage.removeItem('tm_pestana_activa');
-        
-        const adminPanel = document.getElementById('admin-panel');
-        if (adminPanel) adminPanel.className = 'admin-oculto';
-        document.body.classList.remove('admin-abierto');
-        
-        if (typeof actualizarBotonAcceder === 'function') actualizarBotonAcceder();
-        if (typeof mostrarNotificacion === 'function') {
-            mostrarNotificacion('Tu sesión expiró o fue reemplazada. Inicia sesión de nuevo.', 'warning');
-        }
-        if (typeof mostrarLogin === 'function') {
-            setTimeout(() => mostrarLogin(), 300);
-        }
-        return true;
-    }
-    return false;
-}
-
+// ============================================
+// CARGA DE PRODUCTOS
+// ============================================
 async function cargarProductos(intentos = 3) {
     console.log(`🔄 Cargando productos... (Intento ${4 - intentos}/3)`);
     
@@ -72,7 +49,7 @@ async function cargarProductos(intentos = 3) {
         try {
             localStorage.setItem('productos_data', JSON.stringify(datos));
         } catch (e) {
-            console.warn('⚠️ No se pudo guardar en caché (probablemente por tamaño).');
+            console.warn('⚠️ No se pudo guardar en caché.');
         }
         
         return datos;
@@ -132,7 +109,9 @@ function obtenerProductoPorNombre(nombre) {
     return null;
 }
 
-// ✅ LOGIN (Lógica del script.js viejo, que funcionaba)
+// ============================================
+// LOGIN
+// ============================================
 async function login(username, password) {
     try {
         const respuesta = await fetch(`${API_URL}/auth/login`, {
@@ -140,6 +119,14 @@ async function login(username, password) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
         });
+
+        if (respuesta.status === 409) {
+            const data = await respuesta.json();
+            return { 
+                success: false, 
+                message: data.error || 'Ya tienes una sesión activa en otro dispositivo.' 
+            };
+        }
 
         if (respuesta.status === 429) {
             const data = await respuesta.json();
@@ -158,7 +145,9 @@ async function login(username, password) {
     }
 }
 
-// ✅ REGISTER (Mantenido igual)
+// ============================================
+// REGISTRO DE USUARIO
+// ============================================
 async function registerUser(username, password, email = '', name = '') {
     try {
         if (username.length > 40) return { success: false, message: 'El nombre no puede tener más de 40 caracteres.' };
@@ -178,6 +167,20 @@ async function registerUser(username, password, email = '', name = '') {
         return { success: true, session };
     } catch (error) {
         return { success: false, message: 'Error de conexión con el servidor' };
+    }
+}
+
+// ============================================
+// CATEGORÍAS Y SUBCATEGORÍAS
+// ============================================
+async function cargarCategorias() {
+    try {
+        const respuesta = await fetch(`${API_URL}/categorias`);
+        if (!respuesta.ok) return [];
+        return await respuesta.json();
+    } catch (e) {
+        console.warn('No se pudieron cargar las categorías', e);
+        return [];
     }
 }
 
@@ -201,23 +204,26 @@ async function guardarSubcategoria(subcat) {
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.token}` },
             body: JSON.stringify(subcat)
         });
-        if (manejarErrorAutenticacion(respuesta.status)) return false;
         return respuesta.ok;
     } catch (e) { return false; }
 }
 
-async function cargarCategorias() {
+async function editarSubcategoria(id, datos) {
     try {
-        const respuesta = await fetch(`${API_URL}/categorias`);
-        if (!respuesta.ok) return [];
-        return await respuesta.json();
-    } catch (e) {
-        console.warn('No se pudieron cargar las categorías', e);
-        return [];
-    }
+        const session = getSession();
+        if (!session) return false;
+        const respuesta = await fetch(`${API_URL}/subcategorias/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.token}` },
+            body: JSON.stringify(datos)
+        });
+        return respuesta.ok;
+    } catch (e) { return false; }
 }
 
-// ✅ LOGOUT (Mantenido igual, con la limpieza de admin)
+// ============================================
+// LOGOUT
+// ============================================
 async function logout() {
     try {
         const session = getSession();
@@ -231,9 +237,14 @@ async function logout() {
         console.warn('⚠️ No se pudo cerrar la sesión en el servidor:', error);
     }
 
+    // Detener todos los temporizadores/verificadores
+    detenerTemporizadorInactividad();
+    detenerTemporizadorAviso();
+    detenerVerificadorSesion();
+
     localStorage.removeItem(SESSION_KEY);
     sessionStorage.removeItem('tm_pestana_activa');
-    
+
     const adminPanel = document.getElementById('admin-panel');
     if (adminPanel) adminPanel.className = 'admin-oculto';
     document.body.classList.remove('admin-abierto');
@@ -242,18 +253,4 @@ async function logout() {
     actualizarBotonCerrarSesion();
     mostrarNotificacion('Sesión cerrada correctamente', 'info');
     setTimeout(() => location.reload(), 500);
-}
-
-async function editarSubcategoria(id, datos) {
-    try {
-        const session = getSession();
-        if (!session) return false;
-        const respuesta = await fetch(`${API_URL}/subcategorias/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.token}` },
-            body: JSON.stringify(datos)
-        });
-        if (manejarErrorAutenticacion(respuesta.status)) return false;
-        return respuesta.ok;
-    } catch (e) { return false; }
 }
