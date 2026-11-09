@@ -10,6 +10,9 @@ const NEGOCIO = {
     telegram: ''
 };
 
+// ============================================
+// ESTADO GLOBAL
+// ============================================
 let datosGlobales = null;
 let adminDatos = null;
 let modoEdicion = null;
@@ -22,16 +25,20 @@ let pedidosGlobales = [];
 let filtroPedidoActual = 'todos';
 let varianteIdCounter = 0;
 let categoriasGlobales = [];
+let subcategoriasGlobales = []; // ✅ NUEVO: subcategorías globales
 
+// ============================================
+// POLÍTICAS DE SEGURIDAD
+// ============================================
 const POLITICAS_SEGURIDAD = {
     cliente: {
-        inactividadMs: 0,
+        inactividadMs: 2 * 60 * 60 * 1000,
         abandonoMovilMs: 4 * 60 * 60 * 1000,
         tokenExpiryMs: 7 * 24 * 60 * 60 * 1000,
         avisoPrevioMs: 2 * 60 * 1000
     },
     admin: {
-        inactividadMs: 0,
+        inactividadMs: 15 * 60 * 1000,
         abandonoMovilMs: 15 * 60 * 1000,
         tokenExpiryMs: 8 * 60 * 60 * 1000,
         avisoPrevioMs: 1 * 60 * 1000
@@ -45,6 +52,9 @@ function obtenerPoliticaSeguridad() {
         : POLITICAS_SEGURIDAD.cliente;
 }
 
+// ============================================
+// GESTIÓN DE SESIÓN
+// ============================================
 function getSession() {
     const session = localStorage.getItem(SESSION_KEY);
     if (!session) return null;
