@@ -267,11 +267,16 @@ function cambiarTipoTallas(tipo) {
     const sinTallas = document.getElementById('tallas-sin');
     if (!alfabeticas || !numericas || !sinTallas) return;
     
-    // ✅ Guardar posición del scroll ANTES del cambio
+    // Guardar el scroll de TODOS los contenedores antes del cambio
     const contenedor = document.querySelector('.admin-contenido');
-    const scrollAntes = contenedor ? contenedor.scrollTop : 0;
     const tabContent = document.querySelector('.admin-tab-content.active');
-    const scrollTabAntes = tabContent ? tabContent.scrollTop : 0;
+    const scrollContenedor = contenedor ? contenedor.scrollTop : 0;
+    const scrollTab = tabContent ? tabContent.scrollTop : 0;
+    const scrollWindow = window.scrollY;
+    
+    // Desactivar el foco del navegador temporalmente
+    const activeElement = document.activeElement;
+    if (activeElement) activeElement.blur();
     
     // Hacer el cambio de UI
     alfabeticas.style.display = 'none'; 
@@ -283,10 +288,11 @@ function cambiarTipoTallas(tipo) {
     else if (tipo === 'numericas') numericas.style.display = 'flex';
     else sinTallas.style.display = 'flex';
     
-    // Restaurar el scroll (evita el salto automático del navegador)
+    // Restaurar TODOS los scrolls en el siguiente frame (evita el salto)
     requestAnimationFrame(() => {
-        if (contenedor) contenedor.scrollTop = scrollAntes;
-        if (tabContent) tabContent.scrollTop = scrollTabAntes;
+        if (contenedor) contenedor.scrollTop = scrollContenedor;
+        if (tabContent) tabContent.scrollTop = scrollTab;
+        window.scrollTo(0, scrollWindow);
     });
 }
 
