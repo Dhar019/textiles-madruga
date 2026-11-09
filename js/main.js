@@ -109,21 +109,16 @@ document.addEventListener('DOMContentLoaded', function() {
             cerrarLogin();
             actualizarBotonAcceder();
             
-            // ✅ Abrir panel directamente
-            const session = getSession();
-            if (session && (session.role === 'admin' || session.role === 'superadmin')) {
-                mostrarNotificacion('Bienvenido administrador', 'success');
-                
-                const adminPanel = document.getElementById('admin-panel');
-                if (adminPanel) {
-                    adminPanel.className = 'admin-visible';
-                    document.body.classList.add('admin-abierto');
-                    cargarAdminProductos();
-                    cargarPedidosAdmin();
+            // ✅ Esperar un tick para que el localStorage se actualice
+            setTimeout(() => {
+                const session = getSession();
+                if (session && (session.role === 'admin' || session.role === 'superadmin')) {
+                    mostrarNotificacion('Bienvenido administrador', 'success');
+                    abrirAdmin(); // ✅ Ahora sí, con el rol guardado
+                } else {
+                    mostrarNotificacion('Bienvenido ' + username, 'success');
                 }
-            } else {
-                mostrarNotificacion('Bienvenido ' + username, 'success');
-            }
+            }, 100);
         } else {
             mostrarNotificacion(result.message, 'error');
         }
