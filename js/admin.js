@@ -387,7 +387,8 @@ function editarProductoAdmin(id) {
     document.querySelector('#producto-form button[type="submit"]').textContent = 'Actualizar';
     document.getElementById('form-title').textContent = 'Editar Producto';
     
-    form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    // ⚠️ NO scrollIntoView (causa scroll raro)
+    // form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 // ============================================
@@ -737,7 +738,7 @@ async function eliminarUsuario(userId) {
 }
 
 // ============================================
-// SUBCATEGORÍAS
+// SUBCATEGORÍAS (CON DELEGACIÓN DE EVENTOS)
 // ============================================
 async function cargarSubcategoriasAdmin() {
     const container = document.getElementById('admin-subcategorias-lista');
@@ -774,8 +775,13 @@ async function cargarSubcategoriasAdmin() {
         `;
         
         subs.forEach(sub => {
+            // ✅ Usamos data-* en lugar de onclick inline (a prueba de apóstrofes)
+            const nombreSeguro = (sub.nombre || '').replace(/"/g, '&quot;');
             html += `
-                <div class="admin-producto-item">
+                <div class="admin-producto-item" 
+                     data-sub-id="${sub.id}" 
+                     data-sub-nombre="${nombreSeguro}" 
+                     data-sub-padre="${sub.categoriaPadre}">
                     <div class="info">
                         <div class="info-texto">
                             <span class="nombre">${sub.nombre}</span>
@@ -783,8 +789,8 @@ async function cargarSubcategoriasAdmin() {
                         </div>
                     </div>
                     <div class="acciones">
-                        <button class="btn-editar" onclick="editarSubcategoriaAdmin('${sub.id}', '${sub.nombre}', '${sub.categoriaPadre}')">Editar</button>
-                        <button class="btn-eliminar" onclick="eliminarSubcategoria('${sub.id}')">Eliminar</button>
+                        <button class="btn-editar btn-editar-sub">Editar</button>
+                        <button class="btn-eliminar btn-eliminar-sub">Eliminar</button>
                     </div>
                 </div>
             `;
@@ -798,6 +804,26 @@ async function cargarSubcategoriasAdmin() {
     }
     
     container.innerHTML = html;
+    
+    // ✅ Delegación de eventos para editar
+    container.querySelectorAll('.btn-editar-sub').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const item = this.closest('.admin-producto-item');
+            const id = item.dataset.subId;
+            const nombre = item.dataset.subNombre;
+            const padre = item.dataset.subPadre;
+            editarSubcategoriaAdmin(id, nombre, padre);
+        });
+    });
+    
+    // ✅ Delegación de eventos para eliminar
+    container.querySelectorAll('.btn-eliminar-sub').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const item = this.closest('.admin-producto-item');
+            const id = item.dataset.subId;
+            eliminarSubcategoria(id);
+        });
+    });
 }
 
 function editarSubcategoriaAdmin(id, nombre, catPadre) {
@@ -874,7 +900,7 @@ function filtrarUsuariosAdmin(termino) {
 }
 
 // ============================================
-// FIX: el .admin-contenido NUNCA debe scrollear
+// FIX: neutralizar scroll raro en el panel
 // ============================================
 document.addEventListener('scroll', function(e) {
     const contenedor = document.querySelector('.admin-contenido');
@@ -882,3 +908,41 @@ document.addEventListener('scroll', function(e) {
         contenedor.scrollTop = 0;
     }
 }, true);
+
+// Evitar scroll automático al enfocar inputs
+document.addEventListener('focusin', function(e) {
+    if (e.target.closest('.admin-contenido')) {
+        const y = window.scrollY;
+        const contenedor = document.querySelector('.admin-contenido');
+        const scrollC = contenedor ? contenedor.scrollTop : 0;
+        requestAnimationFrame(() => {
+            window.scrollTo(0, y);
+            if (contenedor) contenedor.scrollTop = scrollC;
+        });
+    }
+});
+
+// ============================================
+// EXPONER FUNCIONES GLOBALMENTE
+// ============================================
+window.editarSubcategoriaAdmin = editarSubcategoriaAdmin;
+window.eliminarSubcategoria = eliminarSubcategoria;
+window.cambiarTipoTallas = cambiarTipoTallas;
+window.editarProductoAdmin = editarProductoAdmin;
+window.eliminarProductoAdmin = eliminarProductoAdmin;
+window.toggleOfertaAdmin = toggleOfertaAdmin;
+window.guardarOferta = guardarOferta;
+window.quitarOferta = quitarOferta;
+window.toggleDescuentoInput = toggleDescuentoInput;
+window.cambiarRolUsuario = cambiarRolUsuario;
+window.eliminarUsuario = eliminarUsuario;
+window.renderizarUsuariosAdmin = renderizarUsuariosAdmin;
+window.cargarPedidosAdmin = cargarPedidosAdmin;
+window.cambiarEstadoPedido = cambiarEstadoPedido;
+window.eliminarPedidoAdmin = eliminarPedidoAdmin;
+window.filtrarPorEstado = filtrarPorEstado;
+window.filtrarProductosAdmin = filtrarProductosAdmin;
+window.filtrarOfertasAdmin = filtrarOfertasAdmin;
+window.filtrarUsuariosAdmin = filtrarUsuariosAdmin;
+window.cargarOfertasAdmin = cargarOfertasAdmin;
+window.cargarSubcategoriasAdmin = cargarSubcategoriasAdmin;
