@@ -75,11 +75,22 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('btn-acceder')?.addEventListener('click', function(e) {
         e.preventDefault();
         const session = getSession();
-        if (session) { 
-            if (isAdmin()) abrirAdmin(); 
-            else mostrarNotificacion('Sesión activa como: ' + session.username, 'info'); 
-        }
-        else {
+        
+        if (session) {
+            // Si hay sesión, abrimos el panel de admin si es admin
+            if (isAdmin()) {
+                const adminPanel = document.getElementById('admin-panel');
+                if (adminPanel) {
+                    adminPanel.className = 'admin-visible';
+                    document.body.classList.add('admin-abierto');
+                    cargarAdminProductos();
+                    cargarPedidosAdmin();
+                    iniciarVerificadorSesion();
+                }
+            } else {
+                mostrarNotificacion('Sesión activa como: ' + session.username, 'info');
+            }
+        } else {
             mostrarLogin();
         }
     });
@@ -106,21 +117,32 @@ document.addEventListener('DOMContentLoaded', function() {
         const result = await login(username, password);
         
         if (result.success) {
+            // La sesión ya se guardó en localStorage dentro de login()
+            // El session.user.role ya está disponible
+            
             cerrarLogin();
             actualizarBotonAcceder();
             
-            // ✅ Esperar un tick para que el localStorage se actualice
-            setTimeout(() => {
-                const session = getSession();
-                if (session && (session.role === 'admin' || session.role === 'superadmin')) {
-                    mostrarNotificacion('Bienvenido administrador', 'success');
-                    abrirAdmin(); // ✅ Ahora sí, con el rol guardado
-                } else {
-                    mostrarNotificacion('Bienvenido ' + username, 'success');
+            // Forzamos la apertura del admin si es admin
+            if (isAdmin()) {
+                mostrarNotificacion('Bienvenido administrador', 'success');
+                
+                // Abrimos el panel de admin directamente
+                const adminPanel = document.getElementById('admin-panel');
+                if (adminPanel) {
+                    adminPanel.className = 'admin-visible';
+                    document.body.classList.add('admin-abierto');
+                    
+                    // Cargamos los datos del admin
+                    cargarAdminProductos();
+                    cargarPedidosAdmin();
+                    iniciarVerificadorSesion();
                 }
-            }, 100);
-        } else {
-            mostrarNotificacion(result.message, 'error');
+            } else {
+                mostrarNotificacion('Bienvenido ' + username, 'success');
+            }
+        } else { 
+            mostrarNotificacion(result.message, 'error'); 
         }
     });
 
