@@ -711,6 +711,7 @@
     border-radius: 20px !important;
     box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5) !important;
     border: 1px solid rgba(232, 122, 32, 0.2) !important;
+    contain: layout size !important;
 }
 
 /* --- HEADER Y TABS FIJOS --- */
@@ -801,14 +802,15 @@
 /* --- CONTENIDO DE PESTAÑAS (ÚNICO CON SCROLL) --- */
 .admin-tab-content {
     display: none;
-    flex: 1 1 auto !important;
-    overflow-y: auto !important;
+    flex: 1 1 0% !important;        
+    overflow-y: auto !important;    
     overflow-x: hidden !important;
     padding: 0 35px 30px 35px !important;
     scrollbar-width: thin;
     scrollbar-color: var(--color-naranja) transparent;
-    min-height: 0 !important;
-    overscroll-behavior: contain;
+    min-height: 0 !important;       
+    max-height: 100% !important;    
+    overscroll-behavior: contain !important;
 }
 
 .admin-tab-content.active {
