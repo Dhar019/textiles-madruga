@@ -23,26 +23,15 @@ function cerrarLogin() {
     }
 }
 
-async function abrirAdmin() {
+function abrirAdmin() {
     if (!protegerAdmin()) return;
-
-    // ✅ Verificar que la sesión es válida en el Worker
-    const sesionValida = await verificarSesionReal();
-    if (!sesionValida) {
-        mostrarNotificacion('Tu sesión expiró o fue reemplazada. Inicia sesión de nuevo.', 'warning');
-        const adminPanel = document.getElementById('admin-panel');
-        if (adminPanel) adminPanel.className = 'admin-oculto';
-        document.body.classList.remove('admin-abierto');
-        actualizarBotonAcceder();
-        mostrarLogin();
-        return;
-    }
-
-    // Si la sesión es válida, abrir el panel normalmente
     const adminPanel = document.getElementById('admin-panel');
     adminPanel.className = 'admin-visible';
+    document.body.style.overflow = 'hidden'; // Bloquea el scroll del body
     document.body.classList.add('admin-abierto');
     cargarAdminProductos();
+    reiniciarTemporizadorInactividad();
+    iniciarVerificadorSesion();
     cargarPedidosAdmin();
     scrollModalAlTop(adminPanel);
     document.getElementById('admin-cerrar').onclick = cerrarAdmin;
@@ -52,6 +41,7 @@ async function abrirAdmin() {
 function cerrarAdmin() {
     const adminPanel = document.getElementById('admin-panel');
     if (adminPanel) adminPanel.className = 'admin-oculto';
+    document.body.style.overflow = 'auto'; // ✅ Restaura el scroll del body
     document.body.classList.remove('admin-abierto');
     const formProducto = document.getElementById('form-producto');
     if (formProducto) formProducto.className = 'form-oculto';
