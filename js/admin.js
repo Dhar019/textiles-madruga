@@ -101,6 +101,7 @@ function abrirAdmin() {
     adminPanel.className = 'admin-visible';
     document.body.style.overflow = 'hidden';
     document.body.classList.add('admin-abierto');
+    document.documentElement.classList.add('admin-abierto-html');
     cargarAdminProductos();
     reiniciarTemporizadorInactividad();
     iniciarVerificadorSesion();
@@ -115,6 +116,7 @@ function cerrarAdmin() {
     if (adminPanel) adminPanel.className = 'admin-oculto';
     document.body.style.overflow = 'auto';
     document.body.classList.remove('admin-abierto');
+    document.documentElement.classList.remove('admin-abierto-html');
     const formProducto = document.getElementById('form-producto');
     if (formProducto) formProducto.className = 'form-oculto';
     detenerVerificadorSesion();

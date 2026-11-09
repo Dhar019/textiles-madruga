@@ -825,9 +825,9 @@
 .admin-tab-content::-webkit-scrollbar-thumb { background: var(--color-naranja); border-radius: 4px; }
 
 /* --- BODY: BLOQUEAR SCROLL CUANDO ADMIN ABIERTO --- */
-body.admin-abierto {
+html:has(body.admin-abierto) {
     overflow: hidden !important;
-    overscroll-behavior: none;
+    height: 100vh !important;
 }
 
 /* --- FORMULARIO: NO EMPUJA EL FLEX --- */
