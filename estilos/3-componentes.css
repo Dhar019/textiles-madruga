@@ -686,8 +686,9 @@
 #admin-panel .admin-overlay {
     position: absolute !important;
     inset: 0 !important;
-    z-index: 1 !important;
+    z-index: 0 !important;             
     background: transparent !important;
+    pointer-events: none !important;    
 }
 
 /* --- CONTENEDOR PRINCIPAL (casi toda la pantalla) --- */
