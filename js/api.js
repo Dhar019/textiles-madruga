@@ -3,7 +3,7 @@
 // ============================================
 
 // ============================================
-// CARGA DE PRODUCTOS
+// CARGA DE PRODUCTOS (con timeout y fallback VPN)
 // ============================================
 async function cargarProductos(intentos = 3) {
     console.log(`🔄 Cargando productos... (Intento ${4 - intentos}/3)`);
@@ -24,11 +24,18 @@ async function cargarProductos(intentos = 3) {
     }
 
     try {
+        // ✅ TIMEOUT DE 5 SEGUNDOS
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        
         const respuesta = await fetch(`${API_URL}/productos`, {
             method: 'GET',
             mode: 'cors',
-            cache: 'no-store'
+            cache: 'no-store',
+            signal: controller.signal
         });
+        
+        clearTimeout(timeoutId);
         
         if (!respuesta.ok) throw new Error(`Error HTTP: ${respuesta.status}`);
         
@@ -70,11 +77,35 @@ async function cargarProductos(intentos = 3) {
         if (datosLocales) {
             mostrarNotificacion('Usando datos guardados. Algunos productos pueden no estar actualizados.', 'warning');
         } else {
-            mostrarNotificacion('No se pudieron cargar los productos. Comprueba tu conexión.', 'error');
+            // ✅ FALLBACK: mostrar mensaje amigable de bloqueo de VPN
+            mostrarMensajeBloqueoVPN();
         }
         
         return datosLocales;
     }
+}
+
+// ✅ NUEVA FUNCIÓN: mensaje amigable si no hay productos y no hay caché
+function mostrarMensajeBloqueoVPN() {
+    document.querySelectorAll('.grid-productos').forEach(grid => {
+        if (grid.children.length === 0 || grid.querySelector('.loader-container')) {
+            grid.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; background: #FFF5EB; border-radius: 16px; border: 1px dashed var(--color-naranja); margin: 20px 0;">
+                    <div style="font-size: 3rem; margin-bottom: 15px;">📡</div>
+                    <h3 style="font-family: var(--font-serif); color: var(--color-naranja); font-size: 1.3rem; margin-bottom: 10px;">
+                        No pudimos cargar el catálogo
+                    </h3>
+                    <p style="color: var(--color-gris); font-size: 0.95rem; max-width: 500px; margin: 0 auto 20px auto; line-height: 1.6;">
+                        Si estás en Cuba, es posible que necesites una <strong style="color: var(--color-naranja);">VPN</strong> para ver los productos. 
+                        Es un bloqueo de conexión, no un fallo de la web.
+                    </p>
+                    <button onclick="location.reload()" style="background: var(--color-naranja); color: white; border: none; padding: 12px 28px; border-radius: 50px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: all 0.3s ease;">
+                        🔄 Reintentar
+                    </button>
+                </div>
+            `;
+        }
+    });
 }
 
 function cargarProductosLocal() {

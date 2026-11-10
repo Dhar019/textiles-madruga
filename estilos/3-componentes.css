@@ -2944,3 +2944,49 @@ html.admin-abierto-html {
     width: 90% !important;
     padding: 30px 28px 24px !important;
 }
+
+/* ✅ Aviso de VPN más amigable */
+.aviso-navegador {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 16px;
+    background: #FFF5EB;
+    border-left: 3px solid var(--color-naranja);
+    border-radius: 10px;
+    font-size: 0.8rem;
+    color: var(--color-negro);
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.aviso-navegador svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: var(--color-naranja);
+}
+
+.aviso-navegador strong {
+    color: var(--color-naranja);
+}
+
+.aviso-navegador-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    background: rgba(232, 122, 32, 0.1);
+    border-radius: 10px;
+    font-size: 0.75rem;
+    color: var(--color-crema);
+    flex-wrap: wrap;
+    text-align: center;
+    line-height: 1.5;
+}
+
+.aviso-navegador-footer svg {
+    flex-shrink: 0;
+    color: var(--color-naranja);
+}
